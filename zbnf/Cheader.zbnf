@@ -1,0 +1,540 @@
+<?ZBNF-www.vishia.de version="0.7" encoding="iso-8859-1" ?>
+$xmlns:topics="http://www.vishia.de/2006/Topics".
+$xmlns:xhtml="http://www.w3.org/1999/xhtml".
+
+##yyyy-mm-dd who      what
+##2009       Hartmut some details
+##2008-04-16 Hartmut implicitStructAttribute instead attribut with @implicitStruct
+##                   because it is better detectable by evaluating parse result, improve calculatin time!
+##2007-12-28 Hartmut
+##2007-12-28 Hartmut  semantic CLASS_C instead ClassDef for CLASS_C sections to differ from class definition
+
+
+##type::= instead @ident name because construct {<$?name>?::}
+##methodTyp instead @name name because construct {<$?name>?::}
+##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
+
+$keywords=return|if|else|while|do|public|private|protected|inline|static|virtualstatic_cast|struct|class|union|enum|operator.
+
+Cheader::=
+[{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
+[ [ #ifndef <$?HeaderEntry>
+  | #if ! defined ( <$?HeaderEntry> )          ## the test to exclude of double includes is obligate!
+  ]
+  #define <$?HeaderEntryDef>
+]
+[/*@PACKAGE <*\ *?package/@name> <*|*/?>*/]
+[{ <includeDef?+@> }]    ## includes at begin
+[<OutsideHeaderBlock>]
+[{                        ##repetition of blocks
+  /*@TOPIC <topic>
+| <CLASS_CPP>
+| <CLASS_C>              ##/*@CLASS_C ....
+| <DEFINE_C>             ##/*@DEFINE_C ....
+| <ARRAY>                ##/*@ARRAY ....
+| <INLINE>               ##/*@INLINE ....
+##| <headerBlock>
+}]
+[#endif]
+\e.
+
+##:NOTE: a HeaderBlock may be also inside a condition Block. A Headerblock is the first one information.
+##A conditionBlock is only a auxialary wrapper on HeaderBlocks.
+
+
+##===========================================================================================================
+##Block of definition in header. This is the first one information to evaluate a header but also a inner element.
+headerBlock::=<?>
+[ /**<description?-?>*/]
+[/*<implementDescription?-?>*/]
+[ <invalidBlock?+@>
+| <validBlock?>
+| <conditionBlock?+conditionBlock>
+##| extern <variableDecl?+@> ;
+| extern <attribute?+?>
+| EX <attribute?+?>       ##special case for a special programming style, EX is per define 'extern' or empty.
+| <enumDefinition> ;
+| struct <structDefinition?+?> ;
+| union <unionDefinition?+@> ;
+##| <?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
+| <?constDef> [static<?staticConst>] const <attribute?+?>
+| typedef
+  [ xx
+  | <?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
+  | <methodPtrTypedef?+@>
+  | <methodTypedef?+@>
+  | struct <structDefinition?+@> ;
+  | union <unionDefinition?+@> ;
+  | <?+classDefinition> <classDef> <$?@name> ;
+  |<enumDefinition> ;
+  | <?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
+  | <?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
+  ]
+| inline <inlineMethod>
+| inline <operatorDef?operator> [;|<statementBlock>]
+| <includeDef?+@>
+| #define CONST<defineDefinition?+const_initializer>
+| #define NULL<defineDefinition?+null_initializer>
+| #define <defineDefinition?+@>
+| <undefDefinition?+@>
+| #error [<""?compilerError> | <*\n?compilerError>]
+| #pragma <*\n?pragma>
+| <classDecl?+@>
+| <structDecl?+@>
+| <classDef?+@> ;
+| <attribute>
+| <methodDef?+@> ;
+| <operatorDef?operator> [;|<statementBlock>]
+| <defineUse?+@>
+| ;  ##NOTE: an empty unnecessary semicolon is acceptable in C
+].
+
+
+
+OutsideHeaderBlock::=<?outside>
+{ [?/*@]                                  ##stop repetition if /*@NEWBLOCK is detected
+  <headerBlock>
+}
+.
+
+
+
+topic::=<?topics:topic> <$?@ident> <*\n?><*|*/?xhtml:body+>*/.
+
+
+CLASS_C::= /*@CLASS_C <$?@name> <*|*/?>*/
+{ [?/*@]                                  ##stop repetition if /*@NEWBLOCK is detected
+  <headerBlock>
+}
+[<?virtual> /*@CLASS_C_VIRTUAL <*|*/?>*/  ##it is the block of the c-like virtual methods
+  { [?/*@]                                ##stop repetition if /*@ is detected, it is the next block or the end
+    <headerBlock>
+  }
+]
+.
+
+
+##/*@ARRAY ObjectRefvalues_Jc @@@@@@@
+##Definition of arrays of types outside the CLASS_C-block:
+ARRAY::= /*@ARRAY <$?classIdent> <*|*/?>*/
+{ [?/*@]
+  <headerBlock>
+}
+.
+
+
+
+DEFINE_C::=/*@DEFINE[_C] [<$?@name>]<*|*/?>*/
+[ /*@ <description>*/]
+{ [?/*@]
+  <headerBlock>
+}
+.
+
+INLINE::=/*@INLINE [<$?@name>]<*|*/?>*/
+[ /*@ <description>*/]
+{ [?/*@]
+  <headerBlock>
+}
+.
+
+CLASS_CPP::=/*@CLASS_CPP <*|*/?>*/
+{ [?/*@]
+  <headerBlock>
+}
+.
+
+structDefinition::= [<$?@tagname>]
+[\{ [{ <structContent?> }] \} | <macro> ]    ##NOTE: a macro can substiture a structure definition inclusive {}. Better solution: using a preprecessor.
+[GNU_PACKED] [ *<?referenceStruct>] [<$?@name>[ <arraysize>]] .
+
+?en:structDefinition.referenceStruct::="A * before the struct-name or struct-typename inside a typedef means, the struct is used as referenced type.".
+
+unionDefinition::=[<$?@tagname>]
+\{ { ##[/**<description?-?>*/]
+     [ [<?variante> struct <structDefinition>] ;
+     | <attribute?variante>
+     | #define <defineDefinition>
+     | <headerBlock>
+     ]
+   }
+\} [GNU_PACKED] [<$?@name>[ <arraysize>]].
+
+##classDefinition::=class [<$?@tagname>] \{ [{ [ <classContent?> | <structContent?> ] }] \} <$?@name>;.
+
+enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
+\{
+{ ##note before or behind enumElement there may be several defines, associated to the enum.
+  [{  [/**<description?-?>*/] #define <defineDefinition?+?>}]
+  [[/**<description?-?>*/]<enumElement?+?>
+   [{  [/**<description?-?>*/] #define <defineDefinition?+?>}]
+  ]
+? ,
+} 
+\} [<$?@name>] .
+
+
+##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
+implicitStructAttribute::=[/**<description>*/] struct <structDefinition?><?@implicitStruct> ;.
+
+methodDef::= [METHOD_C|extern "C"|extern|] <type> {<$?name>? ::} ([|<methodArgumentList?>] ).
+
+methodPtrTypedef::= [METHOD_C|extern "C"|] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]);.
+
+methodTypedef::= [METHOD_C|extern "C"|] <type> [<$?class> :: ] <$?name> ( [|<methodArgumentList?>] );.
+
+
+##a defineArgument is a define which replaces a type name - argument specification with a simple identifier. It's used for special cases.
+methodArgumentList::={ \.\.\.<?variableArgs> [<$?>]| <typedParameter> | void | <$?defineArgument> ? ,}.
+##TRICKY: an identifier <$?> after ... of a <?variableArgs> was necessary in a UML tool, it is an empty-defined identifier for compiling, but it should be accepted here also. 
+
+##block inside a header with conditional compilation via ifdef
+conditionBlock::=
+[ #ifdef <$?conditionDef>| #ifndef <$?conditionDefNot>| #if {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| } ]
+[{ <headerBlock> }]
+[{<?elif> #elif {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| }
+  [{ <headerBlock> }]
+}]  
+[<?elseConditionBlock> #else
+  [{ <headerBlock> }]
+]
+#endif.
+
+
+
+invalidBlock::=
+#if 0
+[{ <headerBlock> }]
+#endif.
+
+
+validBlock::=
+#if 1
+[{ <headerBlock> }]
+#endif.
+
+
+includeDef::= #include [<""?!prepFilePath>|\<<*\>?!prepFilePath><?@sysInclude>\>].
+
+
+prepFilePath::=<$NoWhiteSpaces><! *?>
+  [ <stringtolastinclChar/\\?@path>           ##or all chars until the last \\ or / is the path part of the file
+  ]                                          ##or no path is given.
+  [ <stringtolastExclChar.?@file><*?@ext>
+  | <*@file>
+  ]<! *?>.
+
+
+
+
+##defineDefinition::=<$NoWhiteSpaces><$?@name>[( { <$?parameter/@name> ? , } )]<![ \t]*?>[<#-?intvalue>|0x<#x?hexvalue>|<""?stringvalue>|]<![ \t]*?>{<*|\n|\\|\r\n?value>? \\[\r]\n}.
+## be carefull: no white spaces between defineDefinition because the white spaces have syntax deterministic functions!
+## if whitespaces are overred the line may be left.
+##?c? defineDefinition::= :older versions 2010-05-01 has <$?name>, this correction is from 2010-06-28
+defineDefinition::=<$NoWhiteSpaces> <$?@name> [ ( {<?parameter> <![ \t]*?><$?@name> ? <![ \t]*?>, } <![ \t]*?>) ]
+                   <![ \t]*?> [ <""?stringvalue>
+                              | 0x<#x?hexvalue>
+                              | <#-?intvalue>[\.<#?fractPart>[[E|e]<#-?exponent>]]
+                              |]
+                   <![ \t]*?>
+                   { <*|\n|\\|\r\n?value>
+                   ? \\[\r]\n
+                   }.
+
+## by value: either until a backslash followed by end of lineor until and of line,
+##           repitition if backslash followed by end of line is found.
+
+undefDefinition::= #undef<![ \t]*?><$?@name>[( { <$?parameter/@name> ? , } )].
+
+defineUse::= <$?defineMethod> ( { <$?defineparameter> ? , } ).
+
+classDecl::=class <$?name> ;.
+
+structDecl::=struct <$?name> ;.
+
+
+type::= [<?@modifier>volatile|const|] 
+  [<?@forward>struct|class|union|] 
+  [ [unsigned<?unsigend>|signed<?signed>] [  ##signed and unsigned only with int types! 
+                                            int <?@name=int32>
+                                          | short int <?@name=int16>
+                                          | short <?@name=int16>
+                                          | long long <?@name=int64>
+                                          | long int <?@name=int32>
+                                          | long     <?@name=int32>
+                                          | char     <?@name=int8>
+                                          |  <?@name=int>]
+  | [{ <$?environmentClass> ::}] [ short int<?@name=short> 
+                                 | long int<?@name=long> 
+                                 | long long<?@name=int64> 
+                                 | int short<?@name=int16> 
+                                 | long double<?@long_double>
+                                 | <$?@name> 
+                                 ] [ \< <type?templateType> \> ] 
+  ]
+  [{ * *<?@pointer2>
+  | * &<?@pointerRef>
+  | *<?@pointer>
+  | const **<?@constPointer2>
+  | const *<?@constPointer>
+  | volatile *<?@volatilePointer>
+  | &<?cppRef>
+  }] 
+  [<?@modifier2>volatile|const|].
+
+
+inlineMethod::=<methodDef> [const] [;|<statementBlock>].
+
+
+##typedParameter::= <type> [ <$?@name>[ \[ <value?sizeof> \]] [ = <value?defaultValue>] ].
+typedParameter::= <type> [ <$?@name>[<arraysize>] [ = <value?defaultValue>] ].
+
+
+enumElement::= [/**<description>*/] <$?@name> [ = <enumValue?> ].
+
+classDef::=class [<$?@name>] [ : {<superclass> ? ,} ]
+\{ [{ <classVisibilityBlock> | <classContent?>  }]
+\}.
+
+
+superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
+
+
+
+##old, it doesnt considere int a,b:# attribute::= [/** <*{ *}|*/?!test_description>*/] <type> <$?name> [<arraysize>];. ## | [ = <value> ] ];.
+
+##NOTE: <?*> means, a result from outer isn't store here, but in the deeper level.
+##NOTE: attributes may be written in form: type name,name[xx],name.
+##     But it doesn't consider a asterix here like int *name,*other. The first asterix is parsed associated to the type, the second cause an parse error here.
+##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
+##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,};.
+attribute::=<?> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,} ;.  ##[//<endlineComment?*?>].
+attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ]].
+
+##The short form doesn't work yet:# attribute::=<?*> [/**<description?-?>*/] <type?-?> {<?+attribute> <$?@name> [<arraysize>| = <value> |] ?,};.
+
+
+##NOTE: \{ ... \} are defined outside to faster parse.
+##NOTE: In C it is possible to write "{ 1,2,}" (comma on end), therefore the number is optional in repetition.
+arrayValue::= { \{ <arrayValue> \} | <value> |  <?noValue>? , }.  
+?arrayValue::="constant definition of an array in C writing { value, value...}, whereby nesting is possible.".
+
+description::= <*{ * }|*/?!test_description>.
+
+implementDescription::= <*{ * }|*/?!test_description>.
+
+##The test_desciption syntax is used to parse the inner structure of a description.
+test_description::= <*|\e|\@?text>
+[{ @return <*@\e?returnDescription/text>
+ | @param <paramDescription>
+ | @sizeof = <sizeofDescription>
+ | @super <?superClass>
+ | @bytepos = [0x<#x?bytepos/@value>|<#?bytepos/@value>]
+ | @GUID = <""?GUID/@value>
+## | @container = <* \s\n\r\e\.;@?containerType>
+ | @container = [<$?containerType>] \< <$?containerElementType> [ * <?referencedContainerElement> ] \> [\.]
+ | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
+ | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
+ | @refl:{ <*,\.\e?refl>? ,}[ \.]
+ | <?auxDescription> @<$?@name> <*@\e?@value>
+ | <*|\e|\@?text>
+ }] \e.
+
+?test_description.superClass::= "if a element is marked with @super, it is designated as the super element. 
+                It should be the first in a struct, it is mostly a struct.".
+
+
+?test_description.lastUndefsizeArray::= "This annotation can be written on the last element. It should be an array, 
+  whereby its size is not determined. The size depends on other informations in the context.".
+
+
+paramDescription::=<$?@name> <*@\e?text>.
+
+xxparamDescription::=<$?@name> <*|\. |\.\r\n|\.\n|\e|\@?brief> [\.] [<*|\e|\@?rest/xhtml:body+> ].
+
+sizeofDescription::=<?sizeof><#?@sizeof> <*@\e?text>.
+?description.sizeof ::= "The size of a element may be given as immediate numeric value. 
+                        It is used for documentation (lists)." .
+
+structContent::=<?>
+[ <invalidBlock?>
+| <validBlock?>
+| [/**<description?-?>*/]
+  typedef
+  [ xx
+  | <?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
+  | <methodPtrTypedef?+@>
+  | <methodTypedef?+@>
+  | struct <structDefinition?+@> ;
+  | union <unionDefinition?+?> ;
+  | <?+classDefinition> <classDef?> <$?@name> ;
+  | <enumDefinition?+?> ;
+  | <?typedef> <$?type> <$?newType> ;
+  ]
+| [/**<description?-?>*/] union <unionDefinition?+attribute> ;
+| <enumDefinition> ;
+| <implicitStructAttribute>
+| <attribute>
+| [/**<description?-?>*/] #define <defineDefinition?+?>
+| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
+| <structContentInsideCondition>
+| <methodPtrTypedef?+@>
+].
+
+
+classContent::=<?>
+[ [inline] virtual <methodDef?abstractMethod> [<?@modifier>volatile|const|] = 0 ;
+| [inline] virtual <methodDef?virtualMethod> [<?@modifier>volatile|const|] [;|<statementBlock>]
+| [inline] virtual <operatorDef?abstractOperator> [<?@modifier>volatile|const|] = 0 ;
+| [inline] virtual <operatorDef?virtualOperator> [<?@modifier>volatile|const|] [;|<statementBlock>];
+| static <methodDef?staticMethod>  [<?@modifier>volatile|const|] [;|<statementBlock>]
+| static <attribute?+staticAttribute>
+| <?friendClass> friend [class] <outerClassName> ;
+| <enumDefinition> ;
+| <?classForward> class <$?@name> ;
+| <?structForward> struct <$?@name> ;
+| <?implicitAttribute> <classDef> <$?name> ;
+| <classDef>;
+##| <structDef?+@>
+| <Destructor>
+| [inline] <operatorDef?operator> [<?@modifier>volatile|const|] [;|<statementBlock>]
+| [inline] <methodDef> [<?@modifier>volatile|const|] [;|<statementBlock>]
+| <?constructor> <$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>]
+| <attribute?+?>
+##| <variableDecl>;
+| <structContent?>
+].
+
+
+##TODO experience
+outerClassName::=<$?name>[ :: <outerClassName>].
+##outerClassName::=<$?-name> [::<outerClassName?+outerClass>| <?+name>].
+##outerClassName::=<$?@name> :: [<outerClassName>| <?+name>].
+
+Destructor::= [virtual] ~<$?className> ( ) [ = 0 ;<?@abstract>| ;|<statementBlock>].
+
+operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>|<unaryOperator?>|<binaryOperator?>|<type?typeConversion>] ( [| void |{ <typedParameter> ? ,}] ).
+
+statementBlock::=
+\{ [ STACKTRC_ENTRY ( <""?STACKTRC_ENTRY> ) ; ]
+[{ <statement> }]
+\}.
+
+statement::=
+  return [| <value?returnAssignment>] ;
+| <variabledefinition>
+| <simpleMethodCall> ;
+| <assignment>
+| <if_statement>
+| <while_statement>
+| <try_statement>
+.
+
+
+##variabledefinition::=<$?type> <$?attribute> [ = [<objectAccess>|<value>] ];.
+variabledefinition::=<type> <$?attribute> [ = [<objectAccess>|<value>] ];.
+
+
+
+returnAssignment::= [<objectAccess>;|<value>;|<assignment>].
+
+assignment::= <variable> <assignOperator> [<objectAccess>;| <value>;|<assignment>].
+
+value::=
+{ [|<unaryOperator>]
+  [ <""?simpleStringLiteral>
+  | <''?simpleCharLiteral>
+  | & <value?referenceAddress>
+  | <refCasting> <value>  ##must be arranged before ( <value> ) because confusion with, example (type)value and (variable)
+  | ( <value> )
+  | 0x<#x?number>[<?@longModifier>L]
+##  | <?floatNumber> <#f?>[<?@floatModifier>F| <?@longModifier>L|]  ##it doesn't work. TODO search why!
+  | <#f?floatNumber>[<?@floatModifier>F| <?@longModifier>L|]
+  | <#-?number>[<?@longModifier>L]
+##  | <simpleMethodCall>
+  | <methodCall>
+  | <variable>
+  ##    | <!'.'?simpleChar>
+  ]
+?
+<binaryOperator>
+}
+
+[ \? <value?value-true> : <value?value-false>]
+.
+
+
+assignOperator::= = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>=.
+
+unaryOperator::= - | ~ | ! | * | & .
+
+##TRICKY-ZBNF: use [<?semantic> ...] to store the string value. use <?> to circumvent double storing.
+binaryOperator::=<?>[<?binaryOperator> + | - | * | / | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ ].
+##binaryOperator::= + | - | * | / | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ .
+
+
+simpleMethodCall::= [{<$?environmentClass> ::}] <$?methodname> [( )| <actualParameter>].
+
+actualParameter::= ({ <objectAccess>| <value>? ,} ).
+
+
+classVisibilityBlock::=[<?visibility> public | protected | private ] : [{ <classContent> | <structContent> }].
+
+structContentInsideCondition::=
+[/**<description>*/] 
+[ #ifdef <$?conditionDef>| #ifndef <$?conditionDefNot>| #if {<?OrCondition> {<?AndCondition> [defined(<$?conditionDef>) | ! defined(<$?conditionDefNot>) ] ? && } ? \|\| } ]
+  [{ <structContent> }]
+[<?elseConditionBlock> #else
+  [{ <structContent> }]
+]
+#endif.
+
+##variableDecl::= <type> <$?name> [\[<?arrayType>\]].
+
+AccessRight::=[<?accessRight/@value> public | private | protected |].
+
+##arraysize can be simple, or a complex value. NOTE: Only the simpe variants are regarded in Header2Reflection. 
+arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }|  <?unknown>] \] [<arraysize>].
+##arraysize::=\[ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> | <*\ \]?value>] \] [<arraysize>].
+##arraysize::=\[ [ <*\ \]?value> ] \] [<arraysize>].
+
+?en:arraysize.unknown::="An unknown arraysize is possible on extern declarations of arrays writing 'extern type name[];' ".
+
+## An enum value is a constant. It may be written as term "konst + konst". A konst is a number or a symbolic const.
+enumValue::= {0x<#x?hexnumber>[<?@longModifier>L] | <#-?intnumber>[<?@longModifier>L] | <macro> | { <$?symbol>? ::} ? [<?operation/@value> +|-|*|\|] }.
+
+
+
+methodCall::=[<superAccess>|<externObject>|]<simpleMethodCall>.
+
+variable::=[ <superAccess>| <externObject>|] [{<$?environmentClass>::}] <$?simpleVariable> [\[ <value?index> \]].
+
+superAccess::=xxx.
+
+externObject::= { [<simpleMethodCall>|<$?association>[ \[ <value?index> \]] ] [-\>|\.] }.
+
+
+
+if_statement::=if ( <condition> ) [<statementBlock>|<statement>] [ else [<statementBlock>|<statement>] ].
+
+while_statement::=while ( <condition> ) [<statementBlock>|<statement>].
+
+try_statement::=try <statementBlock> { catch ( <$?exceptionType> <$?exceptionObj> ) <statementBlock> }.
+
+
+condition::=<value?>.
+
+##objectAccess::=<nullPointer> | <newObject> .
+
+objectAccess::=xxx.
+
+nullPointer::=null.
+
+
+refCasting::=
+  static_cast \< <type> \>   ##C++-safety casting
+| ( <type> )                 ##C-like-casting
+.
+
+
+macro::= <$?@name> ( { <$?identArg> | <value> ? ,} ).

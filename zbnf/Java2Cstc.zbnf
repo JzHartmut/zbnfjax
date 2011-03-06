@@ -1,0 +1,78 @@
+<?ZBNF-www.vishia.org version="0.9" encoding="ISO-8859-1" ?>
+
+Structure::= \<\?Java2C-stc www\.vishia\.org version=\" <#f?@version> \"  encoding=<""?@encoding>  \?\>
+[Structure of translated java-file | fileC = ] <""?fileName> 
+package <*; ?package> ;
+{ <ClassData> } \e.
+
+ClassData::= [{ extern <?extern> 
+              | final <?final> 
+              | embedded <?embedded> 
+              | abstract <?abstract> 
+              | nonStaticInner <?nonStaticInner> 
+              | anonymous <?anonymous>
+              | const <?const>               ##to produce const* in C, only get-methods.
+              | statementBlock:<!.?statementBlock>
+              }] 
+[class|interface<?interface>] 
+<*; ?nameJava> ; [nameC = ] <$?nameC> ; 
+[{ argIdent = <$?argIdent> ; | header = <* \t;?header> ; }]
+[ extends <$/?superClass> ] [ implements { <$/?interfaceClass> ? ,} ]  
+\{ [ InnerClass \{ [{ <ClassData?InnerClassData> }] \}]
+   [ typeIdents \{ [{ <type> | <ClassData?InnerClassData> }] \}]
+   [ fieldIdents \{ [{ <field> }|{ <fieldShort?field> ; }|] \}]  ##deprecated, use fields
+   [ fields \{ [{ <fieldShort?field> ; }] \}]
+   [ methods \{ [{ <method> }] \}]
+   [ methods-overrideable \{ { <$?methodOverridableC> ; } \} ]
+   [ castTo \{ [{ <castTo> }] \}]
+   [ castFrom \{ [{ <castFrom> }] \}]
+\}.
+
+field::= field [:] \{ <* \t?typeJava>  ##it's obsolte!!
+         [ instance: <* \t?instanceType>]
+          <1*?modeAccess><1*?modeArrayElement><1*?modeStatic> 
+         [ -fixBufferSize \[ <#?fixSize> \]                  ##fix buffer for StringBuffer 
+         | { \[ [\?\?<?arrayDimension>| <*\] ?fixArraySizes>] \] } ##size of dimensions
+         |]
+         [<$?name>] ; \} 
+         .
+fieldShort::= [va_arg] \.\.\. <?vaarg> [<$?name>] 
+| <$/\.?typeJava> 
+  [{ \[ [\?\?<?arrayDimension>| <*\] ?fixArraySizes>] \] }] ##size of dimensions
+  [ ( { instance[ = | :] <$/\.?instanceType> 
+	 	 | fixBufferSize = <#?fixSize>                   ##fix buffer for StringBuffer
+		  ? , } ) ]
+  <1*?modeAccess><1*?modeArrayElement><1*?modeStatic> 
+  [<$?name>] 
+.
+         
+envIdent::=  <$?@name> \. [<envIdent?subIdent>] .
+
+##TRICKY: use same semantic like envIdent to use same storing class for ZbnfJavaOutput.
+xxxpackageType::= <$?@name> / [<packageType?subIdent>] .         
+         
+type::= type; <$?typeName>.
+
+method::= 
+<$?javaName>[+<$?unambigouosName>][-<$?suffixName>[$<?classSuffixName>]][%<$?implementationSuffix>] 
+[ , defined [=|:] <* \t:,?defClassAndMethodUnambigous>]
+[ , mode [=|:] { ctor<?modeCtor> 
+               | nonStaticCtor<?modeCtorNonStatic> 
+               | anonymousCtor<?modeCtorAnonymous> 
+               | noStacktrace<?modeNoStacktrace> 
+               | noThCxt<?modeNoThCxt> 
+							 | overrideable<?modeOverrideable> 
+							 | returnThis<?modeReturnThis> 
+							 | static<?modeStatic> 
+							 | returnNew<?modeReturnNew> 
+							 |returnNonPersistring<?modeReturnNonPersistring> 
+							 ? + }] 
+: [<field?returnType> | <fieldShort?returnType> ]  
+[ ( { <field?param> | <fieldShort?param> ? , } ) |()|] ;
+.
+
+castTo::= <$/\.?typeJava> [:] [access = ][<?accessDst> $| &| *| t| %] [:] <""?castExpr> [\? access = ][<?accessSrc> $| &| *| t| %] ;.      
+
+castFrom::= [<?accessDst> $| &| *| t| %] [:] <""?castExpr> <$/\.?typeJava> [<?accessSrc> $| &| *| t| %] ;.      
+         
+

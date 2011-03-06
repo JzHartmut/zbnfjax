@@ -1,0 +1,636 @@
+<html xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:pre="http://www.vishia.de/2006/XhtmlPre" xmlns:xhtml="http://www.w3.org/1999/xhtml" test_rootname="root">
+   <test_inputXmlRoot name="local-name(.)"></test_inputXmlRoot>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+      <title>readme - zbnfjax</title>
+      <link rel="stylesheet" type="text/css" href="../htmlstd.css">
+   </head>
+   <body>
+      <h1>readme - zbnfjax</h1>
+      <p class="standard"><font size="+1"><u>Inhalt</u></font></p>
+      <ul>
+         <li><a href="#chapter_1">1 Sources and make</a></li>
+         <li><a href="#chapter_2">2 Which other tools and sources are needed ?</a></li>
+         <li><a href="#chapter_3">3 Usage</a></li>
+         <ul>
+            <li><a href="#chapter_3.1">3.1 Environment, call</a></li>
+            <li><a href="#chapter_3.2">3.2 The file-locations to use, adaptions</a></li>
+         </ul>
+         <li><a href="#chapter_4">4 Content description</a></li>
+         <ul>
+            <li><a href="#chapter_4.1">4.1 batch</a></li>
+            <li><a href="#chapter_4.2">4.2 batch_template</a></li>
+            <li><a href="#chapter_4.3">4.3 make</a></li>
+            <li><a href="#chapter_4.4">4.4 XmlDocu_xsl</a></li>
+            <li><a href="#chapter_4.5">4.5 xsl</a></li>
+            <li><a href="#chapter_4.6">4.6 Jars</a></li>
+         </ul>
+      </ul>
+      <hr><a id="w0aaab3" name="Topic.readme_zbnfjax."></a><div class="" id="Topic.readme_zbnfjax.">
+         <p class="debug">Topic:.readme_zbnfjax.</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">The <code>zbnfjax</code>-folder contain jar and scripts to work with ZBNF and XML. Some examples are explained, see <a href="../readme_ZBNF.html">../readme_ZBNF.html</a>. The <b>zbnfjax</b> is a complexly ready to use folder for some applications such as Zmake and Documentation generation.
+         </p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">XSL-Scripts, ZBNF-Scripts. Batches and the Zmake.jar for <b>Zmake</b>, the standard Zmake-System is supplied here.
+               </p>
+            </li>
+            <li>
+               <p class="std">XSL-Scripts, ZBNF-Scripts, Batches and the Xslt.jar for <b>XML-Documentation-Generation</b>.
+               </p>
+            </li>
+            <li>
+               <p class="std">XSL-Scripts, ZBNF-Scripts, Batches for <b>conversion to XMI</b> from Headerfiles and Java-Files. The XMI-File presents an UML-Model and it can be inputted to any UML-Tool.
+               </p>
+            </li>
+            <li>
+               <p class="std">Xslt.jar for free <b>XSL-Translation using mulitple inputs and Wikiformat-Conversion</b>.
+               </p>
+            </li>
+         </ul>
+      </div><br clear="all"><a id="w0aaab4" name="chapter_1"></a><a id="w0aaab4" name="1"></a><h2>1 Sources and make</h2><a id="w0aaab4b3" name="Topic.readme_zbnfjax.."></a><div class="" id="Topic.readme_zbnfjax..">
+         <p class="debug">Topic:.readme_zbnfjax..</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">All <b>Java-Sources</b>, which are sources of the ready-to-use jar-Files in the <code>zbnfjax</code>-folder, are supplied in <code>../srcJava_...</code>-Folders. The Java sources are separated in additional folders because the independence of the sources shall be emphasized.
+            The makefiles uses only specific srcJava_...-Folders. The sources are also located in <a href="http://www.vishia.org/Java/index.html">www.vishia.org/Java</a>, maybe there in newer revisions.
+         </p>
+         
+         <p class="std">The <b>Javadoc of this sources</b> are visible at <a href="http://www.vishia.org/Java/docuSrcJavaPublic/index.html">www.vishia.orgJava/docuSrcJavaPublic</a> or <a href="http://www.vishia.org/Java/docuSrcJavaSrc/index.html">www.vishia.orgJava/docuSrcJavaSrc</a>. It is possible to generate the Javadoc locally at the users filespace: Starting <code>../make/genjavadoc_Zbnf.bat</code> generates it in a parallel folder to ZBNF. The generated javadoc isn't a part of the download because the file space is greater
+            as all others.
+         </p>
+         
+         <p class="std">All <b>batch-Files for generating the jar-Files</b> located in <code>zbnfjax</code> are given in the <code>../make</code>-directory. The javac-Compiler and the jar-Builder are used and should be present while making. The compiling process is contained
+            in the file <code>make/makeJavacJar.bat</code>. This file should be adapted to find the Java-Develop-Environment (see comments there). The batchfiles are given only for
+            windows-environment yet. Shell scripts for Linux should be adequately.
+         </p>
+         
+         <p class="std">All together are supplied in the download <a href="http://sourceforge.net/projects/zbnf">http://sourceforge.net/projects/zbnf</a>.
+         </p>
+         
+         <p class="std">The sources are self-documenting so far as well. Some additional explanations are provided at several pages of <a href="http://www.vishia.org/index.html">www.vishia.org</a>, some links are given in the examples to the vishia-page in internet.
+         </p>
+      </div><br clear="all"><a id="w0aaab5" name="chapter_2"></a><a id="w0aaab5" name="2"></a><h2>2 Which other tools and sources are needed ?</h2><a id="w0aaab5b3" name="Topic.readme_zbnfjax.."></a><div class="" id="Topic.readme_zbnfjax..">
+         <p class="debug">Topic:.readme_zbnfjax..</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">The XSLT-translation uses the <b>SAXON-XSLT</b>. The <b>zbnfjax</b> is tested with the last version of <b>Saxon-B</b>, available under <a href="http://saxon.sourceforge.net">http://saxon.sourceforge.net</a> in chapter <em>Older Products</em> as open-source-product. Saxonica has changed its licence conditions. In the past the Saxon-B was open-source, but Saxon-SA
+                  was the commercial product including Xschema and others. The newer versions knows three levels of licence: The open-source
+                  <em>Home Edition</em>, a low-cost <em>Professional Edition</em> and a <em>Enterprise-Edition</em>. The new <em>Home-Edition</em> doesn't support the <code>&lt;saxon:call-template ...</code> instruction, which is used in the Xslt-Scripts. Therefore the last Saxon-B is proper for using zbnfjax in open-source-conditions.
+                  But it is recommended to use the newer Saxon's commercial editions if further support of saxon may be need. See <a href="http://www.saxonica.com">http://www.saxonica.com</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">The <b>JDOM</b>-Java-Sources or the jdom.jar, which are available as open source under <a href="http://www.jdom.org">http://www.jdom.org</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">For using <b>ANT</b>, either an eclipse installation can be used (<a href="http://www.eclipse.org">http://www.eclipse.org</a>) or the original from Apache can be used, see <a href="http://ant.apache.org">http://ant.apache.org</a>.
+               </p>
+            </li>
+         </ul>
+      </div><br clear="all"><a id="w0aaab6" name="chapter_3"></a><a id="w0aaab6" name="3"></a><h2>3 Usage</h2><a id="w0aaab6b3" name="Topic.readme_zbnfjax.."></a><div class="" id="Topic.readme_zbnfjax..">
+         <p class="debug">Topic:.readme_zbnfjax..</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">All possibilities of usage are command-line-oriented. It means, no GUI (Graphical User Interface) is present. The invoking
+            is controled from scripts. The examples show that.
+         </p>
+      </div><br clear="all"><a id="w0aaab6b4" name="chapter_3.1"></a><a id="w0aaab6b4" name="3.1"></a><h3>3.1 Environment, call</h3><a id="w0aaab6b4b3" name="Topic.readme_zbnfjax..."></a><div class="" id="Topic.readme_zbnfjax...">
+         <p class="debug">Topic:.readme_zbnfjax...</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">There are some different file locations for the several tasks:</p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">Java environment (JDK)</p>
+            </li>
+            <li>
+               <p class="std">ANT</p>
+            </li>
+            <li>
+               <p class="std">SAXON and JDOM Jars</p>
+            </li>
+            <li>
+               <p class="std">The zbnfjax-directory</p>
+            </li>
+            <li>
+               <p class="std">temporary directories</p>
+            </li>
+         </ul>
+         
+         <p class="std">This file-locations may be non-uniform in several installations. But a call of a tool seen from user level should be uniformly.
+            Therefore some environment variables are set in only one file, which should be adapted depending from the file locations.
+            All other batch- or shell-script files are independently of the file locations of all tools.
+         </p>
+         
+         <p class="std">For running under <b>Windows</b>, the file <code>setZBNFJAX_HOME.bat</code> is called on start of all other batches. This file sets the environment variables. The file is located in <code>ZBNF/zbnfjax/batch_template/setZBNFJAX_HOME.bat</code>. This file is the template. The user should copy it in a directory, which is obtainable bei the <code>PATH</code> of the system. So a non-path-specified call of
+         </p>
+         <pre>call setZBNFJAX_HOME.bat
+</pre>
+         <p class="std">sets the environment variables in the current command process. In the test environment a directory <code>D:\batch</code> was created and added to the system-<code>PATH</code>-Variable of windows. This directory is used as destination for <code>setZBNFJAX_HOME.bat</code>.
+         </p>
+         
+         <p class="std">The adequate procedure isn't applicable under <b>Unix/Linux</b>. In Unix-systems the setting of environment variables are effected only for sub-shells, never in the parent shell. So it
+            isn't able to call a script to set the variables and use its value outside. Therefore the call of the XML- and convertion-tools
+            are modified:
+         </p>
+         
+         <p class="std">The user calls</p>
+         <pre>zbnfjax cmd args
+</pre>
+         <p class="std">The shell-script-file <code>zbnfjax</code> is contained in <code>ZBNF/zbnfjax/batch_template/zbnfjax</code>. From there it should be copied in a <code>PATH</code>-obtainable directory and adapted there. Under Linux the location <code>/usr/bin</code> may be adequate, because it should be present in any situation. The name <code>zbnfjax</code> means <em>ZBNF JAva Xml</em> and may be sufficiently different to other files at this level. This shell-script should be called at user level. The zbnfjax-specific
+            actions are called inside this script dependent of the <code>cmd</code>. The following settings of <code>cmd</code> are able:
+         </p>
+         
+         <table class="stdTable">
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>cmd</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">description, arguments</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>call "cmdsh" "args"</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">The named cmd-shell-script is executed, all Arguments should supplied in the second arg in "". The path to the script should
+                     be given as relativ full qualified path. Typically it is located in the same directory, than write "./script"
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>genDocu ctrlfile</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">The documentation generation is invoked.</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>javacjar</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Java-compilation and building a jar file.</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>java class args</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Java is invoked with the classpath defined in zbnfjax. <code>class</code> is the path to the Main-class. All Arguments should supplied in the second arg in "".
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>zbnf2Xml args</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">The call of the java-programm org.vishia.zbnf.Zbnf2Xml is invoked.</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>zmake args</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">The call of Zmake is invoked.</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>CHeader2JavaByteCoding args</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">The call of CHeader2JavaByteCoding is invoked.</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>Header2Reflection args</code></p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">The call of Header2Reflection is invoked. To support a lot of inputfiles, all inputfiles may be accumulated in a environment
+                     variable <code>INPUT</code> in form <code>-i:PATHFILE </code> separated with spaces. Than this calling arguments should not be given in the argument line.
+                  </p>
+               </td>
+            </tr>
+         </table>
+         
+         <p class="std">The variants of second parameter calls the named script under <code>$ZBNFJAX_HOME/unixscript/name</code> internally.
+         </p>
+         
+         <p class="std">The same procedure is able to use <b>under Windows too</b>. The batch-file zbnfjax.bat is used.
+         </p>
+      </div><br clear="all"><a id="w0aaab6b5" name="chapter_3.2"></a><a id="w0aaab6b5" name="3.2"></a><h3>3.2 The file-locations to use, adaptions</h3><a id="w0aaab6b5b3" name="Topic.readme_zbnfjax..."></a><div class="" id="Topic.readme_zbnfjax...">
+         <p class="debug">Topic:.readme_zbnfjax...</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">The <code>zbnfjax</code>-folder should be copied from the download in commonly directories to offer to use. Some further tools are necessary. The
+            next table shows, where this parts are stored in the file tree. It is an example and suggestion for unified using.
+         </p>
+         
+         <table class="stdTable">
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Path Windows</p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Path Linux</p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Folder/Files</p>
+               </td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Actions, Explaination</p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  <pre>D:\Progs
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>/usr/share/vishia
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>zbnfjax/*
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">
+                     <code>zbnfjax</code>-folder from this download, copied, ready to use
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  <pre>D:\batch
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">-</p>
+               </td>
+               <td class="stdTable_td">
+                  <pre>setZBNFJAX_HOME.bat
+zbnfjax.bat
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">In directory <code>zbnfjax/batch_template</code> from this download, copied and adapted. The PATH-Variabe of the system should point to this location. If the pathes of all
+                     components are used like shown here, no adaption is necessary.
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">-</p>
+               </td>
+               <td class="stdTable_td">
+                  <pre>/usr/bin
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>zbnfjax
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">In directory <code>zbnfjax/batch_template</code> from this download, copied and adapted, the PATH-Variabe of the system points to this location. If the pathes of all components
+                     are used like shown here, no adaption is necessary.
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  <pre>D:\Progs\XML_Tools
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>/usr/share/
+  XML_Tools
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>saxon9.jar
+saxon9_jdom.jar
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">It is the last SAXON-B version downloaded from <a href="http://saxon.sourceforge.net">http://saxon.sourceforge.net</a>. Only this files are need here.
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  <pre>D:\Progs\XML_Tools
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>/usr/share/
+  XML_Tools
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>jdom.jar
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Downloaded from <a href="http://www.jdom.org">http://www.jdom.org</a>: <code>jdom-1.1.1.zip</code>. Inside this zip-file only the <code>jdom/build/jdom.jar</code> is extracted and copied.
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  <pre>D:\Progs\jdk1.6.0
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>/usr/share/java
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>bin/*, jre/*, ...
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">This is the Java-EE-SDK downloaded from Sun. Under linux the Software is unpacked in a parallel directory like <code>usr/share/JavaVersion/jdk1.6.0_17</code>. The <code>usr/share/java</code> is a soft link to this directory. Under Windows the Java-version is used with its immediate path. Note: There may be several
+                     versions of Java used on a PC for other applications too. Than a immediate path to the selected Java-version should be set
+                     in the environment variables of <code>zbnfjax</code> respectively <code>setZBNFJAX_HOME.bat</code>. Any system variables should not be changed.
+                  </p>
+               </td>
+            </tr>
+            <tr class="stdTable">
+               <td class="stdTable_td">
+                  <pre>D:\Progs\XML_Tools
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>/usr/share/
+  eclipse/plugins
+</pre></td>
+               <td class="stdTable_td">
+                  <pre>org.apache.ant_1.6...
+</pre></td>
+               <td class="stdTable_td">
+                  
+                  <p class="std_td">Any ANT-version greater or equal 1.6 should be present. Under Linux the last eclipse version is downloaded from <a href="http://www.eclipse.org">http://www.eclipse.org</a>. It contains ANT. Under Windows Eclipse may be present too, but for non-eclipse users ANT was copied at the shown location.
+                     The version <code>org.apache.ant_1.6.5</code> was used yet.
+                  </p>
+               </td>
+            </tr>
+         </table>
+      </div><br clear="all"><a id="w0aaab7" name="chapter_4"></a><a id="w0aaab7" name="4"></a><h2>4 Content description</h2><a id="w0aaab7b3" name="Topic.readme_zbnfjax.."></a><div class="" id="Topic.readme_zbnfjax..">
+         <p class="debug">Topic:.readme_zbnfjax..</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">The folder contains the folders and files:</p>
+      </div><br clear="all"><a id="w0aaab7b4" name="chapter_4.1"></a><a id="w0aaab7b4" name="4.1"></a><h3>4.1 batch</h3><a id="w0aaab7b4b3" name="Topic.readme_zbnfjax..batch."></a><div class="" id="Topic.readme_zbnfjax..batch.">
+         <p class="debug">Topic:.readme_zbnfjax..batch.</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">
+                  <code>CHeader2JavaByteCoding.bat</code>: Windows-batch-file to execute conversion from a C-headerfile to a Java-source-file to support structural access to data
+                  in a Java-<code>byte[]</code>array. See <a href="../examples_XML/ByteDataAccessJava/readme.html">../examples_XML/ByteDataAccessJava/readme.html</a> and <a href="http://www.vishia.org/Java/indexByteDataAccess.html">www.vishia.org/Java/indexByteDataAccess.html</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>cmdDocuGctr.bat</code>: Windows-batch-file to execute the documentation generation. See <a href="../examples_XML/DocuGenerationViaXML/readme.html">../examples_XML/DocuGenerationViaXML/readme.html</a> and <a href="http://www.vishia.org/XmlDocu/index.html">www.vishia.org/XmlDocu/index.html</a>.
+               </p>
+            </li>
+         </ul>
+      </div><br clear="all"><a id="w0aaab7b5" name="chapter_4.2"></a><a id="w0aaab7b5" name="4.2"></a><h3>4.2 batch_template</h3><a id="w0aaab7b5b3" name="Topic.readme_zbnfjax..batch_template."></a><div class="" id="Topic.readme_zbnfjax..batch_template.">
+         <p class="debug">Topic:.readme_zbnfjax..batch_template.</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">
+                  <code>setZBNFJAX_HOME.bat</code>: Windows-batch-file to set environment variables before starting other actions. This file should be copied in a directory,
+                  which is obtainable by the systems PATH. Its content is to be adapted to your system environment, regarding the path to Java
+                  and the neccesary downloads from SAXON and JDOM.
+               </p>
+            </li>
+         </ul>
+      </div><br clear="all"><a id="w0aaab7b6" name="chapter_4.3"></a><a id="w0aaab7b6" name="4.3"></a><h3>4.3 make</h3><a id="w0aaab7b6b3" name="Topic.readme_zbnfjax..."></a><div class="" id="Topic.readme_zbnfjax...">
+         <p class="debug">Topic:.readme_zbnfjax...</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">This folder contains a makefile <code>makeXsl_fromXslp.bat</code>, which generates the <code>*.xsl</code>-files from the <code>*.xslp</code> into a <code>gen</code>-subdirectory. It uses Zmake. Because most of the scripts converts the xslp to xsl temporary, this make should be a phase-out-model.
+            But it is used any times yet.
+         </p>
+      </div><br clear="all"><a id="w0aaab7b7" name="chapter_4.4"></a><a id="w0aaab7b7" name="4.4"></a><h3>4.4 XmlDocu_xsl</h3><a id="w0aaab7b7b3" name="Topic.readme_zbnfjax..."></a><div class="" id="Topic.readme_zbnfjax...">
+         <p class="debug">Topic:.readme_zbnfjax...</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">This folder contains the special Scripts for documentation generation (<a href="../examples_XML/DocuGenerationViaXML/readme.html">../examples_XML/DocuGenerationViaXML/readme.html</a>):
+         </p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">
+                  <code>htmlstd.css</code>: Standard css-file, this file will be copied in the destination folder while generating HTML-output.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>XmlDocu_xsl_RevNotes.txt</code>: This file contains some revision notes to versions, but not all. Its using should be improved. It should be that file, which
+                  contains all revision notes, bug reports and requirements to the documentation generation.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>HtmlFormatStd.xml</code> deprecated. It was used instead <code>htmlstd.css</code> in the past.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>WordFormatStd.xml</code> This file contains the style sheets for MS-Word documents for all known and used styles. The content of this file will be
+                  copied in a <em>word.xml</em>-file while generating a MS-Word document. The appearance of the text is defined in a standard well form. If a <em>word.xml</em> will be copied into an existing word document with the same named style sheets, the existing appearance of the word document
+                  will be used. But the <code>word.xml</code>-file have to be contain any style sheet with the required name.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>FreemindTopic.xsl</code>: It is the xsl-script to transform from topics in a freemind file (see <a href="http://freemind.sourceforge.net/wiki/index.php/Main_Page">http://freemind.sourceforge.net/wiki/index.php/Main_Page</a>. to Xhtml-elements, which are used to compose a document. This xsl-file can be included in the control script of the documentation
+                  generation (<a href="http://www.vishia.org/XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="http://www.vishia.org/XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Pre2Word.xsl</code>: It is the xsl-script to transform from the <a href="http://www.vishia.org/XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> to a <em>Microsoft-Word.xml</em>-Format. The <code>word.xml</code>-output file can be opened with MS-Word directly, or it can be inserted in an existing word document.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Pre2Xhtml.xsl</code>: It is the xsl-script to transform from the <a href="http://www.vishia.org/XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> to a HTML output.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>TopixXhtml.xsl</code>: This xsl-script converts the parsed <a href="http://www.vishia.org/XmlDocu/html/Topics.html">TextTopics</a> to Xhtml-Elements. It is used adequate to <code>FreemindTopic.xsl</code> to compose a document from TextTopic-Sources.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>XmiSample.xsl</code>: It is only a xsl_script to check using XMI-files.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Xschema2PreHtml.xsl</code>: This script converts xschema-Files to Xhtml for documentation generation.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>DocuGenCtrl2Ant.xslp</code>: This xsl-Script is used to generate a ANT.xml-File to control the flow of the documentation generation with <a href="http://ant.apache.org">Apache-ANT</a>. The input is the parsed GenCtrl-File (parsed with <code>DocuGenCtrl.zbnf</code>).
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>DocuGenCtrl2Xsl.xslp</code>: This xsl-Script converts the content of the parsed GenCtrl-File to a xsl-File, which controls the composition of the document.
+                  The generated XML-File is a xsl-File, which is used to prepare the <a href="http://www.vishia.org/XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> from all inputs (two-stage operation).
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>HeaderDocu.xslp</code>: This xsl-script converts parsed Headerfiles (parsed with <code>../zbnf/Cheader.zbnf</code>) to Xhtml-elements, which are used to compose a document. This xsl-file can be included in the control script of the documentation
+                  generation (<a href="http://www.vishia.org/XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="http://www.vishia.org/XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>RequCrossRef.xslp</code>: This xsl-script is used inside a <a href="http://www.vishia.org/XmlDocu/html/Hyperlink.html#CorrectHref">CorrectHref</a>-preparation to produce Xhtml-elements for texts, which shows cross references in a document. The appearance of cross references
+                  in the text may be adapted here. The input of the XSL-translation are an internal produced XML-tree.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>XmiDocu.xslp</code>: This xsl-script converts informations from a <span class="removedHref">XMI</span>-file (from an <span class="removedHref">UML</span>-model) to Xhtml-elements, which are used to compose a document. This xsl-file can be included in the control script of the
+                  documentation generation (<a href="http://www.vishia.org/XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="http://www.vishia.org/XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>AsciiTopics.zbnf</code>: This is a ZBNF-syntax to parse <a href="http://www.vishia.org/XmlDocu/html/Topics.html">TextTopics</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>DocuGenCtrl.zbnf</code>: This is a ZBNF-syntax to parse the textual given documentation control file. The parser output is used as input for the
+                  xsl-scripts <code>DocuGenCtrl2Ant.xslp</code> and <code>DocuGenCtrl2Xsl.xslp</code> and for <a href="http://www.vishia.org/XmlDocu/html/Hyperlink.html#CorrectHref">CorrectHref</a>-preparation too.
+               </p>
+            </li>
+         </ul>
+         
+         <p class="std">The scripts can be adapted, if the appearance of a generated document should be changed. At example the styling of chapters
+            of a document which shows XMI-input may be changed. It may be possible to copy the scripts under an alternate name and change
+            it. A user can create its own style.
+         </p>
+      </div><br clear="all"><a id="w0aaab7b8" name="chapter_4.5"></a><a id="w0aaab7b8" name="4.5"></a><h3>4.5 xsl</h3><a id="w0aaab7b8b3" name="Topic.readme_zbnfjax..."></a><div class="" id="Topic.readme_zbnfjax...">
+         <p class="debug">Topic:.readme_zbnfjax...</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <p class="std">This folder contains commonly xsl-scripts, especially for Zmake.</p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">
+                  <code>CheaderTypes.xsl</code>: This xsl-scripts works with inputs from header-files, parsed with <code>../zbnf/Cheader.zbnf</code>. All types contained in the header are dissolved. Any type is outputed only one time. It is a intermediate step to create
+                  a <span class="removedHref">XMI</span>-file from header-files.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Java2xmiTypes.xsl</code>: This xsl-scripts works with inputs from Java-files, parsed with <code>../zbnf/Java2C.zbnf</code>. All types contained in the Java-file are dissolved. Any type is outputed only one time. It is a intermediate step to create
+                  a <span class="removedHref">XMI</span>-file from Java-files.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Cheader2ByteDataAccess_Java.xslp</code>: This xsl-scripts works with inputs from header-files, parsed with <code>../zbnf/Cheader.zbnf</code>. It controls the creation of a Java-file, which controls a byte-data-access using the superclass <a href="http://www.vishia.org/Java/docuSrcJavaSrc/org/vishia/byteData/ByteDataAccess.html">javadoc-src:_org/vishia/byteData/ByteDataAccess</a>. See <a href="../examples_XML/ByteDataAccessJava/readme.html">../examples_XML/ByteDataAccessJava/readme.html</a> or <a href="http://www.vishia.org/Java/indexByteDataAccess.html">Cheader2ByteDataAccess</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Cheader2Xmi.xslp</code>: Xsl-script to generate <span class="removedHref">XMI</span> from headers. See <a href="../examples_XML/Header2XMI/readme.html">../examples_XML/Header2XMI/readme.html</a> or <a href="http://www.vishia.org/SwEng/html/Cheader2Xmi.html">Cheader2XMI</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>Java2Xmi.xslp</code>: Xsl-script to generate <span class="removedHref">XMI</span> from Java sources. See <a href="../examples_XML/Java2XMI/readme.html">../examples_XML/Java2XMI/readme.html</a> or <a href="http://www.vishia.org/SwEng/html/ModelBasedSwDevlp.html#Topic.ExampleJava2xmi.">Java2XMI</a>.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>ZmakeStd.xslp</code>: The xsl-script which produces <span class="removedHref">ANT</span>.xml to run <a href="http://www.vishia.org/Zmake/index.html">Zmake</a>. This script contains all Zmake-standard-possibilities. The input for the XSL-translation is a parsed Zmake-Script, see next.
+                  This xsl-file is included in the documentation generation too. It means, that all opportunities of Zmake can use within the
+                  documentation generation. A twice scripting is prevent.
+               </p>
+            </li>
+         </ul>
+      </div><br clear="all"><a id="w0aaab7b9" name="chapter_4.6"></a><a id="w0aaab7b9" name="4.6"></a><h3>4.6 Jars</h3><a id="w0aaab7b9b3" name="Topic.readme_zbnfjax..."></a><div class="" id="Topic.readme_zbnfjax...">
+         <p class="debug">Topic:.readme_zbnfjax...</p>
+         <p class="debug"> pStyle=std tableStyle=stdTable</p>
+         
+         <ul class="std">
+            <li>
+               <p class="std">
+                  <code>zbnf.jar</code>: This is the ZBNF-parser-executable. No other tools are needed.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>header2Reflection.jar</code>: To run <span class="removedHref">../examples_ZBNF_core/Header2Reflection/readme.html</span> this jar and <code>zbnf.jar</code> are needed in the classpath.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>zmake.jar</code>: This jar contains the <code>org.vishia.zbnf.Zmake</code>-class to run Zmake. Secondly some classes under <code>org.vishia.ant</code> are present. Third the <code>org.vishia.xmlSimple.Xsltpre</code>-class is included here, because it is necessary to run Zmake. This class is also contained in <code>xslt.jar</code>, because it is need in both independently.
+               </p>
+            </li>
+            <li>
+               <p class="std">
+                  <code>xslt.jar</code>: To run the <a href="http://www.vishia.org/Xml/html/XsltMultinp.html">vishia-XSLT</a>-Translator. The SAXON- and JDOM jars should be present in the class path too to run the translator.
+               </p>
+            </li>
+         </ul>
+      </div><br clear="all"></body>
+</html>

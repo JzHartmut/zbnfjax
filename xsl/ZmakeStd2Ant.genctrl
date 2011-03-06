@@ -1,0 +1,124 @@
+
+
+/**Parses one Java file from the list in one target and produces an XML-File with the parse result.
+ * One ANT-target per file.
+ */
+(?:target=zbnfJava?)
+(?:forInput?)
+  (?=name?)zbnfJava:(?output.file?)=(?input.file?)(?/=?)
+	(?=input?)(?input.absFile?)(?/=?)		
+	(?=output?)(?output.absDir?)(?input.localFile?)(?output.ext?)(?/=?)		
+  (?+targetCall?)(?name?)(?/+?)
+
+  (?+target?)
+  
+  <!-- generated from ZmakeStd2Ant.genCtrl, Zmake-target: "zbnfJava" -->
+  <target name="(?name?)"
+			description="ZmakeStd.xslp:genTargetForInput-target"
+			depends="(?name?)_isUptodate"
+			unless="(?name?)_isUptodate">
+    <echo message="Zbnf2Xml-Java.zbnf: (?output?)"/>
+    <exec dir="${curDir}" executable="java" failonerror="true">
+			<arg line="-cp ${env.JAVACP_XSLT}"/>
+			<arg line="org.vishia.zbnf.Zbnf2Xml"/>
+			<arg line="-i:(?input?)"/>
+			<arg line="-s:${env.ZBNFJAX_HOME}/zbnf/Java2C.zbnf"/>
+			<arg line="-y:(?output?)"/>
+			<arg line="--report:(?output?).log"/>
+			<arg line="--rlevel:334"/>
+			<arg line="-a:@filename=&#34;(?input.localPathFile?)&#34;"/>
+    </exec>
+  </target>
+  <target name="(?name?)_isUptodate"
+           description="ZmakeStd2Ant.genCtrl:genTargetForInput-uptd">
+      <uptodate property="(?name?)_isUptodate"
+                targetfile="(?output?)">
+         <srcfiles file="(?input?)"/>
+         <srcfiles file="${env.ZBNFJAX_HOME}/zbnf/Java2C.zbnf"/>
+      </uptodate>
+  </target>
+  
+  (?/+?)
+  
+(?/forInput?)
+
+(?/target?)
+
+
+
+/**Generates the XMI-file from given XML-Files. The XML-Files contains the structure of software.
+ * It may be created from Java, from C-Headerfiles, or others.
+ */ 
+(?:target=javaXML2XMI?)
+  (?=output?)(?output.absFile?);(?/=?)
+  (?+targetCall?)XMI-(?output?)(?/+?)
+  (?+target?)
+
+  <target name="XMI-(?output?)" description="ZmakeStd2Ant.genCtrl-javaXml2XMI"
+			depends="isUptodate_XMI-(?output?)"
+			unless="isUptodate_XMI-(?output?)">
+    
+    <exec dir="${curDir}" executable="java" failonerror="true">
+      <arg line="org.vishia.xml.Xslt"/>
+        <!-- all input files in xml-transformed form: -->
+      (?:forInput?)
+        (?=input?)${curDir}/tmp/(?input.localFile?).xml(?/=?)
+    	  <arg line="-i:(?input?)"/>
+      (?/forInput?)	
+      <arg line="-t${env.ZBNFJAX_HOME}/xsl/Java2xmiTypes.xsl"/>
+      <arg line="-y:${tmp}/(?output.name?).XmiTypes.xml"/>
+    </exec>
+    
+    <exec dir="${curDir}" executable="java" failonerror="true">
+      <arg line="org.vishia.xml.Xslt"/>
+      <arg line="-i:${tmp}/(?output.name?).XmiTypes.xml"/>
+			<arg line="-t${env.ZBNFJAX_HOME}/xsl/gen/Java2xmi.xsl"/>
+			<arg line="-w+"/>
+			<arg line="-y:(?output.absFile?)"/>
+     	<!-- all input files in xml-transformed form: -->
+			(?:forInput?)(?:?)
+      	<arg line="-i:${curDir}/tmp/(?input.localFile?).xml"/>(?/?)
+     	(?/forInput?)	
+    </exec>
+  </target>
+  <target name="isUptodate_XMI-(?output?)" description="ZmakeStd.xslp:genTarget_ZmakeStd-uptd">
+    <uptodate property="isUptodate_XMI-(?output?)" targetfile="(?output.absFile?)">
+	  	(?:forInput?)(?:?)
+	    	<srcfiles file="${curDir}/tmp/(?input.localFile?).xml"/>(?/?)
+	   	(?/forInput?)	
+    </uptodate>
+   </target>
+
+  (?/+?)
+
+    
+(?/target?)
+
+
+(?:file?)
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project xmlns:xs="XSL" name="ZmakeAnt" default="ZmakeAnt" basedir="."><!--Generated with ZmakeStd.xslp -->
+	<taskdef name="Zcopy" classname="org.vishia.ant.Zcopy"/>
+  <property environment="env"/>
+  <property name="tmp" value="..\tmp"/>
+  
+  <!--This target is the start target, it produces a screen-output and calls than all targets for result elements. -->
+  <target name="ZmakeAnt" description="ZmakeStd2Ant.genctrl:The whole xmake">
+    <echo message="current dir: ${curDir}"/>
+    <echo message="ZBNFJAX_HOME: ${env.ZBNFJAX_HOME}"/>
+    <antcall target="ZmakeAntExec"/>
+  </target>
+
+  (?target?)  //List of all targets
+  
+  <target name="ZmakeDummy"/>
+  
+  <!--This target contains the dependency to all result elements. -->
+  <target name="ZmakeAntExec" description="ZmakeStd2Ant.genctrl:The whole Zmake1"
+    depends="(?:forList:targetCall?)(?:text?)
+      (?/text?)(?*?), (?/forList?) ZmakeDummy"
+  />
+  
+</project>
+(?/file?)

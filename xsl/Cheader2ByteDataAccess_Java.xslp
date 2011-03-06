@@ -1,0 +1,672 @@
+<xsl:stylesheet version="2.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+>
+
+<!-- Changes
+ 2010-02-07 Hartmut Annotation @lastUndefsizeArray in Header, element "description/lastUndefsizeArray": Not regarded as normal alement.
+
+-->
+
+<xsl:output method="text" encoding="iso-8859-1"/>
+<xsl:param name="outPackage"/>
+<xsl:param name="outFile" select="HeaderEntry" />
+
+<xsl:template match= "/Cheader|/root/Cheader">
+
+
+  <xsl:text>
+package (?$outPackage?) ;
+
+import org.vishia.byteData.*;
+
+public class (?$outFile?)
+{
+</xsl:text>
+  <xsl:for-each select="outside/enumDefinition">
+    <xsl:text>
+
+  //enum (?@name?):
+  //( ?call enumConstantDefinition:"enumElement"()?)
+  (?call defineToStaticInt:"enumElement"()?)
+
+    </xsl:text>
+  </xsl:for-each>
+  <xsl:for-each select="outside/defineDefinition" ><xsl:call-template name="defineToStaticInt" /></xsl:for-each>
+  <xsl:apply-templates select="outside/structDefinition[not(starts-with(description/brief/xhtml:body/xhtml:p,'nj'))]"/>
+  <xsl:apply-templates select="outside/unionDefinition[not(starts-with(description/brief/xhtml:body/xhtml:p,'nj'))]"/>
+  <xsl:apply-templates select="CLASS_C/structDefinition[not(starts-with(description/brief/xhtml:body/xhtml:p,'nj'))]"/>
+  <xsl:text>
+}
+</xsl:text>
+</xsl:template>
+
+
+
+
+
+
+
+
+
+
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+	<xsl:template match= "structDefinition|unionDefinition">
+    <!-- TODO using the template of structDefinition also for unionDefinition is incorrect,
+         unionDefinition should be translated in an other way,
+         but because the content of unionDefinition are not so relevant, only the syntax should match,
+         it is a fast way to run.
+     -->
+    <xsl:text>
+
+
+  public static class </xsl:text><xsl:value-of select="@name"/><xsl:text> extends ByteDataAccess
+  {
+    (?call arraySizesOfAttribute:"attribute[count(arraysize/@value)>0]"()?)
+
+    /**Index of the data element*/
+    public static final int
+      </xsl:text>
+
+    <xsl:choose><xsl:when test="count(attribute)>0">
+      <xsl:for-each select="attribute[1]">
+        <xsl:call-template name="genIdxConst">
+          <xsl:with-param name="idx" select="'0'" />
+          <!-- xsl:with-param name="pos" select="'1'" / -->
+        </xsl:call-template>
+      </xsl:for-each>
+    </xsl:when><xsl:otherwise>
+      <xsl:text>kIdxAfterLast = 0</xsl:text>
+    </xsl:otherwise></xsl:choose>
+    <xsl:text>
+    ; /*xsl: all Data from struct in headerfile converted to position indices */
+
+    (?call enumConstantDefinition:"xxxenumDefinition/enumElement"()?)
+    (?call defineToStaticInt:"enumDefinition/enumElement"()?)
+    (?call defineToStaticInt:"defineDefinition"()?)
+
+    </xsl:text>
+    <!-- enum and define definition at level of CLASS_C -->
+    <xsl:if test="local-name(..)='CLASS_C'">
+      <xsl:variable name="classSuffix"><xsl:text>_(?!../@name?)</xsl:text></xsl:variable>
+      <xsl:text>
+      (?call defineToStaticInt:"../enumDefinition/enumElement"(classSuffix="$classSuffix")?)
+      (?call defineToStaticInt:"../defineDefinition"(classSuffix="../@name")?)
+      </xsl:text>
+    </xsl:if>
+
+    
+    <xsl:text>
+    /** Constructs the data management class*/
+    public </xsl:text><xsl:value-of select="@name"/><xsl:text>()
+    { 
+    }
+
+    /** Constructs as a child inside another ByteDataAccess*/
+    public (?@name?)(ByteDataAccess parent, int idxChildInParent)
+    { try{ assignAtIndex(idxChildInParent, parent); }
+      catch(AccessException exc)
+      { //it won't be have any exception because specifyLengthElement() inside this class is the only source for it.
+      }
+    }
+    </xsl:text>
+    <!-- generate assignDowncast method: -->
+    <xsl:for-each select="attribute[1]">
+      <xsl:variable name="typetest"><xsl:text>((?!type/@name?))</xsl:text></xsl:variable>
+      <xsl:if test="not(boolean(variante)) and not(boolean(type/@pointer)) and not(boolean(type/@constPointer)) and not(contains('(int)(float)(short)(char)(uint)(ushort)(byte)(int8)(int16)(int32)(uint8)(uint16)(uint32)(Int8)(Int16)(Int32)(UInt8)(UInt16)(UInt32)(int16BigEndian)(int32BigEndian)(int64BigEndian)(floatBigEndian)(doubleBigEndian)(ptrBigEndian)',$typetest))">
+        <xsl:text>
+    public void assignDowncast((?!type/@name?) parent)
+    throws AccessException
+    { assignDowncast_i(parent);
+    }
+        </xsl:text>
+      </xsl:if>
+    </xsl:for-each>
+    <xsl:text>
+
+
+
+    public int specifyLengthElementHead()
+    { return kIdxAfterLast;  //NOTE all are head bytes, no dynamic!
+    }
+
+    protected void specifyEmptyDefaultData()
+    {
+      for(int ii=idxBegin; ii &lt; idxEnd; ii++)
+      { super.data[ii] = 0;
+      }
+    }
+
+    protected int specifyLengthElement() throws AccessException
+    {
+      return kIdxAfterLast;
+    }
+
+        </xsl:text>
+    <!-- setName(type value) -->
+    <xsl:for-each select="attribute">
+
+      <xsl:variable name="typetest"><xsl:text>((?!type/@name?))</xsl:text></xsl:variable>
+      <xsl:if test="not(boolean(variante)) and not(boolean(type/@pointer)) and not(boolean(type/@constPointer)) and not(contains('(int)(float)(short)(char)(uint)(ushort)(byte)(int8)(int16)(int32)(uint8)(uint16)(uint32)(Int8)(Int16)(Int32)(UInt8)(UInt16)(UInt32)(int16BigEndian)(int32BigEndian)(int64BigEndian)(floatBigEndian)(doubleBigEndian)(ptrBigEndian)',$typetest))">
+        <!-- a complex type:     public final DataExchange_OBM head = new DataExchange_OBM(); -->
+        <xsl:text>
+    public final (?!type/@name?) (?@name?) = new (?!type/@name?)(); //(this, kIdx(?@name?));  //embedded structure
+        </xsl:text>
+      </xsl:if>
+
+      <xsl:call-template name="gensetMethod"></xsl:call-template>
+      <xsl:call-template name="gengetMethod"></xsl:call-template>
+    </xsl:for-each>
+
+    <!-- NOTE: generate setBigEndian for all classes, elsewhere super.setBigEndian may be not work if it is a derivated class. -->
+      <xsl:text>
+      /**Because the method has fix childs, the assignDataToFixChilds method is overridden to apply to all fix childs. */
+      @Override protected void assignDataToFixChilds() throws ByteDataAccess.AccessException
+      {
+      </xsl:text>
+      <xsl:for-each select="attribute">
+
+        <xsl:variable name="typetest"><xsl:text>((?!type/@name?))</xsl:text></xsl:variable>
+        <xsl:if test="not(boolean(variante)) and not(boolean(type/@pointer)) and not(boolean(type/@constPointer)) and not(contains('(int)(float)(short)(char)(uint)(ushort)(byte)(int8)(int16)(int32)(uint8)(uint16)(uint32)(Int8)(Int16)(Int32)(UInt8)(UInt16)(UInt32)(int16BigEndian)(int32BigEndian)(int64BigEndian)(floatBigEndian)(doubleBigEndian)(ptrBigEndian)',$typetest))">
+          <xsl:text>
+        //NOTE: use super.data etc to prevent false using of a local element data. super is ByteDataAccess.    
+        (?@name?).assignData(super.data, super.idxEnd, super.idxBegin + kIdx(?@name?));  //embedded structure
+        (?@name?).setBigEndian(super.bBigEndian);</xsl:text>
+        </xsl:if>
+
+      </xsl:for-each>
+      <xsl:text>
+      }
+
+      /**Because the method has fix childs, the setBigEndian method is overridden to apply the endian to all fix childs. */
+      @Override public void setBigEndian(boolean val)
+      { super.setBigEndian(val);
+      </xsl:text>
+      <xsl:for-each select="attribute">
+
+        <xsl:variable name="typetest"><xsl:text>((?!type/@name?))</xsl:text></xsl:variable>
+        <xsl:if test="not(boolean(variante)) and not(boolean(type/@pointer)) and not(boolean(type/@constPointer)) and not(contains('(int)(float)(short)(char)(uint)(ushort)(byte)(int8)(int16)(int32)(uint8)(uint16)(uint32)(Int8)(Int16)(Int32)(UInt8)(UInt16)(UInt32)(int16BigEndian)(int32BigEndian)(int64BigEndian)(floatBigEndian)(doubleBigEndian)(ptrBigEndian)',$typetest))">
+          <!-- a complex type:     protected final DataExchange_OBM head = new DataExchange_OBM(); -->
+          <xsl:text>
+        (?@name?).setBigEndian(val);  //embedded structure
+          </xsl:text>
+        </xsl:if>
+
+      </xsl:for-each>
+      <xsl:text>
+      }
+      </xsl:text>
+
+    <xsl:text>
+  }
+
+</xsl:text>
+	</xsl:template>
+
+
+
+  <xsl:template name="arraySizesOfAttribute">
+    <xsl:text>
+    protected static final int kSize(?@name?) = (?!arraysize/@value?);
+    </xsl:text>
+  </xsl:template>
+
+
+
+
+
+  <xsl:template name="enumConstantDefinition">
+    <!-- ##a NOTE: only one presentation of number will be found. -->
+    <xsl:text>
+    public static final int (?@name?) = <!-- ??"count(hexnumber)>0"?'0x' -->(?!hexnumber?)(?!number?)(?!intnumber?);
+    </xsl:text>
+	</xsl:template>
+
+
+
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <xsl:template name="genIdxConst">
+  <xsl:param name="idx"/>
+    <!-- xsl:message><xsl:value-of select="name/@name"/> idx=<xsl:value-of select="$idx"/></xsl:message -->
+    <xsl:if test="number($idx)!=0">
+      <xsl:text>
+      , </xsl:text>
+    </xsl:if>
+    <xsl:text>kIdx</xsl:text><xsl:value-of select="@name"/>
+    <xsl:text> = </xsl:text>
+    <xsl:value-of select="$idx" />
+
+    <xsl:variable name="nrofBytes"><xsl:call-template name="getSizeType" /></xsl:variable>
+
+    <xsl:choose><xsl:when test="count(following-sibling::attribute[1])=0 or following-sibling::attribute[1]/description/lastUndefsizeArray">
+      <!-- It is the last element of the struct, build lIdxAfterLast. --> 
+      <xsl:text>
+      , kIdxAfterLast = </xsl:text><!-- xsl:value-of select="number($idx)+number($nrofBytes)" / --><xsl:value-of select="$idx" /> + <xsl:value-of select="$nrofBytes" /><xsl:text>;</xsl:text>
+    </xsl:when><xsl:otherwise>
+      <!-- It is not the last element of the struct, generate kIdx for the next, calling recursively this template.. --> 
+      <xsl:for-each select="following-sibling::attribute[1]">
+        <xsl:call-template name="genIdxConst">
+	        <!-- xsl:with-param name="idx" select="number($idx)+number($nrofBytes)" / -->
+	        <xsl:with-param name="idx"><xsl:value-of select="$idx" /> + <xsl:value-of select="$nrofBytes" /></xsl:with-param>
+	      </xsl:call-template>
+      </xsl:for-each>
+	  </xsl:otherwise></xsl:choose>    
+	</xsl:template>
+
+
+
+
+<xsl:template name="getSizeType">
+  <xsl:choose>
+    <xsl:when test="description/sizeof"><xsl:value-of select="description/sizeof/@sizeof" /></xsl:when>
+    <xsl:when test="type/@name='int8'">1</xsl:when>
+    <xsl:when test="type/@name='int16'">2</xsl:when>
+    <xsl:when test="type/@name='int32'">4</xsl:when>
+    <xsl:when test="type/@name='uint8'">1</xsl:when>
+    <xsl:when test="type/@name='uint16'">2</xsl:when>
+    <xsl:when test="type/@name='uint32'">4</xsl:when>
+    <xsl:when test="type/@name='char'">1</xsl:when>
+    <xsl:when test="type/@name='short'">2</xsl:when>
+    <xsl:when test="type/@name='int'">4</xsl:when>
+    <xsl:when test="type/@name='long'">4</xsl:when>
+    <xsl:when test="type/@name='float'">4</xsl:when>
+    <xsl:when test="type/@name='float32'">4</xsl:when>
+    <xsl:when test="type/@name='double'">8</xsl:when>
+    <xsl:when test="type/@name='int16BigEndian'">2</xsl:when>
+    <xsl:when test="type/@name='int32BigEndian'">4</xsl:when>
+    <xsl:when test="type/@name='int64BigEndian'">8</xsl:when>
+    <xsl:when test="type/@name='floatBigEndian'">4</xsl:when>
+    <xsl:when test="type/@name='doubleBigEndian'">8</xsl:when>
+    <xsl:when test="type/@name='ptrBigEndian'">4</xsl:when>
+    <xsl:when test="boolean(type/@pointer)">4</xsl:when>
+    <xsl:when test="boolean(type/@constPointer)">4</xsl:when>
+    <xsl:when test="boolean(variante)"><xsl:text>/*union:*/</xsl:text><xsl:call-template name="getSizeUnion" /></xsl:when>
+    <xsl:otherwise><!-- it is a embedded structure, the struct type should be defined in the same file. -->
+      <xsl:choose><xsl:when test="count(type)>0">
+        <xsl:value-of select="type/@name"/><xsl:text>.kIdxAfterLast</xsl:text>
+      </xsl:when><xsl:when test="local-name()='structDefinition'">
+        <xsl:value-of select="@name"/><xsl:text>.kIdxAfterLast</xsl:text>
+      </xsl:when><xsl:otherwise><xsl:text>1 /*ERROR union*/ </xsl:text>
+      </xsl:otherwise></xsl:choose>
+    </xsl:otherwise>
+  </xsl:choose>
+  <xsl:if test="count(arraysize)>0">
+    <xsl:text> * </xsl:text><xsl:value-of select="arraysize/@value"/><xsl:value-of select="arraysize/@symbolValue"/>
+  </xsl:if>
+</xsl:template>
+
+
+<!-- supplies the size of the current attribut with elements variante, its a union. -->
+<!-- It works in a recursion calling getSizeUnion_i. The last call supplies the sizeMaxNew as return value -->
+<xsl:template name="getSizeUnion">
+<xsl:param name="sizeMax" select="'0'" />
+  <xsl:text>/*union: */ </xsl:text>
+  <xsl:for-each select="variante[1]">
+    <xsl:call-template name="getSizeUnion_i" />
+  </xsl:for-each>
+</xsl:template>
+
+
+
+
+<!-- inner routine called only recursively in getSizeUnion. -->
+<!--NOTE: the algorithm is problematicly, if struct definitions are used inside. It is better to use @nrofBytes as annotation in Headerfile. -->
+<xsl:template name="getSizeUnion_i">
+<xsl:param name="sizeMax" select="'0'" />
+  <xsl:text>/*TEST (?!local-name(*)?)-(?!*/type/@name?)*/ </xsl:text>
+  <xsl:variable name="nrofBytes"><xsl:for-each select="*"><xsl:call-template name="getSizeType" /></xsl:for-each></xsl:variable>
+  <xsl:variable name="sizeMaxNew">
+    <xsl:choose>
+      <!-- if nrofBytes or sizeMax contains .kIdxAfterLast, it comes from a structure. Any comparision is not able here. -->
+      <!-- in this cases it is assumed that the all struct in the union have the same size. -->
+      <xsl:when test="contains($nrofBytes,'.kIdxAfterLast')" ><xsl:value-of select="$nrofBytes" /></xsl:when>
+      <xsl:when test="contains($sizeMax,'.kIdxAfterLast')" ><xsl:value-of select="$sizeMax" /></xsl:when>
+      <!-- xsl:when test="$nrofBytes instance of String"><xsl:value-of select="$nrofBytes" /></xsl:when -->
+      <!-- xsl:when test="$sizeMax instance of String"><xsl:value-of select="$sizeMax" /></xsl:when -->
+      <xsl:when test="$nrofBytes gt $sizeMax"><xsl:value-of select="$nrofBytes" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$sizeMax" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:text>/*(?!local-name(*)?)-(?!*/@name?)=(?$nrofBytes?) ((?$sizeMaxNew?)) */ </xsl:text>
+  <xsl:choose>
+    <xsl:when test="boolean(following-sibling::variante[1])">
+      <xsl:for-each select="following-sibling::variante[1]">
+        <xsl:call-template name="getSizeUnion_i"><xsl:with-param name="sizeMax" select="$sizeMaxNew" /></xsl:call-template>
+      </xsl:for-each>
+    </xsl:when>
+    <xsl:otherwise><xsl:value-of select="$sizeMaxNew" /></xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+
+
+
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <xsl:template name="gensetMethod">
+
+    <xsl:choose><xsl:when test="type/@name='char' and count(arraysize)>0">
+      <xsl:choose><xsl:when test="description/lastUndefsizeArray">
+      
+        <xsl:text>
+    public void set_(?@name?)(String val) throws ByteDataAccess.AccessException
+    { addChildString(val);  //The last element is designated with '@lastUndefsizeArray' in Header-file, therefore the element is added as child,
+    }
+	  </xsl:text>
+	    
+	    </xsl:when><xsl:otherwise>
+        <xsl:text>
+    public void set_(?@name?)(String val)
+    { setString(kIdx(?@name?), (?!arraysize/@value?)(?!arraysize/@symbolValue?), val);
+    }
+	  </xsl:text>
+      
+      </xsl:otherwise></xsl:choose>
+    
+    </xsl:when><xsl:otherwise><!-- not test="type/@name='char' and count(arraysize)>0" -->
+	    
+	    <xsl:choose><xsl:when test="description/lastUndefsizeArray">
+        <xsl:variable name="setMethod">
+	        <xsl:choose>
+	          <xsl:when test="type/@name='int8'">addChildInteger(1, </xsl:when>
+	          <xsl:when test="type/@name='int16'">addChildInteger(2, </xsl:when>
+	          <xsl:when test="type/@name='int32'">addChildInteger(4, </xsl:when>
+	          <xsl:when test="type/@name='uint8'">addChildInteger(1, </xsl:when>
+	          <xsl:when test="type/@name='uint16'">addChildInteger(2, </xsl:when>
+	          <xsl:when test="type/@name='uint32'">addChildInteger(4, </xsl:when>
+	          <xsl:when test="type/@name='short'">addChildInteger(2, </xsl:when>
+	          <xsl:when test="type/@name='int'">addChildInteger(4, </xsl:when>
+	          <xsl:when test="type/@name='long'">addChildInteger(4, </xsl:when>
+	          <xsl:when test="type/@name='char'">addChildInteger(1, (byte)</xsl:when>
+	          <xsl:when test="type/@name='float'">addChildFloat(</xsl:when>
+	          <xsl:when test="type/@name='double'">addChildDouble(</xsl:when>
+	          <xsl:when test="type/@name='int16BigEndian'">addChildInteger(2, </xsl:when>
+				    <xsl:when test="type/@name='int32BigEndian'">addChildInteger(4, </xsl:when>
+				    <xsl:when test="type/@name='int64BigEndian'">addChildInteger(8, </xsl:when>
+				    <xsl:when test="type/@name='floatBigEndian'">addChildFloat(</xsl:when>
+				    <xsl:when test="type/@name='doubleBigEndian'">addChildDouble(</xsl:when>
+				    <xsl:when test="type/@name='ptrBigEndian'">addChildInteger(4, </xsl:when>
+				    <xsl:when test="boolean(type/@pointer)">addChildInteger(4, </xsl:when>
+	          <xsl:when test="boolean(type/@constPointer)">addChildInteger(4, </xsl:when>
+	          <xsl:otherwise>???</xsl:otherwise>
+	        </xsl:choose>
+        </xsl:variable>
+
+	      <xsl:variable name="valueType"><xsl:call-template name="genValueType" /></xsl:variable>
+	
+	      <xsl:choose>
+	      <xsl:when test="$setMethod != '???'">
+	        <xsl:text>
+	    public void set_(?@name?)((?$valueType?) val(?if count(arraysize)>0?), int idx(?/if?)) throws ByteDataAccess.AccessException
+	    { //type of struct-attribut is (?!type/@name?)
+	      (?$setMethod?)val);
+	    }
+	      </xsl:text>
+	      </xsl:when>
+	      <xsl:otherwise>
+	        <xsl:text>
+	      //note: method to set (?@name?), not able to generate.
+	        </xsl:text>
+	      </xsl:otherwise></xsl:choose>
+      
+      </xsl:when><xsl:otherwise> <!-- not test="description/lastUndefsizeArray"-->
+        <xsl:variable name="setMethod">
+  	      <xsl:choose>
+	          <xsl:when test="type/@name='int8'">setInt8</xsl:when>
+	          <xsl:when test="type/@name='int16'">setInt16</xsl:when>
+	          <xsl:when test="type/@name='int32'">setInt32</xsl:when>
+	          <xsl:when test="type/@name='uint8'">setUint8</xsl:when>
+	          <xsl:when test="type/@name='uint16'">setUint16</xsl:when>
+	          <xsl:when test="type/@name='uint32'">setUint32</xsl:when>
+	          <xsl:when test="type/@name='short'">setInt16</xsl:when>
+	          <xsl:when test="type/@name='int'">setInt32</xsl:when>
+	          <xsl:when test="type/@name='long'">setInt32</xsl:when>
+	          <xsl:when test="type/@name='char'">setUint8</xsl:when>
+	          <xsl:when test="type/@name='float'">setFloat</xsl:when>
+	          <xsl:when test="type/@name='double'">setDouble</xsl:when>
+	          <xsl:when test="type/@name='int16BigEndian'">setInt16</xsl:when>
+				    <xsl:when test="type/@name='int32BigEndian'">setInt32</xsl:when>
+				    <xsl:when test="type/@name='int64BigEndian'">setInt64</xsl:when>
+				    <xsl:when test="type/@name='floatBigEndian'">setFloat</xsl:when>
+				    <xsl:when test="type/@name='doubleBigEndian'">setDouble</xsl:when>
+				    <xsl:when test="type/@name='ptrBigEndian'">setUint32</xsl:when>
+				    <xsl:when test="boolean(type/@pointer)">setUint32</xsl:when>
+	          <xsl:when test="boolean(type/@constPointer)">setUint32</xsl:when>
+	          <xsl:otherwise>???</xsl:otherwise>
+	        </xsl:choose>
+        </xsl:variable>
+
+	      <xsl:variable name="valueType"><xsl:call-template name="genValueType" /></xsl:variable>
+	
+	      <xsl:choose>
+	      <xsl:when test="$setMethod != '???'">
+	        <xsl:text>
+	    public void set_(?@name?)((?$valueType?) val(?if count(arraysize)>0?), int idx(?/if?))
+	    { //type of struct-attribut is (?!type/@name?)
+	      (?$setMethod?)(kIdx(?@name?)(?if count(arraysize)>0?), idx, (?!arraysize/@value?)(?!arraysize/@symbolValue?)(?/if?), val);
+	    }
+	      </xsl:text>
+	      </xsl:when>
+	      <xsl:otherwise>
+	        <xsl:text>
+	      //note: method to set (?@name?), not able to generate.
+	        </xsl:text>
+	      </xsl:otherwise></xsl:choose>
+      
+      </xsl:otherwise></xsl:choose> <!-- not test="description/lastUndefsizeArray"-->
+    </xsl:otherwise></xsl:choose><!-- not test="type/@name='char' and count(arraysize)>0" -->
+
+	</xsl:template>
+
+
+
+
+
+
+
+  <xsl:template name="genValueType">
+    <xsl:choose><xsl:when test="type/@name='char' and count(arraysize)>0">
+      <xsl:text>String</xsl:text>
+    </xsl:when><xsl:otherwise>
+        <xsl:choose>
+          <xsl:when test="type/@name='int8'">byte</xsl:when>
+          <xsl:when test="type/@name='int16'">short</xsl:when>
+          <xsl:when test="type/@name='int32'">int</xsl:when>
+          <xsl:when test="type/@name='uint8'">int</xsl:when>
+          <xsl:when test="type/@name='uint16'">int</xsl:when>
+          <xsl:when test="type/@name='uint32'">int</xsl:when>
+          <xsl:when test="type/@name='short'">short</xsl:when>
+          <xsl:when test="type/@name='int'">int</xsl:when>
+          <xsl:when test="type/@name='long'">int</xsl:when>
+          <xsl:when test="type/@name='char'">char</xsl:when>
+          <xsl:when test="type/@name='float'">float</xsl:when>
+          <xsl:when test="type/@name='double'">double</xsl:when>
+          <xsl:when test="type/@name='int16BigEndian'">short</xsl:when>
+			    <xsl:when test="type/@name='int32BigEndian'">int</xsl:when>
+			    <xsl:when test="type/@name='int64BigEndian'">long</xsl:when>
+			    <xsl:when test="type/@name='floatBigEndian'">float</xsl:when>
+			    <xsl:when test="type/@name='doubleBigEndian'">double</xsl:when>
+			    <xsl:when test="type/@name='ptrBigEndian'">int</xsl:when>
+          <xsl:when test="boolean(type/@pointer)">int</xsl:when>
+          <xsl:when test="boolean(type/@constPointer)">int</xsl:when>
+          <xsl:otherwise>int</xsl:otherwise>
+        </xsl:choose>
+    </xsl:otherwise></xsl:choose>
+	</xsl:template>
+
+
+
+
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <xsl:template name="gengetMethod">
+
+    <xsl:choose><xsl:when test="type/@name='char' and count(arraysize)>0">
+      <xsl:text>
+      public String get_(?@name?)(String val)
+      { return getString(kIdx(?@name?), (?!arraysize/@value?)(?!arraysize/@symbolValue?));
+      }
+      </xsl:text>
+    </xsl:when>
+    <xsl:when test="boolean(variante)">
+      <xsl:for-each select="variante">
+        <xsl:call-template name="gengetMethod"></xsl:call-template>
+      </xsl:for-each>
+    </xsl:when>
+    <xsl:when test="boolean(type)">
+      <xsl:variable name="getMethod">
+        <xsl:choose>
+          <xsl:when test="type/@name='int8'">(byte)getInt8</xsl:when>
+          <xsl:when test="type/@name='int16'">(short)getInt16</xsl:when>
+          <xsl:when test="type/@name='int32'">getInt32</xsl:when>
+          <xsl:when test="type/@name='uint8'">getUint16</xsl:when>
+          <xsl:when test="type/@name='uint16'">getUint16</xsl:when>
+          <xsl:when test="type/@name='uint32'">getUint32</xsl:when>
+          <xsl:when test="type/@name='short'">(short)getInt16</xsl:when>
+          <xsl:when test="type/@name='int'">getInt32</xsl:when>
+          <xsl:when test="type/@name='long'">getInt32</xsl:when>
+          <xsl:when test="type/@name='char'">(char)getUint8</xsl:when>
+          <xsl:when test="type/@name='float'">getFloat</xsl:when>
+          <xsl:when test="type/@name='double'">getDouble</xsl:when>
+          <xsl:when test="type/@name='int16BigEndian'">(short)getInt16</xsl:when>
+			    <xsl:when test="type/@name='int32BigEndian'">getInt32</xsl:when>
+			    <xsl:when test="type/@name='int64BigEndian'">getInt64</xsl:when>
+			    <xsl:when test="type/@name='floatBigEndian'">getFloat</xsl:when>
+			    <xsl:when test="type/@name='doubleBigEndian'">getDouble</xsl:when>
+			    <xsl:when test="type/@name='ptrBigEndian'">getUint32</xsl:when>
+          <xsl:when test="boolean(type/@pointer)">getUint32</xsl:when>
+          <xsl:when test="boolean(type/@constPointer)">getUint32</xsl:when>
+          <xsl:otherwise>???</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="valueType"><xsl:call-template name="genValueType" /></xsl:variable>
+
+      <xsl:choose>
+      <xsl:when test="$getMethod != '???'">
+        <xsl:variable name="nameIdx">
+          <xsl:choose>
+            <xsl:when test="local-name()='variante'"><xsl:value-of select="../@name" /></xsl:when>
+            <xsl:otherwise><xsl:value-of select="@name" /></xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:text>
+      public (?$valueType?) get_(?@name?)((?if count(arraysize)>0?)int idx(?/if?))
+      { //type of struct-attribut is (?!type/@name?)
+        return (?$getMethod?)(kIdx(?$nameIdx?)(?if count(arraysize)>0?), idx, (?!arraysize/@value?)(?!arraysize/@symbolValue?)(?/if?));
+      }
+        </xsl:text>
+        <xsl:if test="boolean(arraysize)">
+          <xsl:text>
+      public final static int size_(?@name?) = (?!arraysize/@value?)(?!arraysize/@symbolValue?);
+          </xsl:text>
+        </xsl:if>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>
+      //note: method to set (?@name?), not able to generate.
+        </xsl:text>
+      </xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <xsl:otherwise>
+    </xsl:otherwise></xsl:choose>
+
+	</xsl:template>
+
+
+
+
+
+
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+  <!-- ******************************************************************** -->
+	<xsl:template match= "enumDef">
+    <xsl:text>
+  public class </xsl:text><xsl:value-of select="typeident/@name"/><xsl:text>
+  { </xsl:text>
+  <xsl:for-each select="enumElement">
+    <xsl:text>
+    public static final int </xsl:text>
+    <xsl:value-of select="ident/@name"/>
+    <xsl:for-each select="enumValue">
+      <xsl:text> =</xsl:text><xsl:apply-templates select="symbol|operation|hexnumber|number"/>
+    </xsl:for-each>
+    <xsl:text>;</xsl:text>
+  </xsl:for-each>
+  <xsl:text>
+  }
+    </xsl:text>
+	</xsl:template>
+
+
+
+	<xsl:template match= "enumValue/symbol"><xsl:text> </xsl:text><xsl:value-of select="@name"/></xsl:template>
+
+	<xsl:template match= "enumValue/operation"><xsl:text> </xsl:text><xsl:value-of select="@src"/></xsl:template>
+
+	<xsl:template match= "enumValue/hexnumber"><xsl:text> 0x(?call toHex(decimalNumber="hexnumber")?)</xsl:text></xsl:template>
+
+	<xsl:template match= "enumDef/number"><xsl:text> </xsl:text><xsl:value-of select="@int"/></xsl:template>
+
+
+<!-- ******************************************************************** -->
+<!-- ******************************************************************** -->
+<!-- ******************************************************************** -->
+<xsl:template name="defineToStaticInt">
+<xsl:param name="classSuffix" select="'-'" />
+  <xsl:variable name="name">
+    <xsl:choose><xsl:when test="ends-with(@name, $classSuffix)"><xsl:value-of select="substring-before(@name,$classSuffix)" /></xsl:when>
+    <xsl:otherwise><xsl:value-of select="@name" /></xsl:otherwise></xsl:choose>
+  </xsl:variable>
+  <xsl:choose>
+    <xsl:when test="boolean(intvalue) or boolean(intnumber)">
+      <xsl:text>
+    public static final int (?$name?) = (?!intvalue?)(?!intnumber?);</xsl:text>
+    </xsl:when>
+    <xsl:when test="boolean(hexvalue)">
+      <!-- xsl:text>
+    public static final int (?$name?) = (?!hexvalue?);</xsl:text -->
+      <xsl:text>
+    public static final int (?$name?) = 0x(?call toHex(decimalNumber="hexvalue")?);</xsl:text>
+    </xsl:when>
+    <xsl:when test="boolean(hexnumber)">
+      <xsl:text>
+    public static final int (?$name?) = 0x(?call toHex(decimalNumber="hexnumber")?);</xsl:text>
+    </xsl:when>
+    <xsl:when test="boolean(stringvalue)">
+      <xsl:text>
+    public static final String (?$name?) = "(?!stringvalue?)";</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>
+    //#define (?$name?) (?!value?)</xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
+  <xsl:text>    //Cheader2ByteDataAccess_Java.xslp: classSuffix=:(?$classSuffix?):</xsl:text>
+</xsl:template>
+
+
+
+<xsl:variable name="hexDigits" select="'0123456789ABCDEF'" />
+<xsl:template name="toHex">
+  <xsl:param name="decimalNumber" />
+  <xsl:if test="$decimalNumber >= 16">
+    <xsl:call-template name="toHex">
+      <xsl:with-param name="decimalNumber" select="floor($decimalNumber div 16)" />
+    </xsl:call-template>
+  </xsl:if>
+  <xsl:value-of select="substring($hexDigits, ($decimalNumber mod 16) + 1, 1)" />
+</xsl:template>
+
+
+
+</xsl:stylesheet>

@@ -1,0 +1,34 @@
+==2008-0727 HScho==
+
+===Cheader2Xmi.xslp===
+*Benennung: Dieser File soll doch Cheader2Xmi.xslp und nicht HeaderXml2Xmi.xslp heißen: ''Cheader'' ist als Kopfelement im geparsten Header (Cheader.zbnf) präsent und kann/sollte namensrelevant sein.
+*UML:Model heißt jetzt immer fix ''GeneratedFromCheader'', dafür gibt es pro Headerfile ein Package mit dem Includeklammernamen des Headerfiles.
+*Bereinigung: 
+**altes template allAssociations gelöscht.
+**allClassesOfHeader statt allClasses
+
+*Im template allClassesOfHeader: neue Variable ClassNames enthält die ausgeblendeten doppelten Names.
+*Associations: 
+**Es wird jetzt eine composition gebildet bei embedded struct. 
+**Generalization für alle struct am Anfang einer anderen struct.
+
+*bytepos aus Cheader.zbnf (dort neu) wird verarbeitet. Das ist manuelle Vorgabe der Byteposition im comment von struct-Elementen @bytepos=nr
+
+*corr: template GenerateNamedClass: description erschien nicht weil select falsch war.
+
+===XmiDocu.xslp===
+*template umlClassAttributesWithBytepos: (Aufruf mit umlClass(..., attributes=bytes): Jetzt wird pro Element die Bytepos angegeben.
+*template decimal2hex ist neu.
+
+===ZmakeStd.xslp===
+*doc: Überall xsl:comment mit ''Generated with ZmakeStd.xslp ...'' damit im erzeugten ANT-xml die Herkunft erkennbar ist.
+*nice: Bereinigung: genReflection ist raus, dies wird nunmehr mit Header2Reflection.jar erledigt (Java), hier nicht mir gepflegt.
+*new: template name=PathBase ist jetzt ergänzt mit template name=pathbase_Reg_srcpath: regarding srcpath. Es wird damit generell ein Attribut srcpath="..." berücksichtigt.
+*corr: template name="exec_Xsltpre", Parameterschreibfehler. nicht -i: sondern hier nur -iVALUE
+*corr: template name="evaluateInput_XsltPath" statt "evaluateInput_XsltPathExt" wird aufgerufen in templates genXmiFromZbnfCheader, damit wird der Outputfilename nicht mehr mit der Extension des Inputs gebildet. 
+*corr: template genTargetForInput: Wenn der Outputfile eine ext hat, dann wird die ext nicht vom Inputfile übernommen.
+
+===Cheader.zbnf===
+*new: In einer description::= wird nun @super und @bytepos=<#?>|0x<#x?> erkannt und als description/superClass und description/bytepos/@value abgelegt. 
+*new: In ''description::='': ''@GUID = <""?>'' as documentation tag for GUID to xmi.
+*docu

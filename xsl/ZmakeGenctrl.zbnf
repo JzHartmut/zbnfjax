@@ -1,0 +1,65 @@
+<?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
+##This script describes the syntax of a Zmake-generation-control-file.
+
+ZmakeGenctrl::= 
+{ <ZmakeTarget> 
+| <genFile> 
+| (\?= <variableAssignment?setVariable> (\?/=\?)
+} \e.
+
+##A Zmake-Script contains of targets, which are to do.
+##The genControl Script determines the textual representation of some targets with the several use-able names.
+##All named targets in the control script can be used as Zmake-target-name (translator name) in the users Zmake script.
+##This file describes how a genControl script should be build.
+
+
+ZmakeTarget::= (\?:target = <$?@name> \?) 
+  <genContent?>
+(\?/target\?).
+
+
+##A genControl script should have a part (?:file?)....(?/file?) which describes how the whole file should build.
+
+genFile::= (\?:file\?)
+  <genContent?>
+(\?/file\?).
+  
+  
+
+
+##The textual content of any target, file, variable etc.
+
+genContent::=  ##<$NoWhiteSpaces>
+{ [?(\?/\?)]
+[ (\?= <variableAssignment?setVariable> (\?/=\?)
+| (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+| (\?:forList : <forList> (\?/forList\?)
+| (\?+ <variableAssignment?addToList> (\?/+\?)
+| (\?input\.<$?inputValue>\?)    
+| (\?output\.<$?outputValue>\?)
+| (\?*\?)<?listElement>
+| (\?<$?variableValue>\?)
+| (\?:\?)<genContentNoWhitespace?>(\?/\?)
+| (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
+| <*|(\??text>                        ##text after whitespace but inclusive trailing whitespaces
+]
+}.
+
+
+genContentNoWhitespace::=<$NoWhiteSpaces>
+{ [?(\?/\?)]
+[ (\?input\.<$?inputValue>\?)    
+| (\?output\.<$?outputValue>\?)
+| (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+| (\?*\?)<?listElement>
+| (\?<$?variableValue>\?)
+| <*|(\??text>                        ##text after whitespace but inclusive trailing whitespaces
+]
+}.
+
+
+
+variableAssignment::= <$?@name> \?)<genContent?> .
+
+forList::= <$?@name>\?) <genContent?> .
+

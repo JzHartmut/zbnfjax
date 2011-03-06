@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- written with org.vishia.xmlSimple.SimpleXmlOutputter -->
+<ZmakeGenctrl >
+  <ZmakeTarget name="zbnfJava" >
+    <forInputContent >
+      <setVariable name="name" >
+        <text >zbnfJava:</text>
+        <outputValue >file</outputValue>
+        <text >=</text>
+        <inputValue >file</inputValue>
+        <text /></setVariable>
+      <setVariable name="input" >
+        <inputValue >absFile</inputValue>
+        <text /></setVariable>
+      <setVariable name="output" >
+        <outputValue >absDir</outputValue>
+        <inputValue >localFile</inputValue>
+        <outputValue >ext</outputValue>
+        <text /></setVariable>
+      <addToList name="targetCall" >
+        <variableValue >name</variableValue>
+        <text /></addToList>
+      <addToList name="target" >
+        <text >&lt;!-- generated from ZmakeStd2Ant.genCtrl, Zmake-target: &quot;zbnfJava&quot; --&gt;
+  &lt;target name=&quot;</text>
+        <variableValue >name</variableValue>
+        <text >&quot;
+			description=&quot;ZmakeStd.xslp:genTargetForInput-target&quot;
+			depends=&quot;</text>
+        <variableValue >name</variableValue>
+        <text >_isUptodate&quot;
+			unless=&quot;</text>
+        <variableValue >name</variableValue>
+        <text >_isUptodate&quot;&gt;
+    &lt;echo message=&quot;Zbnf2Xml-Java.zbnf: </text>
+        <variableValue >output</variableValue>
+        <text >&quot;/&gt;
+    &lt;exec dir=&quot;${curDir}&quot; executable=&quot;java&quot; failonerror=&quot;true&quot;&gt;
+			&lt;arg line=&quot;-cp ${env.JAVACP_XSLT}&quot;/&gt;
+			&lt;arg line=&quot;org.vishia.zbnf.Zbnf2Xml&quot;/&gt;
+			&lt;arg line=&quot;-i:</text>
+        <variableValue >input</variableValue>
+        <text >&quot;/&gt;
+			&lt;arg line=&quot;-s:${env.ZBNFJAX_HOME}/zbnf/Java2C.zbnf&quot;/&gt;
+			&lt;arg line=&quot;-y:</text>
+        <variableValue >output</variableValue>
+        <text >&quot;/&gt;
+			&lt;arg line=&quot;--report:</text>
+        <variableValue >output</variableValue>
+        <text >.log&quot;/&gt;
+			&lt;arg line=&quot;--rlevel:334&quot;/&gt;
+			&lt;arg line=&quot;-a:@filename=&amp;#34;</text>
+        <inputValue >localPathFile</inputValue>
+        <text >&amp;#34;&quot;/&gt;
+    &lt;/exec&gt;
+  &lt;/target&gt;
+  &lt;target name=&quot;</text>
+        <variableValue >name</variableValue>
+        <text >_isUptodate&quot;
+           description=&quot;ZmakeStd2Ant.genCtrl:genTargetForInput-uptd&quot;&gt;
+      &lt;uptodate property=&quot;</text>
+        <variableValue >name</variableValue>
+        <text >_isUptodate&quot;
+                targetfile=&quot;</text>
+        <variableValue >output</variableValue>
+        <text >&quot;&gt;
+         &lt;srcfiles file=&quot;</text>
+        <variableValue >input</variableValue>
+        <text >&quot;/&gt;
+         &lt;srcfiles file=&quot;${env.ZBNFJAX_HOME}/zbnf/Java2C.zbnf&quot;/&gt;
+      &lt;/uptodate&gt;
+  &lt;/target&gt;
+  
+  </text>
+        <text /></addToList>
+      <text />
+      <text /></forInputContent>
+    <text />
+    <text /></ZmakeTarget>
+  <ZmakeTarget name="javaXML2XMI" >
+    <setVariable name="output" >
+      <outputValue >absFile</outputValue>
+      <text >;</text>
+      <text /></setVariable>
+    <addToList name="targetCall" >
+      <text >XMI-</text>
+      <variableValue >output</variableValue>
+      <text /></addToList>
+    <addToList name="target" >
+      <text >&lt;target name=&quot;XMI-</text>
+      <variableValue >output</variableValue>
+      <text >&quot; description=&quot;ZmakeStd2Ant.genCtrl-javaXml2XMI&quot;
+			depends=&quot;isUptodate_XMI-</text>
+      <variableValue >output</variableValue>
+      <text >&quot;
+			unless=&quot;isUptodate_XMI-</text>
+      <variableValue >output</variableValue>
+      <text >&quot;&gt;
+    
+    &lt;exec dir=&quot;${curDir}&quot; executable=&quot;java&quot; failonerror=&quot;true&quot;&gt;
+      &lt;arg line=&quot;org.vishia.xml.Xslt&quot;/&gt;
+        &lt;!-- all input files in xml-transformed form: --&gt;
+      </text>
+      <forInputContent >
+        <setVariable name="input" >
+          <text >${curDir}/tmp/</text>
+          <inputValue >localFile</inputValue>
+          <text >.xml</text>
+          <text /></setVariable>
+        <text >&lt;arg line=&quot;-i:</text>
+        <variableValue >input</variableValue>
+        <text >&quot;/&gt;
+      </text>
+        <text /></forInputContent>
+      <text >&lt;arg line=&quot;-t${env.ZBNFJAX_HOME}/xsl/Java2xmiTypes.xsl&quot;/&gt;
+      &lt;arg line=&quot;-y:${tmp}/</text>
+      <outputValue >name</outputValue>
+      <text >.XmiTypes.xml&quot;/&gt;
+    &lt;/exec&gt;
+    
+    &lt;exec dir=&quot;${curDir}&quot; executable=&quot;java&quot; failonerror=&quot;true&quot;&gt;
+      &lt;arg line=&quot;org.vishia.xml.Xslt&quot;/&gt;
+      &lt;arg line=&quot;-i:${tmp}/</text>
+      <outputValue >name</outputValue>
+      <text >.XmiTypes.xml&quot;/&gt;
+			&lt;arg line=&quot;-t${env.ZBNFJAX_HOME}/xsl/gen/Java2xmi.xsl&quot;/&gt;
+			&lt;arg line=&quot;-w+&quot;/&gt;
+			&lt;arg line=&quot;-y:</text>
+      <outputValue >absFile</outputValue>
+      <text >&quot;/&gt;
+     	&lt;!-- all input files in xml-transformed form: --&gt;
+			</text>
+      <forInputContent >
+        <text >
+      	&lt;arg line=&quot;-i:${curDir}/tmp/</text>
+        <inputValue >localFile</inputValue>
+        <text >.xml&quot;/&gt;</text>
+        <text />
+        <text /></forInputContent>
+      <text >&lt;/exec&gt;
+  &lt;/target&gt;
+  &lt;target name=&quot;isUptodate_XMI-</text>
+      <variableValue >output</variableValue>
+      <text >&quot; description=&quot;ZmakeStd.xslp:genTarget_ZmakeStd-uptd&quot;&gt;
+    &lt;uptodate property=&quot;isUptodate_XMI-</text>
+      <variableValue >output</variableValue>
+      <text >&quot; targetfile=&quot;</text>
+      <outputValue >absFile</outputValue>
+      <text >&quot;&gt;
+	  	</text>
+      <forInputContent >
+        <text >
+	    	&lt;srcfiles file=&quot;${curDir}/tmp/</text>
+        <inputValue >localFile</inputValue>
+        <text >.xml&quot;/&gt;</text>
+        <text />
+        <text /></forInputContent>
+      <text >&lt;/uptodate&gt;
+   &lt;/target&gt;
+
+  </text>
+      <text /></addToList>
+    <text />
+    <text /></ZmakeTarget>
+  <genFile >
+    <text >&lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;
+&lt;project xmlns:xs=&quot;XSL&quot; name=&quot;ZmakeAnt&quot; default=&quot;ZmakeAnt&quot; basedir=&quot;.&quot;&gt;&lt;!--Generated with ZmakeStd.xslp --&gt;
+	&lt;taskdef name=&quot;Zcopy&quot; classname=&quot;org.vishia.ant.Zcopy&quot;/&gt;
+  &lt;property environment=&quot;env&quot;/&gt;
+  &lt;property name=&quot;tmp&quot; value=&quot;..\tmp&quot;/&gt;
+  
+  &lt;!--This target is the start target, it produces a screen-output and calls than all targets for result elements. --&gt;
+  &lt;target name=&quot;ZmakeAnt&quot; description=&quot;ZmakeStd2Ant.genctrl:The whole xmake&quot;&gt;
+    &lt;echo message=&quot;current dir: ${curDir}&quot;/&gt;
+    &lt;echo message=&quot;ZBNFJAX_HOME: ${env.ZBNFJAX_HOME}&quot;/&gt;
+    &lt;antcall target=&quot;ZmakeAntExec&quot;/&gt;
+  &lt;/target&gt;
+
+  </text>
+    <variableValue >target</variableValue>
+    <text >&lt;target name=&quot;ZmakeDummy&quot;/&gt;
+  
+  &lt;!--This target contains the dependency to all result elements. --&gt;
+  &lt;target name=&quot;ZmakeAntExec&quot; description=&quot;ZmakeStd2Ant.genctrl:The whole Zmake1&quot;
+    depends=&quot;</text>
+    <forList name="targetCall" >
+      <text >
+      </text>
+      <listElement />
+      <text >, </text>
+      <text /></forList>
+    <text >ZmakeDummy&quot;
+  /&gt;
+  
+&lt;/project&gt;
+</text>
+    <text /></genFile></ZmakeGenctrl>

@@ -1,0 +1,189 @@
+<?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
+##This script converts a make prescript given in lines with translator (Zmake) to xml and than to ant.xml
+##yyyy-mm-dd who       what
+##2007-12-29 HartmutS  new: fileset as a new feature
+$comment=[?...?].
+
+Zmake::=<*|\nZMAKE_RULES:?> ZMAKE_RULES:  
+{ \$<variable> ; 
+| <forInput> ;  ##deprecated
+| <target> ; 
+} \e.
+
+##A variable may contain a fileset.
+
+string::= { <""?literal> | <forInputString> | @<$?inputField> | $<$?contentOfVariable> ? + }.
+?en:string::="A string is a concatenation of \"literal\" + $contentOfVariable + @inputField + for(...)".
+
+forInputString::= for ( <input?> : <string?> ).
+?en:forInputString::="For any input file, a String was built. All strings are concatenated. ".
+
+variable::=<$?@name> = [ fileset ( <fileset> ) | <string> | { <execCmd> } ].
+
+forInput::= :<$?@target>: for ( <input?> ) : <string?dst> := exec <exec?> .   ##TODO use right side of target::=
+
+
+##old: cmd::= cmd ( <string?executable>) [, { arg(<string?arg>) ? ,}].
+execCmd::= cmd ( <string?executable> ) [, curdir ( <""?curdir> )] [ , { arg (  <string?arg> ) ? , }].
+
+fileset::= 
+{ srcpath = <""?!prepSrcpath>
+| srcext = <""?srcext>
+##| [<?file> [<""?!prepFilePath>|<*\ \r\n,)?!prepFilePath>]] 
+| <file>
+? , | + 
+}.
+
+
+file::=<""?!prepFilePath>|<*\ \r\n,)?!prepFilePath>.
+
+##The translator is written like a function. It may be nested.
+target::=  [:<$?@target>:] 
+[ <specials?do>  ##action without dst file. 
+|
+  ##<*|\ |\r|\n|:=?!prepOutputfile> :=  
+  <output> :=
+  [ for ( <input?> ) <routine?doForAll> 
+  | <routine?>
+  ##| exec <exec?>
+  ##| <$?@translator> ( <input?> )
+  ]
+].
+
+##The output will be parsed either in "" or all chars until whitespace or :=, than inner syntax.
+output::=<*|\ |\r|\n|:=?!prepFilePath>.
+##it doesn't work: output::=<""?!prepFilePath>|<*|\ |\r|\n|:=?!prepFilePath>.
+
+routine::= 
+  exec <exec?> 
+| [<?@translator> copyNewerFiles|copyFiles|copyChangedFiles] ( <inputFiles?> )  
+|  <$?@translator> ( <input?> )
+.
+
+specials::=
+{ mkdir ( [ <""?mkdir>| <* )?mkdir>] )
+| deltree ( [ <""?deltree>| <* )?deltree>] )
+| exec <exec?>
+? ,}.
+?en:specials/mkdir::="creation of directory if not exists".
+?en:specials/deltree::="delete of a directory tree or create if not exists".
+
+exec::= \{ { [<execCmd> | $<$?execVariable/@name>] ; } \}.
+
+
+
+##An input can be a file in "pathfile"
+##Or an input can be a fileset given with a variable.
+##Or an input can be a whole target in {....}
+##Or an input can be a parameter, it is ident = "value"
+##Or an input can be a filename without "" but to whitespace
+##It is repeatable with , or + as separator.
+input::=
+{ \$<inputSet>
+| srcpath = <""?!prepSrcpath>
+| srcext = <""?srcext>
+##| target = <""?@target>
+##| task = <""?@target>
+| <param>
+| \{ <target> \}
+| <""?!prepInputfile>
+| <*\ \r\n,)?!prepInputfile>
+? , | +
+}.
+
+?input/srcext::="This extension should be added to any src file.".
+
+inputSet::=<$?@name>. ##creates the element inputSet with attribute name
+
+inputFiles::=
+{ \$<inputSet>
+| srcpath = <""?!prepSrcpath>
+| srcext = <""?srcext>
+| <""?!prepInputfile>
+| <*\ \r\n,)?!prepInputfile>
+? , }.
+
+prepSrcpath::=<prepPathbase?srcpath>.
+
+prepInputfile::=<prepFilePath?input>.
+
+##example: D:\path/path/file.c          normal path with \ or /
+##example: D:srcpath:path/path/file.c   a special srcpath, inside a path
+##example: D:srcpath:file.c             a special srcpath, inside a file directly
+##example: srcpath:path/path/file.c     without drive, the drive has only one letter.
+
+##NOTE ZBNF: [?:=] means: if := occurs, it doesnot match.
+##NOTE ZBNF: [<*:?@pathbase>[?:=]:] means: all chars until ':', but the ':' must follow. it is optional.
+
+prepPathbase::=<$NoWhiteSpaces><! *?>
+  [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
+  [ [/|\\]<?@absPath>]
+  [<*?@pathbase>]                      ## all until : is the pathbase, not part of the
+  .
+
+xxxprepFilePath::=<$NoWhiteSpaces><! *?>
+  [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
+  [ [/|\\]<?@absPath>]
+  [<*:?@pathbase>[?:=]:]                      ## all until : is the pathbase, not part of the
+  [<stringtolastinclChar/\\?@path>]          ## all until \\ or / is the path part of the file
+  <stringtolastExclChar.*@$?@file>
+  [ ** <?@allTree>
+  | *  <?@someFiles>
+  | $  <?@someFileExt>
+  | @  <?@somePathFileExt>
+  ]
+  <* ?@ext>   ##the rest is the ext, may be empty.
+  <! *?>.
+
+oldprepFilePath::=<$NoWhiteSpaces><! *?>
+  [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
+  [ [/|\\]<?@absPath>]
+  [<*:?@pathbase>[?:=]:]                      ## all until : is the pathbase, not part of the
+  [ <*|**?@path>                              ##either a ** is containing, the path is before.
+  | <toLastCharIncl:/\\?@path>           ##or all chars until the last \\ or / is the path part of the file
+  |]                                          ##or no path is given.
+  [ **<?@allTree>                             ##  ** is found, than files in the whole subtree
+    [ <![/\\\\]?>                               ## if / followes, than file and ext may be given.
+      <toLastChar:.?@file><*?@ext>
+    ]
+  | <**?@file>                       ##all chars to *
+    *<?@someFiles>
+    [\.*<?@wildcardExt>]
+    <*?@ext>
+  | <toLastChar:.?@file>
+    <*?@ext>
+  ]<! *?>.
+
+prepFilePath::=<$NoWhiteSpaces><! *?>
+[<!.?@drive>:]               ## only 1 char with followed : is drive
+[ [/|\\]<?@absPath>]         ## starting with / is absolute path
+[<*:?@pathbase>[?:=]:]       ## all until : is pathbase
+[ <*|**?@path>               ## all until ** is path
+| <toLastCharIncl:/\\?@path> ## or all until last \\ or / is path
+|]                           ## or no path is given.
+[ **<?@allTree>[/\\] ]       ## ** is found, than files in subtree
+[ <**?@file>                 ## all until * is the file (begin)
+  *<?@someFiles>             ## * detect: set someFiles
+| <toLastChar:.?@file>       ## or all until dot is the file
+|]                           ## or no file is given.
+[\.*<?@wildcardExt>]         ## .* is wildcard-extension
+[ <* \e?@ext> ]              ## the rest is the extension
+.
+
+
+##  [ **<?@allTree><*?@ext>                     ## ** means: all files also in subfolders. The rest after** is extension.
+##  | *<?@someFiles><*?@ext>                    ## * means: Some files or placeholder for the name. The rest after * is extension.
+##  | <stringtolastExclChar.?@file><*?@ext>     ## or a filename and a extension if a . is found
+##  | <*?@file>                                 ## or only a file if no . is found.
+##  ]<! *?>.
+
+##prepOutputfile::=<prepFilePath?output>.
+
+##prepOutputFilePath::=[<+<</:\\?@path>]<*?@file>.
+
+param::=<$?@name> = [ $<$?variable> | <""?@value> ].
+
+
+
+
+

@@ -1,0 +1,16 @@
+#!/bin/bash
+#This file is invoked inside zbnfJax, some environment variables are set there.
+echo xmlDocuGen $1
+
+#$1 is the file, which contains the genctrl-rules.
+INPUT=$1
+
+#Zmake prepares the ANT.xml file, but it uses DocuGenCtrl.zbnf and DocuGenCtrl2Ant.xslp instead zmakeStd.*
+echo zbnfjax/unixscript/xmlDocuGen exec: $ZMAKE_EXE -i:$INPUT -tmp:$TMP_ZBNFJAX -tmpantxml:_ant_${INPUT}.xml -zbnf4ant:XmlDocu_xsl/DocuGenCtrl.zbnf -xslt4ant:XmlDocu_xsl/DocuGenCtrl2Ant.xslp --rlevel:333 --report:$TMP_ZBNFJAX/_${INPUT}_Zmake.log
+
+$ZMAKE_EXE -i:$INPUT -tmp:$TMP_ZBNFJAX -tmpantxml:_ant_${INPUT}.xml -zbnf4ant:XmlDocu_xsl/DocuGenCtrl.zbnf -xslt4ant:XmlDocu_xsl/DocuGenCtrl2Ant.xslp --rlevel:333 --report:$TMP_ZBNFJAX/_${INPUT}_Zmake.log
+
+#ANT executes all the rest. To check what it does, see $TMP_ZBNFJAX/_ant_${INPUT}.xml.
+echo === CALL ANT: $TMP_ZBNFJAX/_ant_${INPUT}.xml
+echo zbnfjax/unixscript/xmlDocuGen exec: $ANT_HOME/bin/ant -f $TMP_ZBNFJAX/_ant_${INPUT}.xml  -DcurDir="$PWD"
+$ANT_HOME/bin/ant -f $TMP_ZBNFJAX/_ant_${INPUT}.xml  -DcurDir="$PWD"

@@ -1,0 +1,896 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xsl:output method="text" encoding="iso-8859-1"/>
+
+
+
+
+<xsl:template name="generateInterface">
+  <xsl:text>#ifndef __(?@dataDefinitionIdent?)_ifc_h__
+#define __(?@dataDefinitionIdent?)_ifc_h__
+/* *************************************************************************************************
+* Data Definition interfaces created from DataDefintion2Cpp.xsl
+* dataDefinitionIdent: (?@dataDefinitionIdent?)
+**************************************************************************************************/
+
+</xsl:text>
+    <xsl:for-each select="interfacedefinition/accessInterface" >
+      <xsl:variable name="ifcIdent" select="@name" />
+	
+      <xsl:text>
+  
+  
+/**(?!description?)
+*/
+class (?!../@ifcNamePrefix?)(?$ifcIdent?)(?!../@ifcNamePostfix?)
+{ </xsl:text>
+      <xsl:for-each select="/.//access[interface=$ifcIdent and parameterPosition='1']">
+        <xsl:variable name="Type">
+        <xsl:text>(?if "name(..)='usingBits'"?)(?!../../type?)(?else?)(?!../type?)(?/else?)</xsl:text>
+        </xsl:variable>
+        <xsl:variable name="ReturnType">
+        <xsl:text>(?if "accessType='return'"?)(?$Type?)(?elif "accessType='bool'"?)bool(?else?)void(?/else?)</xsl:text>
+        </xsl:variable>
+		
+        <xsl:text>			
+  /**(?!description?)
+     (?call argumentDescription()?)
+  */
+    public: virtual (?$ReturnType?) (?!method?)</xsl:text><xsl:call-template name="formalArgumentList" /><xsl:text>=0;</xsl:text>
+      </xsl:for-each>
+  
+      <xsl:for-each select="providedInterface">
+        <xsl:variable name="ifcName"><xsl:value-of select="../../@ifcNamePrefix" /><xsl:value-of select="@name" /><xsl:value-of select="../../@ifcNamePostfix" /></xsl:variable>
+        <xsl:text>
+  public: virtual (?$ifcName?)* provide_(?$ifcName?)() = 0;</xsl:text>
+      </xsl:for-each>
+  
+      <xsl:text>
+};</xsl:text>
+    
+    </xsl:for-each>
+<xsl:text>
+
+
+
+
+
+#endif //__(?@dataDefinitionIdent?)_ifc_h__
+</xsl:text>
+</xsl:template>
+
+
+
+
+
+
+
+
+
+<!-- ***************************************************************************************** -->
+<!-- ***************************************************************************************** -->
+<!-- ***************************************************************************************** -->
+
+
+
+
+<xsl:template name="generateHeader">
+  <xsl:text>#ifndef __(?@dataDefinitionIdent?)_h__
+#define __(?@dataDefinitionIdent?)_h__
+/* *************************************************************************************************
+* Data Definition specification created from DataDefintion2Cpp.xsl
+* dataDefinitionIdent: (?@dataDefinitionIdent?)
+**************************************************************************************************/
+</xsl:text>
+  <xsl:call-template name="userSpecificationIncludes" />
+  <xsl:text>
+
+
+#include "complctr.h"
+#include "Object_Jc.h"
+#include "alignbyt.h"
+
+/* ******************************************************************************************************/
+/* ******************************************************************************************************/
+/* ******************************************************************************************************/
+/* All Data structures of groups, containing sungroup-structures and variable: **************************/
+
+</xsl:text>
+  <xsl:for-each select="component/group"><xsl:call-template name="TypedefStructGroup"/></xsl:for-each>
+  <xsl:text>
+
+
+
+/* ******************************************************************************************************/
+/* ******************************************************************************************************/
+/* ******************************************************************************************************/
+/* All Data structures of components, containing structure data of groups. ******************************/
+
+</xsl:text>
+  <xsl:for-each select="component"><xsl:call-template name="TypedefStructComponent"/></xsl:for-each>
+  <xsl:text>
+
+
+
+/* ******************************************************************************************************/
+/* ******************************************************************************************************/
+/* ******************************************************************************************************/
+
+/** The whole struct of all variables:
+ */
+typedef struct Variable_(?@dataDefinitionIdent?)_t
+{   </xsl:text>
+  <xsl:for-each select="component">
+    <xsl:text>
+  /**Component (?!ident?)(?if "boolean(prefix)"?), WinCC-Präfix: (?!prefix?)(?/if?):
+   * (?!description?)
+   */
+  struct (?!ident?)_t (?!ident?)(?if "boolean(nrofElements)"?)[(?!nrofElements?)](?/if?);
+</xsl:text>
+  </xsl:for-each>
+
+<xsl:text>
+
+}GNU_PACKED Variable_(?@dataDefinitionIdent?);
+#include "alignopt.h"
+
+
+/** Implementierung (?@name?) - Wincc-Access
+    In dieser class sind alle Interfaceklassen des headerfiles oam_(?@name?)_Ifc.h implementiert.
+    Die class basiert auf einem Datencontainer, so dass der Inhalt auch verschickbar ist ueber den PCT-Mechanismus.
+*/
+
+class (?@dataDefinitionIdent?): public Object_Jcpp</xsl:text>
+  <!-- xsl:for-each select="interfacedefinition/accessInterface" >
+    <xsl:text>
+  (?if "position()=1"?):(?else?),(?/else?) public (?!../@ifcNamePrefix?)(?@name?)(?!../@ifcNamePostfix?)</xsl:text>
+  </xsl:for-each -->
+  <xsl:text>
+{
+  /** The big data structure. */
+  protected: Variable_(?@dataDefinitionIdent?)* data;
+  
+  /* Pointer to all implementation classes for the interfaces, they are inner classes. */
+  </xsl:text>
+  <xsl:for-each select="interfacedefinition/accessInterface" >
+    <xsl:text>
+  /**(?!description?)
+   */
+  public: (?!../@ifcNamePrefix?)(?@name?)(?!../@ifcNamePostfix?)* the(?@name?);</xsl:text>
+  </xsl:for-each>
+
+  <xsl:call-template name="userSpecificationConstructor" />
+  <xsl:text>
+
+  public: virtual ~(?@dataDefinitionIdent?)();
+
+  public: Variable_(?@dataDefinitionIdent?)* getWholeData();
+
+  </xsl:text>
+
+
+
+
+  <!-- xsl:for-each select="interface[count(@name)>0]/method[count(@name)>0]" >
+    <xsl:call-template name="Method"></xsl:call-template>
+  </xsl:for-each -->
+
+
+  <!-- xsl:for-each select="component/group/subgroup/variable/access[parameterPosition='1']
+                      | component/group/subgroup/variable/usingBits/access[parameterPosition='1']">
+    <xsl:sort select="method"/>
+    <xsl:call-template name="methodSpecification"/>
+
+  </xsl:for-each -->
+
+  <!-- xsl:for-each select="interfacedefinition/accessInterface/providedInterface" >
+      <xsl:variable name="ifcName"><xsl:value-of select="../../@ifcNamePrefix" /><xsl:value-of select="@name" /><xsl:value-of select="../../@ifcNamePostfix" /></xsl:variable>
+        <xsl:text>
+  public: virtual (?$ifcName?)* provide_(?$ifcName?)();</xsl:text>
+  </xsl:for-each -->
+
+
+    <xsl:for-each select="interfacedefinition/accessInterface" >
+    <!-- generates inner classes for every interface as implementation. -->
+      <xsl:variable name="ifcIdent" select="@name" />
+      <xsl:text>
+  
+  /**(?!description?)
+  */
+  class (?@name?): public (?!../@ifcNamePrefix?)(?@name?)(?!../@ifcNamePostfix?)
+  { friend class (?!/DataDefinition/@dataDefinitionIdent?);
+    protected: (?!/DataDefinition/@dataDefinitionIdent?)* outer;
+    protected: Variable_(?!/DataDefinition/@dataDefinitionIdent?)* data;
+    
+    (?@name?)((?!/DataDefinition/@dataDefinitionIdent?)* outerP);
+    
+    </xsl:text>
+      <xsl:for-each select="/.//access[interface=$ifcIdent and parameterPosition='1']">
+        <xsl:variable name="Type">
+        <xsl:text>(?if "name(..)='usingBits'"?)(?!../../type?)(?else?)(?!../type?)(?/else?)</xsl:text>
+        </xsl:variable>
+        <xsl:variable name="ReturnType">
+        <xsl:text>(?if "accessType='return'"?)(?$Type?)(?elif "accessType='bool'"?)bool(?else?)void(?/else?)</xsl:text>
+        </xsl:variable>
+        <xsl:text>
+    /**(?!description?)
+       (?call argumentDescription()?)
+    */
+    public: virtual (?$ReturnType?) (?!method?)</xsl:text><xsl:call-template name="formalArgumentList" /><xsl:text>;</xsl:text>
+      </xsl:for-each>
+  
+      <xsl:for-each select="providedInterface">
+        <xsl:variable name="ifcName"><xsl:value-of select="../../@ifcNamePrefix" /><xsl:value-of select="@name" /><xsl:value-of select="../../@ifcNamePostfix" /></xsl:variable>
+        <xsl:text>
+    public: virtual (?$ifcName?)* provide_(?$ifcName?)();</xsl:text>
+      </xsl:for-each>
+  
+      <xsl:text>
+  };
+  friend class (?@name?);
+  </xsl:text>
+    
+    </xsl:for-each>
+
+
+
+
+
+  <xsl:call-template name="userSpecificationAdditionals" />
+  <xsl:text>
+
+
+};
+
+#endif //__(?@dataDefinitionIdent?)_h__
+</xsl:text>
+</xsl:template>
+
+
+
+
+
+
+
+<!-- ***************************************************************************************** -->
+<!-- ***************************************************************************************** -->
+<!-- ***************************************************************************************** -->
+
+
+<xsl:template name="generateImplementation">
+  <xsl:text>/* *************************************************************************************************
+* Data Definition implementation created from DataDefintion2Cpp.xsl
+* dataDefinitionIdent: (?@dataDefinitionIdent?)
+**************************************************************************************************/
+
+</xsl:text>
+  <xsl:call-template name="userImplementationIncludes" />
+  <xsl:text>
+//#include "(?@dataDefinitionPackage?)(?@dataDefinitionIdent?).h"
+#include "(?@dataDefinitionIdent?).h"
+#include "Reflection_(?@dataDefinitionIdent?).h"
+#include &lt;string.h>  //because memset()
+
+</xsl:text>
+
+  <xsl:call-template name="userImplementationConstructor" />
+
+  <xsl:text>
+Variable_(?@dataDefinitionIdent?)* (?!/DataDefinition/@dataDefinitionIdent?)::getWholeData()
+{ return data; 
+}
+
+</xsl:text>
+
+  <xsl:for-each select="interfacedefinition/accessInterface" >
+    <xsl:text>
+(?!/DataDefinition/@dataDefinitionIdent?)::(?!@name?)::(?!@name?)((?!/DataDefinition/@dataDefinitionIdent?)* outerP)
+{ outer = outerP;
+  data = outerP->data;
+}  
+</xsl:text>
+  </xsl:for-each>
+<xsl:for-each select="component/group/subgroup/variable/access[parameterPosition='1']
+                    | component/group/subgroup/variable/usingBits/access[parameterPosition='1']">
+  <xsl:sort select="method"/>
+  <xsl:call-template name="methodImplementation"/>
+</xsl:for-each>
+
+
+
+  <xsl:for-each select="interfacedefinition/accessInterface/providedInterface" >
+      <xsl:variable name="ifcName"><xsl:value-of select="../../@ifcNamePrefix" /><xsl:value-of select="@name" /><xsl:value-of select="../../@ifcNamePostfix" /></xsl:variable>
+      <xsl:text>
+(?$ifcName?)* (?!/DataDefinition/@dataDefinitionIdent?)::(?!../@name?)::provide_(?$ifcName?)()
+{ return outer->the(?@name?);
+}
+  </xsl:text>
+  </xsl:for-each>
+
+
+
+  <xsl:call-template name="userImplementationAdditionals" />
+
+</xsl:template>
+
+
+<!-- ***************************************************************************************** -->
+<!-- ***************************************************************************************** -->
+<!-- ***************************************************************************************** -->
+
+
+
+
+
+<xsl:template name="TypedefStructComponent">
+  <xsl:text>
+/**component (?!ident?)(?if "boolean(prefix)"?), WinCC-Präfix: (?!prefix?)(?/if?):
+   (?!description?)
+ */
+typedef struct (?!ident?)_t
+{
+</xsl:text>
+  <xsl:for-each select="group">
+    <xsl:text>
+  /**group (?!ident?)(?if "boolean(prefix)"?), WinCC-Präfix: (?!prefix?)(?/if?):
+   * (?!description?)
+   */
+  struct (?!ident?)_t (?!ident?)(?if "boolean(nrofElements)"?)[(?!nrofElements?)](?/if?);
+</xsl:text>
+  </xsl:for-each>
+  <xsl:text>
+}GNU_PACKED (?!ident?);
+  </xsl:text>
+</xsl:template>
+
+
+
+
+
+
+  <xsl:template name="TypedefStructGroup">
+  <xsl:text>
+
+/* ******************************************************************************************************/
+/**Group (?!ident?)(?if "boolean(prefix)"?), WinCC-Präfix: (?!prefix?)(?/if?):
+   (?!description?)
+ */
+typedef struct (?!ident?)_t
+{</xsl:text>
+  <xsl:for-each select="subgroup">
+    <xsl:text>
+  /**subgroup (?!ident?)(?if "boolean(prefix|../prefix|../../prefix)"?), WinCC-Präfix: (?!../../prefix?)(?!../prefix?)(?!prefix?)(?/if?):
+   * (?!description?)
+   */
+  struct (?!ident?)_t
+  {</xsl:text>
+    <xsl:for-each select="variable">
+    <xsl:variable name="descriptionLine1">
+      <xsl:choose><xsl:when test="contains(description,'&#xd;')"><xsl:value-of select="substring-before(description,'&#xd;')" />
+      </xsl:when><xsl:when test="contains(description,'&#xa;')"><xsl:value-of select="substring-before(description,'&#xa;')" />
+      </xsl:when><xsl:otherwise><xsl:value-of select="description" />
+      </xsl:otherwise></xsl:choose>
+    </xsl:variable>
+    <xsl:text>
+    (?!type?) (?!name?)(?!suffixName?); //(?$descriptionLine1?)</xsl:text>
+    </xsl:for-each>
+    <xsl:text>
+  } (?!ident?)(?if "boolean(nrofElements)"?)[(?!nrofElements?)](?/if?);
+</xsl:text>
+  </xsl:for-each>
+  <xsl:text>
+}GNU_PACKED (?!ident?);
+  </xsl:text>
+</xsl:template>
+
+
+
+
+
+<xsl:template name="TypedefStructSubgroup">
+  <xsl:text>
+
+/* ******************************************************************************************************/
+/**Subgroup (?!ident?)(?if "boolean(prefix|../prefix|../../prefix)"?), WinCC-Präfix: (?!../../prefix?)(?!../prefix?)(?!prefix?)(?/if?):
+   (?!description?)
+ */
+typedef struct (?!ident?)_t
+{
+</xsl:text>
+  <xsl:for-each select="variable">
+  <xsl:text>
+  (?!type?) (?!name?)(?!suffixName?); //(?!description?)</xsl:text>
+  </xsl:for-each>
+  <xsl:text>
+}GNU_PACKED (?!ident?);
+  </xsl:text>
+</xsl:template>
+
+
+
+<xsl:template name="methodSpecification">
+  <xsl:variable name="Type">
+	<xsl:text>(?if "name(..)='usingBits'"?)(?!../../type?)(?else?)(?!../type?)(?/else?)</xsl:text>
+  </xsl:variable>
+  <xsl:variable name="ReturnType">
+	<xsl:text>(?if "accessType='return'"?)(?$Type?)(?elif "accessType='bool'"?)bool(?else?)void(?/else?)</xsl:text>
+  </xsl:variable>
+	
+  <xsl:text></xsl:text><xsl:text>
+    /** Interface: (?!interface?) (xsl:template methodSpecification)*/
+    public: virtual (?$ReturnType?) (?!method?)</xsl:text><xsl:call-template name="formalArgumentList" />
+  <xsl:text>;
+  </xsl:text>
+</xsl:template>
+
+
+
+
+
+
+
+
+
+<xsl:template name="methodImplementation">
+<!-- xmltree at level variable/access or variable/usingBits/access
+     called on access[parameterPosition='1'] | access[count(parameterPosition)=0]
+ -->
+ <xsl:variable name="Type">
+	<xsl:text>(?if "name(..)='usingBits'"?)(?!../../type?)(?else?)(?!../type?)(?/else?)</xsl:text>
+ </xsl:variable>
+ <xsl:variable name="ReturnType">
+	<xsl:text>(?if "accessType='return'"?)(?$Type?)(?elif "accessType='bool'"?)bool(?else?)void(?/else?)</xsl:text>
+ </xsl:variable>
+  <xsl:text>
+/** implements interface: (?!interface?) (xsl:template methodImplementation)*/
+  (?$ReturnType?) (?!/DataDefinition/@dataDefinitionIdent?)::(?!interface?)::(?!method?)</xsl:text>
+  <xsl:call-template name="formalArgumentList" />
+  <xsl:text>
+{</xsl:text>
+  <xsl:variable name="method" select="method" />
+  <xsl:variable name="interface" select="interface" />
+  <xsl:for-each select="/.//access[method=$method and interface=$interface]">
+    <xsl:call-template name="methodBodyLines" />
+  </xsl:for-each>
+  <xsl:text>
+}
+  </xsl:text>
+</xsl:template>
+
+
+
+
+
+
+
+<xsl:template name="methodBodyLines">
+<!-- xmltree at level variable/access or variable/usingBits/access
+     called for-each access[method='methodname']
+ -->
+  
+  <xsl:variable name="structVariable">
+    <xsl:for-each select=".. | ../.."><xsl:if test="local-name()='variable'">
+      <xsl:call-template name="buildVariableName" >
+        <xsl:with-param name="index1" select="'idx1'" />
+        <xsl:with-param name="index2" select="'idxGroup'" />
+      </xsl:call-template>
+        <!-- xsl:text>data-&gt;(?!../../../ident?).(?!../../ident?)(?if "boolean(../../nrofElements)"?)[idxGroup](?/if?).(?!../ident?)(?if "boolean(../nrofElements)"?)[idx1](?/if?).(?!name?)(?!suffixName?)</xsl:text -->
+    </xsl:if></xsl:for-each>
+  </xsl:variable>
+
+  <xsl:variable name="structType">
+    <xsl:for-each select=".. | ../.."><xsl:if test="local-name()='variable'">
+      <xsl:value-of select="type" />
+    </xsl:if></xsl:for-each>
+  </xsl:variable>
+
+  <xsl:variable name="argName">
+    <xsl:for-each select=".. | ../.."><xsl:if test="local-name()='variable'">
+      <xsl:text>(?!name?)(?!suffixName?)</xsl:text>
+    </xsl:if></xsl:for-each>
+  </xsl:variable>
+
+  <xsl:variable name="argType">
+  <!-- returns the special type of the argument or, if not given, the type of the appropriate variable. -->
+      <xsl:choose><xsl:when test="count(argtype)>0">         <xsl:value-of select="argtype" />
+      </xsl:when><xsl:when test="local-name(..)='usingBits'"><xsl:value-of select="../../type" />
+      </xsl:when><xsl:otherwise>                             <xsl:value-of select="../type" />
+      </xsl:otherwise></xsl:choose>
+  </xsl:variable>
+
+  <xsl:choose><xsl:when test="accessType='set' and $argType='bool'">
+  <!-- sets or clear the given bits, depends on arg -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      if((?$argName?)){ (?$structVariable?) |= mask;}
+      else { (?$structVariable?) &amp;= ~mask;}
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    if((?$argName?)){ (?$structVariable?) =~0;}
+    else { (?$structVariable?) = 0;}
+</xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><!-- xsl:when test="accessType='set' and (not(boolean(parameterposition)) or $argType='void')" -->
+             <xsl:when test="accessType='set' and $argType='void'">
+  <!-- sets the given bits, don't clear it. -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; (?!../bitStart?);
+      (?$structVariable?) |= mask;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    (?$structVariable?) =~0;  //set (?$argType?)</xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><xsl:when test="accessType='reset'">
+  <!-- sets the given bits, don't clear it. -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; (?!../bitStart?);
+      (?$structVariable?) &amp;= ~mask;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    (?$structVariable?) =~0;  //reset</xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><xsl:when test="accessType='set' or accessType='ifc'">
+  <!-- normal set operation -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      (?$structVariable?)
+      = ((?$structVariable?) &amp; ~mask)
+      | ( (((?$structType?))(?$argName?))&lt;&lt; bitPos) &amp; mask;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    (?$structVariable?) = (?if "$argType!=$structType"?)((?$structType?))(?/if?)(?$argName?); </xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><xsl:when test="accessType='get'">
+  <!-- normal set operation -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      *(?$argName?) = ((?$structVariable?) &amp; mask) &gt;&gt; bitPos;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    *(?$argName?) = (?$structVariable?); </xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+	
+  </xsl:when><xsl:when test="accessType='return'">
+  <!-- normal set operation -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      return ((?$structVariable?) &amp; mask) &gt;&gt; bitPos;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    return (?$structVariable?); </xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><xsl:when test="accessType='bool'">
+  <!-- normal set operation -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      return ((?$structVariable?) &amp; mask)!=0;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    return (?$structVariable?)!=0; </xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+
+  </xsl:when><xsl:when test="accessType='count1'">
+    <!-- this type of method increments the bits. But if the result value is 0, than it starts from 1. -->
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      (?$structType?) val = ((?$structVariable?)  + (1 &lt;&lt; bitPos)) &amp; mask;
+      if(val == 0){ val = 1 &lt;&lt; bitPos; } //never 0 if at least once increment.
+      (?$structVariable?)
+      = (((?$structVariable?) &amp; ~mask)
+        | val);
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    { (?$structType?) val = (?$structVariable?) +1;
+      if(val == 0){ val = 1; }  //never 0 if at least once increment.
+      (?$structVariable?) = val;
+    }</xsl:text>
+
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><xsl:when test="accessType='clear'">
+
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:text>
+    { int bitPos = (?!../bitStart?);
+      (?$structType?) mask = ((0x1L&lt;&lt; (?!../bitNumOf?))-1) &lt;&lt; bitPos;
+      (?$structVariable?) &amp;= ~mask;
+    }</xsl:text>
+
+    </xsl:when><xsl:otherwise>
+      <xsl:text>
+    (?$structVariable?) = 0;</xsl:text>
+
+    </xsl:otherwise></xsl:choose>
+
+  </xsl:when><xsl:otherwise>
+
+    <xsl:text>
+    //(?$structVariable?): unknown accesstype: (?!accessType?)</xsl:text>
+
+  </xsl:otherwise></xsl:choose>
+
+</xsl:template>
+
+
+<!-- **************************************************************************************************
+     **************************************************************************************************
+     **************************************************************************************************
+ -->
+
+<xsl:template name="initializeAllImplClassesInConstructor">
+<!-- this routine should be called inside the constructor. -->  
+  <xsl:for-each select="interfacedefinition/accessInterface" >
+    <xsl:text>
+  the(?@name?) = new (?@name?)(this);</xsl:text>
+  </xsl:for-each>
+</xsl:template>
+
+
+<xsl:template name="deleteAllImplClassesInDestructor">
+<!-- this routine should be called inside the constructor. -->  
+  <xsl:for-each select="interfacedefinition/accessInterface" >
+    <xsl:text>
+  delete the(?@name?);
+  </xsl:text>
+  </xsl:for-each>
+</xsl:template>
+
+
+	<!-- **************************************************************************************************
+     **************************************************************************************************
+     **************************************************************************************************
+ -->
+
+<xsl:template name="descriptionLine1">
+  <!-- act node is component/group/subgroup/variable -->
+  <xsl:choose><xsl:when test="contains(description,'&#xd;')"><xsl:value-of select="substring-before(description,'&#xd;')" />
+  </xsl:when><xsl:when test="contains(description,'&#xa;')"><xsl:value-of select="substring-before(description,'&#xa;')" />
+  </xsl:when><xsl:otherwise><xsl:value-of select="description" />
+  </xsl:otherwise></xsl:choose>
+</xsl:template>
+
+
+
+  <xsl:template name="buildVariableName">
+  <xsl:param name="index1"/>
+  <xsl:param name="index2"/>
+    <xsl:variable name="index">
+      <xsl:if test="count(../nrofElements)>0">[<xsl:value-of select="$index1"/>]</xsl:if><!-- from subgroup -->
+      <xsl:if test="count(../../nrofElements)>0">[<xsl:value-of select="$index2"/>]</xsl:if><!-- from group -->
+    </xsl:variable>
+    <xsl:text>data-&gt;</xsl:text>
+    <xsl:value-of select="../../../ident" />
+    <xsl:text>.</xsl:text>
+    <xsl:value-of select="../../ident" />
+    <xsl:if test="boolean(../../nrofElements)">[<xsl:value-of select="$index2"/>]</xsl:if>
+    <xsl:text>.</xsl:text>
+    <xsl:value-of select="../ident" />
+    <xsl:if test="boolean(../nrofElements)">[<xsl:value-of select="$index1"/>]</xsl:if>
+    <xsl:text>.</xsl:text>
+    <xsl:value-of select="name"/>
+    <xsl:value-of select="suffixName"/>
+  </xsl:template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <xsl:template name="formalArgumentList" >
+  <xsl:param name="implementation">false</xsl:param>
+  <!-- called at level access[parameterPosition='1'] --> 
+    <xsl:variable name="methodIdent" select="method"/>
+    <xsl:variable name="ifcIdent" select="interface"/>
+    <xsl:text>( </xsl:text>
+    
+    <!-- method assigned to a variable -->
+    <xsl:if test="(name(..)='usingBits' and count(../../../../nrofElements)>0) 
+               or (name(..)='variable' and count(../../../nrofElements)>0)"><xsl:text> int idxGroup</xsl:text><!-- from group -->
+      <xsl:if test="(name(..)='usingBits' and count(../../../nrofElements)>0) 
+                 or (name(..)='variable' and count(../../nrofElements)>0)"><xsl:text>,</xsl:text></xsl:if><!-- same condition as 'int idx1' -->
+    </xsl:if>           
+    <xsl:if test="(name(..)='usingBits' and count(../../../nrofElements)>0) 
+               or (name(..)='variable' and count(../../nrofElements)>0)"><xsl:text> int idx1</xsl:text><!-- from subgroup -->
+      <xsl:if test="count(/.//access[   method=$methodIdent 
+                                    and interface=$ifcIdent 
+                                    and (count(argtype)=0 or argtype!='void')
+                                    ])>0"><xsl:text>,</xsl:text></xsl:if>
+    </xsl:if>
+    <xsl:call-template name="formalArgumentList_ArgRecursively" >
+      <!-- all parameter will be found recursively call of formalArgumentList_ArgRecursively inside that, here started with 1 -->
+      <xsl:with-param name="methodIdent" select="$methodIdent"/>
+      <xsl:with-param name="ifcIdent" select="$ifcIdent"/>
+      <xsl:with-param name="paramNumber" select="'1'"/>
+    </xsl:call-template>
+    <xsl:text> )</xsl:text>
+  </xsl:template>
+
+
+  <xsl:template name="formalArgumentList_ArgRecursively">
+  <!-- called first time inside formalArgumentList and than recursively
+       actual element is "subgroup/variable/access or subgroup/variable/usingBits/access"
+    -->
+  <xsl:param name="methodIdent"/>
+  <xsl:param name="ifcIdent"/>
+  <xsl:param name="paramNumber"/>
+    <xsl:variable name="nextParamNumber" select="number($paramNumber)+1"/>
+
+    <xsl:variable name="argType">
+      <xsl:choose><xsl:when test="count(argtype)>0">
+        <xsl:value-of select="argtype" />
+      </xsl:when><xsl:when test="local-name(..)='usingBits'">
+        <xsl:value-of select="../../type" />
+      </xsl:when><xsl:otherwise>
+        <xsl:value-of select="../type" />
+      </xsl:otherwise></xsl:choose>
+      <xsl:if test="accessType='get'"><xsl:text>*</xsl:text></xsl:if>
+    </xsl:variable>
+
+    <xsl:if test="$argType!='void'">
+      
+      <xsl:variable name="argName">
+        <xsl:choose><xsl:when test="local-name(..)='usingBits'"><!-- xsl:copy-of select="../.." / --><!-- at level "variable/usingBits/access" -->
+          <xsl:text>(?!../../name?)(?!../../suffixName?)</xsl:text>
+        </xsl:when><xsl:otherwise><!-- xsl:copy-of select=".." / --><!-- at level variable/access -->
+          <xsl:text>(?!../name?)(?!../suffixName?)</xsl:text>
+        </xsl:otherwise></xsl:choose>
+      </xsl:variable>
+
+      <xsl:text>(?$argType?) (?$argName?)</xsl:text>
+    </xsl:if>
+    <!-- xsl:for-each select="$variable"><xsl:text>(?!type?) (?!name?)(?!suffixName?)</xsl:text></xsl:for-each -->
+      <!-- xsl:value-of select="../type"/><xsl:text> </xsl:text><xsl:for-each select=".."><xsl:call-template name="buildWinccName"/></xsl:for-each -->
+      <!-- xsl:text> P</xsl:text><xsl:value-of select="$paramNumber"/ -->
+    <xsl:for-each select="//access[method=$methodIdent and interface=$ifcIdent and parameterPosition=$nextParamNumber]">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="formalArgumentList_ArgRecursively" >
+        <xsl:with-param name="methodIdent" select="$methodIdent"/>
+        <xsl:with-param name="ifcIdent" select="$ifcIdent"/>
+        <xsl:with-param name="paramNumber" select="$nextParamNumber"/>
+      </xsl:call-template>
+    </xsl:for-each>
+  </xsl:template>
+
+
+
+
+  <xsl:template name="argumentDescription" >
+    <xsl:choose><xsl:when test="local-name()='access'">
+      <!-- method assigned to a variable -->
+      <xsl:if test="count(../../nrofElements)>0"><!-- from subgroup -->
+        <xsl:text>
+      @param idx1 Index of Element because the WinCC-Variable is inside a subset with index.</xsl:text>
+      </xsl:if>
+      <xsl:if test="count(../../../nrofElements)>0"><!-- from group -->
+        <xsl:text>
+      @param idxGroup Second Index of Element because the WinCC-subset
+             is inside a more comprehensive subset with index.</xsl:text>
+      </xsl:if>
+      <xsl:call-template name="argumentDescription_ArgRecursively" >
+        <!-- all parameter will be found recursively call of argumentDescription_ArgRecursively inside that, here started with 1 -->
+        <xsl:with-param name="methodIdent" select="method/@ident"/>
+        <xsl:with-param name="paramNumber" select="'1'"/>
+      </xsl:call-template>
+
+    </xsl:when><xsl:when test="local-name()='subgroup'">
+      <!-- method assigned to all variables of a subgroup -->
+      <xsl:if test="count(nrofElements)>0"><!-- from subgroup -->
+        <xsl:text>
+      @param idx1 Index of Subgroup.</xsl:text>
+      </xsl:if>
+      <xsl:if test="count(../nrofElements)>0"><!-- from group -->
+        <xsl:text>
+      @param idxGroup Index of Group.</xsl:text>
+      </xsl:if>
+      <xsl:for-each select="variable">
+        <xsl:text>
+      @param </xsl:text><xsl:value-of select="name/@ident"/><xsl:value-of select="suffixName/@ident"/>
+        <xsl:text> </xsl:text>
+        <xsl:value-of select="description/@string"/>
+      </xsl:for-each>
+
+    </xsl:when></xsl:choose>
+  </xsl:template>
+
+
+  <xsl:template name="argumentDescription_ArgRecursively">
+  <!-- called first time inside argumentDescription and than recursively -->
+  <xsl:param name="methodIdent"/>
+  <xsl:param name="paramNumber"/>
+    <xsl:variable name="nextParamNumber" select="number($paramNumber)+1"/>
+    <!-- at level "component/group/subgroup/variable/access" -->
+    <xsl:text>
+      @param </xsl:text>
+      <xsl:text> </xsl:text>
+    <xsl:choose><xsl:when test="local-name(..)='usingBits'">
+      <xsl:for-each select="../.."><xsl:call-template name="buildWinccName"/></xsl:for-each>
+      <xsl:text> </xsl:text>
+      <xsl:value-of select="../../description/@string"/>
+    </xsl:when><xsl:otherwise><!-- at level variable/access -->
+      <xsl:for-each select=".."><xsl:call-template name="buildWinccName"/></xsl:for-each>
+      <xsl:text> </xsl:text>
+      <xsl:value-of select="../description/@string"/>
+    </xsl:otherwise></xsl:choose>
+    <xsl:for-each select="//access[method/@ident=$methodIdent and parameterPosition/@int=$nextParamNumber]">
+      <xsl:call-template name="argumentDescription_ArgRecursively" >
+        <xsl:with-param name="methodIdent" select="$methodIdent"/>
+        <xsl:with-param name="paramNumber" select="$nextParamNumber"/>
+      </xsl:call-template>
+    </xsl:for-each>
+  </xsl:template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</xsl:stylesheet>  

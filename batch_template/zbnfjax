@@ -1,0 +1,162 @@
+#!/bin/bash
+
+## Notation rules: Remarks are signed with a ##-Line,
+#  But alternate settings should be remarks with 1 # as comment chars.
+## This exemplar is a template. It should be adapted to the users environment.
+## More Samples of user locations are provided as commented lines.
+
+##It is presumed, that the download is placed in the home directory under vishia/ZBNF
+
+
+## =====================================================================================================
+## The downloaded XML Tools are found at another directory of the hard disk.
+## At this location the following files and directories should be present:
+## * jdom.jar                http://www.jdom.org
+## * org.apache.ant_1.6.5    http://ant.apache.org
+## * saxon8-jdom.jar         http://www.saxonica.com
+## * saxon8.jar              http://www.saxonica.com
+## * saxon9he.jar
+
+export XML_TOOLS="/usr/share/XML_Tools"
+
+## =====================================================================================================
+## Location of the Java installation, it should be version 5 or 6. Use $JAVA_EXE to call java poor
+
+export JAVA_HOME="/usr/share/java"
+
+export JAVA_EXE="$JAVA_HOME/jre/bin/java"
+
+
+## =====================================================================================================
+## Location of the ANT-installation
+
+#ANT_HOME=$XML_TOOLS/org.apache.ant_1.6.5
+export ANT_HOME="/usr/share/eclipse/plugins/org.apache.ant_1.7.1.v20100518-1145"
+
+
+## =====================================================================================================
+## Location of the class files of a local Eclipse workspace
+## This should be only setted if tests with actual Eclipse compiled sources should be done.
+#ECLIPSE_CP=%FD%\Eclipse.wrk\Eclipse3_3\vishia\bin
+ECLIPSE_CP=
+
+
+## =====================================================================================================
+## The followed environment variables have to be matching to the users local installation:
+
+## A directory for temporary results is used in some batches. Mostly it should be a relative local path.
+## The rule is: If the user has it outside, it shouldn't be changed.
+if test "$TMP_ZBNFJAX" = ""; then  export TMP_ZBNFJAX="$HOME/tmp" ; fi
+
+## Location of the XML_Toolbase scripts.
+export XML_TOOLBASE="/usr/share/vishia/zbnfjax"
+export ZBNFJAX_HOME="/usr/share/vishia/zbnfjax"
+
+## Location of the Java2C_Toolbase scripts.
+export JAVA2C_TOOLBASE="/usr/share/vishia/Java2C"
+
+
+## Some JAVA_CP_xxx are used also in ANT-scripts.
+
+## Java-Classpath for Execution only Zbnf, Zbnf2Xml
+export JAVACP_ZBNF="$ZBNFJAX_HOME/zbnf.jar"
+
+## Java-Classpath for the additional download parts saxon and jdom:
+## see http://www.jdom.org, http://www.saxonica.com/
+export JAVACP_SAXON="$XML_TOOLS/jdom.jar:$XML_TOOLS/saxon9.jar:$XML_TOOLS/saxon9-jdom.jar"
+
+## Java-Classpath for Execution of Xslt. 
+export JAVACP_XSLT="$JAVACP_ZBNF:$ZBNFJAX_HOME/zmake.jar:$ZBNFJAX_HOME/Xslt.jar:$JAVACP_SAXON"
+
+## Java-Classpath for Execution of Header2Reflection.
+export JAVACP_Header2Reflection="$ZBNFJAX_HOME/header2Reflection.jar:$ZBNFJAX_HOME/zbnf.jar"
+
+## delete the environment variable XML_TOOLS, it is only temporary, its content is used in the other environments.
+XML_TOOLS=
+
+
+## =====================================================================================================
+## The following environment variables are built to a fix scheme with the settings above, don't change it:
+
+## expands the common PATH with the used java VM and XML-Tools:
+#export PATH="$ZBNFJAX_HOME/batch:$ANT_HOME:$JAVA_HOME/bin:$PATH"
+
+## sets the CLASSPATH common variable using from ANT and java call without classpath:
+export CLASSPATH="$JAVACP_XSLT"
+
+## callable java for xml, use $JAX_EXE class arguments
+export JAX_EXE="$JAVA_EXE -cp $JAVACP_XSLT"
+
+## calling special progs via java:
+export ZBNF2XML_EXE="$JAVA_EXE -cp $JAVACP_ZBNF org.vishia.zbnf.Zbnf2Xml"
+export XSLT_EXE="$JAVA_EXE -cp $JAVACP_XSLT org.vishia.xml.Xslt"
+export ZMAKE_EXE="$JAVA_EXE -cp $JAVACP_XSLT org.vishia.zbnf.Zmake"
+export Header2Reflection_EXE="$JAVA_EXE -cp $JAVACP_Header2Reflection org.vishia.header2Reflection.CmdHeader2Reflection"
+
+if test ! -d $TMP_ZBNFJAX; then mkdir $TMP_ZBNFJAX; fi
+
+
+## =====================================================================================================
+## The next statements test the correctness of the settings, don't change it!
+## If any error occurs, the batch process is stopped! Please correct the settings in the first block
+## or install the tools!
+
+echo ========================================ZBNFJAX_HOME environment ===========
+#echo PATH=$PATH
+echo TMP_ZBNFJAX=$TMP_ZBNFJAX
+echo ZBNFJAX_HOME=$ZBNFJAX_HOME
+echo JAVA_HOME = $JAVA_HOME
+echo JAVA_EXE = $JAVA_EXE
+echo ANT_HOME = $ANT_HOME
+echo ECLIPSE_CP=$ECLIPSE_CP
+echo JAVACP_ZBNF=$JAVACP_ZBNF
+echo JAVACP_XSLT=$JAVACP_XSLT
+echo JAVACP_Header2Reflection=$JAVACP_Header2Reflection
+#echo ==== composed environment ==================================================
+#echo CLASSPATH = $CLASSPATH
+#echo JAX_EXE = $JAX_EXE
+#echo ZBNF2XML_EXE = $ZBNF2XML_EXE
+#echo XSLT_EXE = $XSLT_EXE
+#echo ZMAKE_EXE = $ZMAKE_EXE
+echo ============================================================================
+
+ERRORMSG=""
+#if test -f $TMP_ZBNFJAX; then OK=OK
+#else ERRORMSG=TMP_ZBNFJAX
+#fi
+if test ! -d $ANT_HOME ; then  ERRORMSG=ANT_HOME ; fi
+if test ! -d $ZBNFJAX_HOME; then ERRORMSG=ZBNFJAX_HOME ; fi
+if test ! -d $JAVA_HOME ; then ERRORMSG=JAVA_HOME ; fi
+
+
+if test ! "$ERRORMSG" = ""
+then echo setZBNFJAX_HOME.sh Environemnt variable $ERRORMSG are not correct. abort.
+else
+  if test "$1" = "call";  then
+    export ZBNFJAX_CALL="call"  #sign call
+    echo execute $2 $3
+    $2 $3
+  elif test "$1" = "genDocu";  then
+    echo documentation generation
+    $ZBNFJAX_HOME/unixscript/xmlDocuGen $2
+  elif test "$1" = "javacjar";  then
+    echo jar generation
+    $ZBNFJAX_HOME/unixscript/javacjar $2
+  elif test "$1" = "java";  then
+    echo java $2 $3
+    $JAX_EXE $2 $3
+  elif test "$1" = "zmake";  then
+    $ZBNFJAX_HOME/unixscript/zmake $2
+  elif test "$1" = "zbnf2xml";  then
+    echo zbnf2xml $2
+    $JAVA_EXE -cp $JAVACP_ZBNF org.vishia.zbnf.Zbnf2Xml $2
+  elif test "$1" = "CHeader2JavaByteCoding";  then
+    echo execute CHeader2JavaByteCoding $2
+    $ZBNFJAX_HOME/unixscript/CHeader2JavaByteCoding $2
+  elif test "$1" = "Header2Reflection";  then
+    echo execute Header2Reflection $INPUT $2 $3 $4 $5 $6 $7 $8 $9
+    $Header2Reflection_EXE $INPUT $2 $3 $4 $5 $6 $7 $8 $9
+  else
+    echo fault command $1, expected: call, genDocu, java, javacjar, zmake, zbnf2xml, CHeader2JavaByteCoding
+  fi
+fi

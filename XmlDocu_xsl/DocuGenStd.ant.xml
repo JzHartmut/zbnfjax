@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- This file is imported from GenDocuCtrl2Ant.xsl to convert some xslp-files to its xsl-representations. -->
+<!-- created by Hartmut Schorrig -->
+<project name="DocuGenStd" default="" basedir=".">
+
+	<!--
+	<echo message = "basedir = ${basedir}"/>
+ 	<echo message = "curDir = ${curDir}"/>
+
+	 make a variable!!
+	<property name="LIBNAME" value=""/>
+	-->
+
+
+
+  <target name="DocuGenCtrl2Xsl.xsl" depends="isUptodate.DocuGenCtrl2Xsl.xsl" unless="isUptodate.DocuGenCtrl2Xsl.xsl">
+    <echo message="classpath=${env.JAVACP_XSLT}" />
+    <exec dir="${curDir}" executable= "java" failonerror="true">
+  	  <arg line ="-cp ${env.JAVACP_XSLT} org.vishia.xmlSimple.Xsltpre" />
+  	  <arg line ="--report:${tmp}/xsltpre.rpt --rlevel:324 " />
+  	  <arg line ="-i${env.ZBNFJAX_HOME}/XmlDocu_xsl/DocuGenCtrl2Xsl.xslp -o${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/DocuGenCtrl2Xsl.xsl"/>
+   	</exec>
+   	<echo message="rebuild DocuGenCtrl2Xsl.xsl" />
+  </target>
+  <target name="isUptodate.DocuGenCtrl2Xsl.xsl">
+    <uptodate property="isUptodate.DocuGenCtrl2Xsl.xsl" targetfile="${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/DocuGenCtrl2Xsl.xsl" >
+      <srcfiles file="${env.ZBNFJAX_HOME}/XmlDocu_xsl/DocuGenCtrl2Xsl.xslp" />
+    </uptodate>
+  </target>
+
+
+  <target name="HeaderDocu.xsl" depends="isUptodate.HeaderDocu.xsl" unless="isUptodate.HeaderDocu.xsl">
+    <exec dir="${curDir}" executable= "cmd.exe" failonerror="true">
+  	  <arg line ="/c call java -cp ${env.JAVACP_XSLT} org.vishia.xmlSimple.Xsltpre --report:${tmp}/xsltpre.rpt --rlevel:324 -i${env.ZBNFJAX_HOME}/XmlDocu_xsl/HeaderDocu.xslp -o${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/HeaderDocu.xsl"/>
+   	</exec>
+   	<echo message="rebuild HeaderDocu.xsl" />
+  </target>
+  <target name="isUptodate.HeaderDocu.xsl">
+    <uptodate property="isUptodate.HeaderDocu.xsl" targetfile="${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/HeaderDocu.xsl" >
+      <srcfiles file="${env.ZBNFJAX_HOME}/XmlDocu_xsl/HeaderDocu.xslp" />
+    </uptodate>
+  </target>
+
+
+  <target name="UmlDocu.xsl" depends="isUptodate.UmlDocu.xsl" unless="isUptodate.UmlDocu.xsl">
+    <echo message="translate with xsltpre" />
+    <exec dir="${curDir}" executable= "cmd.exe" failonerror="true">
+  	  <arg line ="/c call java -cp ${env.JAVACP_XSLT} org.vishia.xmlSimple.Xsltpre --report:${tmp}/xsltpre.rpt --rlevel:324 -i${env.ZBNFJAX_HOME}/XmlDocu_xsl/UmlDocu.xslp -o${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/UmlDocu.xsl"/>
+   	</exec>
+   	<echo message="rebuild UmlDocu.xsl" />
+  </target>
+  <target name="isUptodate.UmlDocu.xsl">
+    <uptodate property="isUptodate.UmlDocu.xsl" targetfile="${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/UmlDocu.xsl" >
+      <srcfiles file="${env.ZBNFJAX_HOME}/XmlDocu_xsl/UmlDocu.xslp" />
+    </uptodate>
+  </target>
+
+
+
+	<target name="genXml2Pre2Html" unless="isUptodate_html" description="common target to generate Html from Xml">
+	  <uptodate property="isUptodate_pre" targetfile="${tmp}/${output}.pre.xml">
+	    <!-- set if the pre.xml is newer as html, in this case pre is built just now and should not be built again. -->
+	    <srcfiles file="${output}.html" />
+	    <srcfiles file="${xsl}" />
+	    <srcfiles file="${tmp}/*.xsl" />
+	    <srcfiles file="${env.ZBNFJAX_HOME}/XmlDocu_xsl/TopicXhtml.xsl" />
+	  </uptodate>
+    <antcall target="genDocuXml2Pre"><!-- unless isUptadate_pre -->
+      <param name="input" value="${input}" />
+      <param name="xsl" value="${xsl}" />
+      <param name="output" value="${output}" />
+    </antcall>
+	  <uptodate property="isUptodate_html_respPre" targetfile="${output}.html">
+	    <!-- set if the pre.xml is newer as html, in this case pre is built just now and should not be built again. -->
+	    <srcfiles file="${tmp}/${output}.pre.xml" />
+	  </uptodate>
+    <antcall target="genPre2Html"><!-- unless isUptodate_html_respPre -->
+      <param name="output" value="${output}" />
+    </antcall>
+  </target>
+
+  <target name="genDocuXml2Pre">
+  <!-- target name="genDocuXml2Pre" unless="isUptodate_pre" -->
+    <property name="argline" value="/c %XSLT_EXE% ${input} -t${xsl} -w+ -y${tmpdocu}/${output}.pre.xml --report:${tmp}/${output}.pre.rpt --rlevel:334" />
+    <echo message="exec: ${argline}"/>
+    <exec dir="${curDir}" executable= "cmd.exe" failonerror="true">
+  	  <arg line ="${argline}"/>
+   	</exec>
+  </target>
+
+  <target name="genPre2Html" unless="isUptodate_html_respPre">
+    <exec dir="${curDir}" executable= "cmd.exe">
+  	  <arg line ="/c %XSLT_EXE% -i${tmpdocu}/${output}.pre.xml -i%ZBNFJAX_HOME%\XmlDocu_xsl\HtmlFormatStd.xml -t%ZBNFJAX_HOME%/XmlDocu_xsl/Pre2Xhtml.xsl -w- -y${output}.html"/>
+   	</exec>
+  </target>
+
+
+
+
+
+	<target name="Check_InterProcessComm_html" depends="allTopic">
+	  <uptodate property="isUptodate_html" targetfile="InterProcessComm2.html" srcfile="InterProcessComm.topic.txt" />
+  </target>
+
+
+	<target name="TestExistsPre">
+	  <available property="preExists" file="${tmp}/${input}.pre.xml"  />
+  </target>
+
+  <target name="allTopic" description="updates all ${tmp}/*.topic.xml if the associated *.topic.txt are newer">
+    <antcall target="TopicXmlExists"><param name="text2TopicFile" value="InterProcessComm" /></antcall>
+  </target>
+
+
+  <target name="TopicXmlExists" description="updates the named ${text2TopicFile}.topic.xml if the named ${text2TopicFile}.txt is newer">
+    <dependset>
+      <!-- ant-note: deletes the target files if any of the source file have a newer timestamp. -->
+      <srcfilelist dir = "." files="${text2TopicFile}.topic.txt" />
+      <targetfilelist dir="${tmp}" files="${text2TopicFile}.topic.xml" />
+    </dependset>
+	  <available property="topicExists" file="${tmp}/${text2TopicFile}.topic.xml" />
+	  <antcall target="convertText2Topic" />
+  </target>
+
+
+
+
+
+
+
+	<target name="text2Topic" description="tests if the ${topicdir}/${topicfile}.topic.txt file is newer as ${topicfile}.topic.xml, calls the conversion if neccessary.">
+    <uptodate property="isUptodateTopic" targetfile="${tmp}/${topicfile}.topic.xml">
+	    <srcfiles file="${topicdir}/${topicfile}.topic.txt" />
+	    <srcfiles file="${env.ZBNFJAX_HOME}/zbnf/AsciiTopics.zbnf" />
+	  </uptodate>
+	  <antcall target="convertText2Topic"><param name="topicfile" value="${topicfile}" /><param name="topicdir" value="${topicdir}" /></antcall>
+  </target>
+  <target name="convertText2Topic" unless="isUptodateTopic" description="called inside text2Topic">
+    <exec dir="${curDir}" executable= "cmd.exe" failonerror="true">
+  	  <arg line ="/c %SBNF_EXE% -i${topicdir}/${topicfile}.topic.txt -s${env.ZBNFJAX_HOME}/zbnf/AsciiTopics.zbnf -y${tmpdocu}/${topicfile}.topic.xml"/>
+   	</exec>
+  </target>
+
+
+	<target name="Text2Genctrl" description="tests if the ${genctrldir}/${genctrlfile}.genctrl.txt file is newer as ${genctrlfile}.genctrl.xsl, calls the conversion if neccessary.">
+
+	  <uptodate property="isUptodateGenCtrl" targetfile="${tmp}/${genctrlfile}.genctrl.xml">
+	    <srcfiles file="${genctrldir}/${genctrlfile}.genctrl.txt" />
+	    <srcfiles file="${env.ZBNFJAX_HOME}/zbnf/DocuGenCtrl.zbnf" />
+	  </uptodate>
+	  <antcall target="convertText2GenCtrlXml"></antcall>
+
+	  <uptodate property="isUptodateGenCtrlXsl" targetfile="${tmp}/${genctrlfile}.genctrl.xsl">
+	    <srcfiles file="${tmp}/${genctrlfile}.genctrl.xml" />
+	    <srcfiles file="${env.ZBNFJAX_HOME}/XmlDocu_xsl/gen/DocuGenCtrl2Xsl.xsl" />
+	  </uptodate>
+	  <antcall target="convertGenCtrlXml2Xsl"></antcall>
+
+  </target>
+
+  <target name="convertText2GenCtrlXml" unless="isUptodateGenCtrl">
+    <echo message="input:${genctrldir}/${genctrlfile}.genctrl.txt" />
+    <exec dir="${curDir}" executable= "cmd.exe">
+  	  <arg line ="/c %SBNF_EXE% -i${genctrldir}/${genctrlfile}.genctrl.txt -s%ZBNFJAX_HOME%/zbnf/DocuGenCtrl.zbnf -y${tmpdocu}/${genctrlfile}.genctrl.xml"/>
+   	</exec>
+  </target>
+
+  <target name="convertGenCtrlXml2Xsl" unless="isUptodateGenCtrlXsl">
+    <echo message="xml2xsl: ${tmp}/${genctrlfile}.genctrl.xsl" />
+    <exec dir="${curDir}" executable= "cmd.exe">
+  	  <arg line ="/c %ZBNFJAX_HOME%\xt.exe ${tmp}/${genctrlfile}.genctrl.xml %ZBNFJAX_HOME%/XmlDocu_xsl/gen/DocuGenCtrl2Xsl.xsl ${tmp}/${genctrlfile}.genctrl.xsl"/>
+   	</exec>
+
+  </target>
+
+
+
+
+	<target name="testHeader2Xml" description="tests if the ${headefile}.h.xml is newer as ${headefile}.h, calls the conversion if neccessary.">
+	  <uptodate property="isUptodateHeaderXml" targetfile="${tmp}/${headerfile}.h.xml">
+	    <srcfiles file="${headerdir}/${headerfile}.h" />
+	    <srcfiles file="${env.ZBNFJAX_HOME}/zbnf/Cheader.zbnf" />
+	  </uptodate>
+	  <antcall target="convertHeader2Xml">
+	    <param name="headerfile" value="${headerfile}" />
+	    <param name="headerdir" value="${headerdir}" />
+	  </antcall>
+  </target>
+  <target name="convertHeader2Xml" unless="isUptodateHeaderXml" description="called inside testHeader2Xml">
+    <exec dir="${curDir}" executable= "cmd.exe" failonerror="true">
+  	  <arg line ="/c %SBNF_EXE% -i${headerdir}/${headerfile}.h -s%ZBNFJAX_HOME%/zbnf/Cheader.zbnf -y${tmpdocu}/${headerfile}.h.xml"/>
+   	</exec>
+  </target>
+
+
+
+
+
+
+</project>

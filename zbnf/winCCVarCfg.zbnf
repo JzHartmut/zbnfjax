@@ -1,0 +1,12 @@
+<?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
+$comment= (? ... ?) .
+$endlineComment=#.
+
+VariablenCfg::=<*|\n==VariablenConfiguration==?> ==VariablenConfiguration== { <variablenBlock> } \e.
+
+variablenBlock::=
+  [variable |struct <$?structName>] : [<$?winCCfolder>/][<$?prefix>]*[<$?suffix>]  
+{ @ DB<#?nrDB>\.DBB<#?nrByte> 
+| DBname = <*\ ,;?dbName>
+| Type [:|=] <*\ ,;?pathUDT>
+? , } ;.

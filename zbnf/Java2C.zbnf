@@ -1,0 +1,389 @@
+
+##This script describes the syntax of java language to use for Java2C-translating and for Java2XMI. The syntax is tested with some Java sources, there may be some unregarded java features yet.
+##written by hartmut.schorrig@vishia.de, www.vishia.org as part of Java2C-project. 
+
+##changes:
+##2010-02-06 Hartmut bug: 'nullReference' or such variables was failed. Move detect of <nullRef> null behind detect of variables.
+##2009-05-31 Hartmut corr nonArrayType::= a type without testing [], used for initialized arrays.
+##                   corr [?<!\\w>] used after some keywords in syntax, to prevent a confusion with identifiers, starting with the same text such as 'ref.classRef' and 'ref.class'
+##                   corr newArray::= may have a const initializer like new array[]{ ref1, ref2}
+##                   chg: reference::= is now defined with recursion, like envIdent, not with a repetition. Therefore the result is a nesting <?reference>-tree.
+##2007-09-00 Hartmut creation
+
+
+JavaSrc::=
+[package <classpath?PackageDefinition> ; ]
+[ {<?importStatement> [/**[><description>*/]] import {<$?package>\.}[<$?class>|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap|*<?allClasses>] ; } ]
+{ <classDefinition> | <interfaceDefinition> }
+.
+
+$keywords::=class|interface|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.
+
+
+description::= <*{ * }|*/?!test_description>.
+
+##The test_desciption syntax is used to parse the inner structure of a description.
+test_description::= <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?text>
+[{ @sizeof = <*@\e?sizeofDescription>
+ |<?returnDescription> @return <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?!paramDescription>
+ |<?param> @param <$?variableName> <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?!paramDescription>
+ | <?staticInstance> @Java2C = staticInstance <*@\e?text>
+ | @java2c = [>{ <java2cTag?> ? , } [:|\.]] <*@\e?rest>
+ | @ <*@\e?auxDescription>
+ }] \e.
+
+##NOTE: The @java2c-Part is not part of paramDesicription-subtext. TODO
+paramDescription::= <*@\e?text>
+[{ @pjava2c = [>{ <java2cTagParam?> ? , } [:|\.]] <*@\e?rest>
+ | @ <*@\e?auxDescription>
+ }] \e.
+
+
+java2cTagParam::=
+[> xxx            ##abort translation if nothing is matched. The xxx is necessary because any path has <?semenatic>
+|<?simpleArray> simpleArray                  ##to array def: no head informations.
+|<?simpleVariableRef> simpleVariableRef     ##in java forex a int[] x where x[0] is used. In C a int* x
+|<?nonPersistent> nonPersistent   ##attribute to param TODO unused yet. Ask it onnly in paramDesciption.
+|<?zeroTermString> zeroTermString ##to String name; a const char*
+].
+
+
+java2cTag::=
+[> xxx            ##abort translation if nothing is matched. The xxx is necessary because any path has <?semenatic>
+|<?xxxfixStringBuffer> fixStringBuffer          ##deprecated. it is always to final StringBuffer name = new StringBuffer(123); 
+|<?simpleArray> simpleArray                  ##to array def: no head informations.
+|<?simpleVariableRef> simpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
+|<?staticInstance> staticInstance            ##to class
+|<?embeddedYElements> embeddedArrayElements  ##to array def: all elements are embedded
+|<?noObject> noObject             ##to class: no superclass ObjectJc
+|<?noGC> noGC                     ##only simple, not an enhanced refernece
+|<?noGC> simpleRef                ##only simple, not an enhanced refernece
+|<?nonPersistent> nonPersistent   ##attribute to param TODO unused yet. Ask it onnly in paramDesciption.
+|<?stackInstance> stackInstance   ##new creates an instance in stack
+|<?zeroTermString> zeroTermString ##to String name; a const char*
+|<?ByteStringJc> ByteStringJc     ##to a byte[] array, it is generated as ByteStringJc
+|<?return-this> return-this
+|<?return-new> return-new
+|<?dynamic-call> dynamic-call     ##to declare a enhanced Mtbl-reference in stack.
+##|<?optimizeString> optimize-toString
+|<?xxxoverride-able> override-able   ##virtual method
+| stacktrace: [ no-param <?noThCxt>| no <?noStacktrace>| yes]
+| instanceType : <""?instanceType>
+| embedded Type : <$?embeddedType>
+|<?stackSize> stackSize ( { <#?bytes> | <* )+?type> ? + } )  ##only valid at thread.start()
+|<?toStringNonPersist> toStringNonPersist             ##The String is designated as non-persistant, especially located in ThreadContext
+|<?nonPersistent> nonPersistent                       ##The String is used only non-Persist. Written on definition of String variable.
+|<?declarePersist> declarePersist                     ##a StringJc is declared as persistent, the programmer knows it.
+| StringBuilderInStack [:|=] <#?StringBuilderInStack> ##used for String concatenation
+|<?StringBuilderInThreadCxt> StringBuilderInThreadCxt ##used for String concatenation and returned Strings
+|<?returnInThreadCxt> returnInThreadCxt ##used to copy a returned an instance in stack in the thread context.
+].
+
+
+Java2CAnnotation::=
+[FixArraySize(<#?simpleArray>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
+|DynamicCall <?dynamic-call>
+].
+
+
+
+?en:java2cTag/nonPersistent::="A reference which is designed as non-persistent, shouldn't be stored and used in another threads.".
+
+classDefinition::= 
+  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> } 
+  class <$?classident>
+  [\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
+  [extends [<?Superclass> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]]
+  [implements { [<?ImplementedInterface> {<$?>?\.}][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>] ? , }]
+  \{ <classContent?>
+  \}.
+
+
+
+classContent::=
+{ ##[/**<description?-?>*/]
+  [ <variableDefinition> ;
+  | <methodDefinition>
+  | <constructorDefinition>
+  | <classDefinition>
+  | <interfaceDefinition>
+  | static <statementBlock?initializingBlockStatic>
+  | <statementBlock?initializingBlock>
+  | ;
+  ]
+}.
+
+
+
+##An envIdent is a ident in a possible environment class.
+## <?@name> is the outest environment class, inside a <?subIdent> is the next inner <?name> etc.
+##In XML it's: <envIdent name="outestClass"><subIdent name="nextClass"><subIdent name="nextClass"></subIdent></subIdent></envIdent>
+envIdent::=  <$?@name> \. [?\.\.] [<envIdent?subIdent>] .
+##old: environment::= [{<?environment> <$?@name> \.}] .
+
+
+##A typeIdent is a identifier of a type which maybe defined in a class context or pure.
+## A pure type ident is either a global visible type, or it may an own class type (local visible, than writing pure).
+## A type in a context uses the envIdent.
+typeIdent::= [<envIdent>] <$?@name>.
+
+
+
+##A nonArrayType has the same content like a typeIdent, but additionally an element type (generic type) of a container 
+
+nonArrayType::= <typeIdent?>   ##nonArrayType produces the same result as typeIdent
+[\< [ [ \?<?undefGenericKey> [ extends <type?baseGenericKey>] | <type?ContainerElementKey>]  , ] 
+      [ \?<?undefGeneric>    [ extends <type?baseGeneric>]    | <type?ContainerElementType>] 
+ \>
+]
+.
+
+##A type has the same content like a nonArrayType, but additionally an array identification may be part of them.
+
+xxxtype::= 
+[ <nonArrayType?>          ##produces type the same result as nonArrayType
+  [{ <?typeArray> \[ \]}]
+| <?va_arg>\.\.\.
+].
+
+type::= <nonArrayType?>   
+[ { <?typeArray> \[ \]}
+| <?va_arg>\.\.\.
+|].
+
+
+
+methodDefinition::=
+[{ /**[><description>*/]
+ | @Override<?A_Override>
+ | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+}]
+[<Modifier>] <type> <$?name> ( [<argumentList?>] )
+[ <throwsDeclaration>]
+[ <?abstractMethod> ;
+| <statementBlock?methodbody>
+].
+
+constructorDefinition::=
+[{ /**[><description>*/]
+ | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+}]
+[<Modifier>] <$?constructor>
+( [<argumentList>] )  ##a
+[ <throwsDeclaration>]
+\{ [<?superCall> super ( [<actualArguments>] ); ]
+   [<statementsOrDefinition> ]
+\}.
+
+throwsDeclaration::= throws { [<?ThrowsException> {<$?>?\.}|!] ? , }.
+
+
+interfaceDefinition::=
+  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> } 
+  interface <$?classident>[\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
+  [extends [<?SuperInterface> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]]
+\{
+  [{  <variableDefinition> ;
+    | <methodDefinition>
+    | <interfaceDefinition>
+    | <classDefinition>
+  }]
+\}.
+
+
+
+
+
+classpath::={<$?packageClassName>?\.}.
+
+importpath::={<$?package>\.}[<$?class>|*<?allClasses>].
+
+AccessRight::=<?>[ public<?public> | private<?private> | protected<?protected> |].
+
+##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
+##      it is a Java specification problem!
+Modifier::=<?>{[synchronized<?synchronized> | static<?static> | final<?final> | volatile<?volatile> | abstract<?abstract> | <AccessRight> ]}.
+
+
+statement::=
+[/*<description>*/]
+[ \{ \} <?+emtypStatementBlock>
+| ; <?emptyStatement>
+|<?synchronizedBock> synchronized ( <simpleValue?synchronizedObject> ) <statementBlock>
+| <statementBlock>
+| <if_statement>
+| <switch_statement>
+| <while_statement>
+| <dowhile_statement>
+| <forElement_statement>
+| <for_statement>
+##|<?throwNew> throw new <$?exceptionClass> ( <value?text> [, <value?value2>] ) ;
+|<?throwNew> throw new <type?exceptionClass> ( <value?text> [ , <value?value2> ] ) ;
+| <try_statement>
+|<?return> return[!<!\\W?>] [ <value> |] ;  ##no word char expected after return, but not processed
+|<?break_statement> break ;
+| <simpleValue?> ;   ##a methodcall is syntactical the same as a simpleValue calling a simple Method
+| <assignment> ;
+]
+[ //<*\r\n?descriptionInline> ]
+.
+
+
+assignment::= <maybeReferencedVariable?leftValue>  [ <assignOperator>  <value> | ++ <?increment> | -- <?decrement> ] .
+
+
+assignOperator::=<?> [<?@assignOperator> = | += | -= | *= | /= | &= | \|= | \<\<= | \>\>= ] . 
+
+if_statement::=if ( <condition> ) [ ;<?noAction> | <statement>] [ else [ ;<?noAction>| <statement?elseStatement>] ].
+
+while_statement::=while ( <condition> ) [<statement>].
+
+dowhile_statement::=do <statement> while ( <condition> );.
+
+for_statement::=for ( 
+  [<variableDefinition> ; | <assignment?startAssignment> ;]  
+  <condition?endCondition> ; 
+  [ <assignment?iteratorAssignment> | <simpleValue?iteratorExpression>]  ##NOTE: a simpleValue contains the pre- and post-increment/decrement forex: ++ix 
+  ) <statement>.
+
+forElement_statement::=for ( <variableDefinition> : <value?forContainer> ) <statement>.
+
+switch_statement::=switch ( <value?switchValue> ) 
+\{ [{<?case> { case <value?caseValue> : }    ##more as one case value: after another is predictable, it are more cases to the same statements.  
+     <statementsOrDefinition>                      ##but at least one statement should be written.
+   }]
+   [<?default> default : <statementsOrDefinition> ] 
+\}.
+
+try_statement::=try <statementBlock> {<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> }.
+
+statementsOrDefinition::=<?>
+{ <variableDefinition?+?> ; 
+|  <classDefinition>
+| <statement>
+| @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+}.
+
+statementBlock::=\{ 
+[{ //<*\r\n?descriptionOfBlock> }]
+[{ <variableDefinition?+?> ; 
+ |  <classDefinition>
+ | <statement>
+ | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+}] \}.
+
+
+##A value represented a number, string or such one. In other way it's named 'expression'.
+##  But the designation 'expression' is not so precise. It means anywhat.
+
+
+
+##A typefixValue is a value, which type isn't changed in combining with the given operators. 
+## The highest type of all simpleValues presents the type of the expression: int higher as short etc. Order is double float long int short byte boolean.
+## It is possible that the simpleValue is char or String. Than the order is String, char, numerical. 
+##Note: exclude && and || because there are activ in maybeBooleanValue. Beware the conflict with & and |.
+
+typefixValue::= { [|<unaryOperator>] <simpleValue?> ? [? && | \|\| ] [<?binaryOperator> + | - | * | / | % |  & | \| | ^ | \>\> | \<\< ]  }.
+
+##instanceof::= <simpleValue?instance> instanceof <type?instanceType>.
+
+##A maybeBooleanValue may be a boolean value, if a cmpOperator is present and/or a combining with booleanOperator is found.
+## Than the type of expression is boolean.
+##A maybeBooleanValue may also be a typefixValue.
+
+maybeBooleanValue::={ <typefixValue?>  [ [ instanceof <type?instanceType>| [<?cmpOperator> \>= | \<= | \> | \< |  == | != ] <typefixValue?>]] ? [<?booleanOperator> && | \|\| ] }.
+##maybeBooleanValue::={ [ <typefixValue?>  [ [<?cmpOperator> \>= | \<= | \> | \< |  == | != ] <typefixValue?>] | <instanceof> ] ? [<?booleanOperator> && | \|\| ] }.
+
+
+##A value may be a boolean or not boolean value, but a conditional operation and a assignment are also recognized.
+##If a condition expression are found, the first value is the parsed value before ?. It is a boolean, because the javac-Compiler has tested it.
+## the terms left and right from : are any desired value, including conditionals and assignments.
+##An assignment infers in presenting of a = operator. The left side is a variable than, the javac-Compiler has tested it.
+## Right hand from = there is any desird value, it is the repetition syntax construct. A concatenating of assignments is accepted.
+##The type of expression is the type of the left assignment, or the higher type of trueValue and falseValue, or the type of maybeBooleanValue.
+##The type of expression is used and tested, if a actual paramter for a method is given and the methods signature is searched.
+
+value::=
+{ <maybeBooleanValue?>
+  [<?conditional> \?  <value?trueValue> : <value?falseValue> ]  ##NOTE: the value before ? is the boolean condition.
+?<?assignment> <assignOperator>   ##NOTE: In this case the parsed value before = is a left value, the javac-compiler had testet it.  
+}
+.
+
+
+##Hint: [?<!\\w>] requires, that a non word char followes. It is necessary on test of true, false, class to different it from identifier beginning with that words, at ex. "trueValue"
+##A simpleValue is a component of a value not concatenated with operators.
+simpleValue::=<?>
+[
+  <""?simpleStringLiteral>[ \. <simpleMethodCall?StringLiteralMethod> ]  ##StringLiteralMethod: It is a special form, in Java "xyz". is a String Object.
+| <''?simpleCharLiteral>
+| [<?booleanConst>true|false] [?<!\\w>]
+|<?casting> ( <type> ) <value>  ##NOTE: must be arranged before ( <simpleValue> ) because confusion with, example (type)simpleValue and (variable)
+##|<?newInstanceAccess> ( <newObject> ) \. [<simpleMethodCall> | <variable> ]
+| 0x<#x?hexNumber>[L]
+| - 0x<#x?hexNumberNegative>[L]
+| <#-?intNumber>[?\.][L|F|]
+| <#f?floatNumber>F
+| <#f?doubleNumber>
+| new <newArray> 
+| <newObject> 
+|<?methodCall> [<reference>]<simpleMethodCall?>
+|<?reflectionType> <$?Type>  \. class [?<!\\w>]
+|<?variable> [ -- <?preDecrement>| ++ <?preIncrement>|] [ <reference>] <simpleVariable?>[ -- <?postDecrement>| ++ <?postIncrement>|]
+| ( <value?parenthesisExpression> )
+|<?nullRef> null
+]
+.
+
+
+condition::=<value?>.  ##The compiler tests that it is a boolean value expression.
+
+
+unaryOperator::=<?> [<?unaryOperator> - | ~ | ! ].
+
+##superAccess::=super\..
+
+##A reference is all things left from point.
+##A referenceValue may be also a simpleMethodCall, but in parenthesis. A simpleMethodCall without () is more immediate. The same is with referenceAssociation.
+reference::=[ this \.<?this> | super \.<?super> | ( <newObject> ) \.| ( <value?referenceValue> ) \.| <simpleMethodCall?referenceMethod> \.| <simpleVariable?referenceAssociation> \.] [<reference>].
+
+##A variable is either a left value or a kind of value.
+simpleVariable::= <$?variableName>[{ \[ <value?arrayIndex> \] }].
+
+maybeReferencedVariable::= [<reference>] <simpleVariable?>.
+
+simpleMethodCall::=<$?methodName> ( [<actualArguments>] ).
+
+actualArguments::={ <value> ? , }.
+
+##formal parameter or argument list of methods and constructors:
+argumentList::=<?>{<?argument> <Modifier?> <type> <$?variableName>[\[\]<?array>] ?, }.
+
+##A syntactical variableDefinition is such as "int a,b,c". But a semantical variableDefinition is "int a", "int b".
+##Therefore the type is assigned to the syntactical <variableInstance?...>, this is semantical the <...?+variableDefinition>.
+variableDefinition::=<?> 
+[{ /**[><description?-?>*/]
+ | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+ | @Java4C\.<Java2CAnnotation>
+}]
+[<Modifier?-?>] <type?-?> {<variableInstance?+variableDefinition>  ? , }.
+variableInstance::=<$?variableName> [ \[\]<?array> ] 
+[ = [ new <newArray> 
+		| <newObject>  
+    | <constArray> 
+		| <value>
+		] ].
+
+newObject::= [<reference>] new <nonArrayType?newClass> ( [<actualArguments>] ) [\{ <classContent?impliciteImplementationClass> \}].
+
+
+newArray::= <nonArrayType?newClass> {\[ [<value>] \]}  [<constArray>] .
+
+##[{<?arrayRef> \[ \] }]
+
+?newArray/value::="The size of the dimensions are known. For more as one dimensions: The hyper dimensions are setted with references to the sub-dimension-array.".
+##?newArray/arrayRef::="Some emtpy [] on end of a new means, the mulitdimensional array isn't initialized at end. There can be assigned another array reference with given dimensions. ".
+
+?newArray/constArray::="An array can be initialized immediately writing some {value, value, value}. ".
+
+constArray::= \{ [{ <value> | <constArray> ? , }] \}.
