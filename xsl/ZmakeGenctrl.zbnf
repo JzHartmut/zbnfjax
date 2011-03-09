@@ -29,29 +29,33 @@ genFile::= (\?:file\?)
 
 ##The textual content of any target, file, variable etc.
 
-genContent::=  ##<$NoWhiteSpaces>
-{ [?(\?/\?)]
-[ (\?= <variableAssignment?setVariable> (\?/=\?)
+genContent::=
+{ (\?= <variableAssignment?setVariable> (\?/=\?)
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+| (\?:for : <forVariable> (\?/for\?)
 | (\?:forList : <forList> (\?/forList\?)
 | (\?+ <variableAssignment?addToList> (\?/+\?)
 | (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
 | (\?*\?)<?listElement>
+| (\?*<forElement>\?)               ##element of the (?*for:name?)...list where name is given here.
 | (\?<$?variableValue>\?)
 | (\?:\?)<genContentNoWhitespace?>(\?/\?)
 | (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
 | <*|(\??text>                        ##text after whitespace but inclusive trailing whitespaces
-]
 }.
 
+
+forElement::=<$?name>[\.<$?elementPart>].
 
 genContentNoWhitespace::=<$NoWhiteSpaces>
 { [?(\?/\?)]
 [ (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+| (\?:for : <forVariable> (\?/for\?)
 | (\?*\?)<?listElement>
+| (\?*<forElement>\?)
 | (\?<$?variableValue>\?)
 | <*|(\??text>                        ##text after whitespace but inclusive trailing whitespaces
 ]
@@ -60,6 +64,8 @@ genContentNoWhitespace::=<$NoWhiteSpaces>
 
 
 variableAssignment::= <$?@name> \?)<genContent?> .
+
+forVariable::= <$?@name>\?) <genContent?> .
 
 forList::= <$?@name>\?) <genContent?> .
 
