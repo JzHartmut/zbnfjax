@@ -10,7 +10,7 @@ if "%ZBNFJAX_HOME%" == "" call setZBNFJAX_HOME.bat
 if errorlevel 1 goto :error
 call %ANT_HOME%\bin\ant -f %TMP_ZBNFJAX%/_antcmdDocuGctr.xml  -DcurDir="%CD%"
 if errorlevel 1 goto :error
-copy %ZBNFJAX_HOME%\XmlDocu_xsl\htmlstd.css ..\html\*.*
+::copy %ZBNFJAX_HOME%\XmlDocu_xsl\htmlstd.css ..\html\*.*
 pause
 goto :ende
 

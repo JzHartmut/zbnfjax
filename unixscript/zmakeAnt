@@ -9,5 +9,7 @@ INPUT=$1
 $ZMAKE_EXE -i:$INPUT -tmp:$TMP_ZBNFJAX -tmpantxml:_ant_${INPUT}.xml -zbnf4ant:xsl/ZmakeStd.zbnf -xslt4ant:xsl/ZmakeStd.xslp --rlevel:333 --report:$TMP_ZBNFJAX/_Zmake_${INPUT}.log
 
 #ANT executes all the rest. To check what it does, see $TMP_ZBNFJAX/_ant_${INPUT}.xml.
+export CLASSPATH="$ZBNFJAX_HOME/zmakeAnt.jar:$CLASSPATH"
+
 echo === CALL ANT: $TMP_ZBNFJAX/_ant_${INPUT}.xml
 $ANT_HOME/bin/ant -f $TMP_ZBNFJAX/_ant_${INPUT}.xml  -DcurDir="$PWD"

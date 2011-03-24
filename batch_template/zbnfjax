@@ -20,11 +20,15 @@
 export XML_TOOLS="/usr/share/XML_Tools"
 
 ## =====================================================================================================
-## Location of the Java installation, it should be version 5 or 6. Use $JAVA_EXE to call java poor
 
-export JAVA_HOME="/usr/share/java"
+## Location of the Java JDK installation, it should be version 6 or newer. 
+export JAVA_JDK="/usr/share/JDK"
 
-export JAVA_EXE="$JAVA_HOME/jre/bin/java"
+## call of java. It may be inside a special JDK, or it may be the standard-java on your system.
+## Hint: $JAVA_EXE can be set to a JRE independently from JAVA_JDK.
+export JAVA_EXE="java"
+#if test -d $JAVA_HOME/bin; then export JAVA_EXE="$JAVA_HOME/bin/java"; fi ##set it only if it doesn't exists.
+export JAVA_EXE="$JAVA_JDK/jre/bin/java"
 
 
 ## =====================================================================================================
@@ -145,8 +149,10 @@ else
   elif test "$1" = "java";  then
     echo java $2 $3
     $JAX_EXE $2 $3
-  elif test "$1" = "zmake";  then
-    $ZBNFJAX_HOME/unixscript/zmake $2
+  elif test "$1" = "zmakeAnt";  then
+    $ZBNFJAX_HOME/unixscript/zmakeAnt $2
+  elif test "$1" = "zmakeGen";  then
+    $ZBNFJAX_HOME/unixscript/zmake $2 $3
   elif test "$1" = "zbnf2xml";  then
     echo zbnf2xml $2
     $JAVA_EXE -cp $JAVACP_ZBNF org.vishia.zbnf.Zbnf2Xml $2

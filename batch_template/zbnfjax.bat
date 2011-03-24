@@ -19,8 +19,13 @@ if not "%1" == "java" goto :nJava
   %JAX_EXE% %2 %3
   goto :ende
 :nJava
+if not "%1" == "zmakeAnt" goto :nZmakeAnt
+  %ZBNFJAX_HOME%\batch\zmakeAnt.bat %2
+  goto :ende
+:nZmakeAnt  
 if not "%1" == "zmake" goto :nZmake
-  %ZBNFJAX_HOME%\batch\zmake.bat %2
+  echo Hint: use zmakeAnt instead zmake as cmd argument of zbnfjax for future compatibility!
+  %ZBNFJAX_HOME%\batch\zmakeAnt.bat %2
   goto :ende
 :nZmake
 if not "%1" == "zbnf2xml" goto :nZbnf2Xml

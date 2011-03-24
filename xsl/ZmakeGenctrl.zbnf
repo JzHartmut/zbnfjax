@@ -1,6 +1,8 @@
 <?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
 ##This script describes the syntax of a Zmake-generation-control-file.
 
+$endlineComment=\#\#.  ##The ## is the start chars for an endline-comment or commented line in the parsed script. 
+
 ZmakeGenctrl::= 
 { <ZmakeTarget> 
 | <genFile> 
@@ -33,31 +35,37 @@ genContent::=
 { (\?= <variableAssignment?setVariable> (\?/=\?)
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
 | (\?:for : <forVariable> (\?/for\?)
+| \<: for : <forVariable> \<\.for\>
 | (\?:forList : <forList> (\?/forList\?)
 | (\?+ <variableAssignment?addToList> (\?/+\?)
 | (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
+| \<* <$?fnEmpty>() \.\>
+| \<* <valueElement> \.\>
 | (\?*\?)<?listElement>
-| (\?*<forElement>\?)               ##element of the (?*for:name?)...list where name is given here.
+| (\?*<valueElement>\?)               ##element of the (?*for:name?)...list where name is given here.
 | (\?<$?variableValue>\?)
 | (\?:\?)<genContentNoWhitespace?>(\?/\?)
+| \<:\><genContentNoWhitespace?>\<\.\>
 | (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
-| <*|(\??text>                        ##text after whitespace but inclusive trailing whitespaces
+| <*|(\?|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces
 }.
 
 
-forElement::=<$?name>[\.<$?elementPart>].
+
+valueElement::=<$?name>[\.<$?elementPart>].
 
 genContentNoWhitespace::=<$NoWhiteSpaces>
-{ [?(\?/\?)]
+{ [?\<\.\>|(\?/\?)]
 [ (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
 | (\?:for : <forVariable> (\?/for\?)
 | (\?*\?)<?listElement>
-| (\?*<forElement>\?)
+| (\?*<valueElement>\?)
+| \<* <valueElement> \.\>
 | (\?<$?variableValue>\?)
-| <*|(\??text>                        ##text after whitespace but inclusive trailing whitespaces
+| <*|(\?|\<:|\<*|\<\.?text>           ##text after whitespace but inclusive trailing whitespaces
 ]
 }.
 
@@ -65,7 +73,7 @@ genContentNoWhitespace::=<$NoWhiteSpaces>
 
 variableAssignment::= <$?@name> \?)<genContent?> .
 
-forVariable::= <$?@name>\?) <genContent?> .
+forVariable::= <$?@name>[\?)|\>] <genContent?> .
 
 forList::= <$?@name>\?) <genContent?> .
 

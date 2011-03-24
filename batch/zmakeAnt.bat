@@ -42,8 +42,14 @@ echo %ZMAKE_EXE% %INPUT% -tmp=%TMP_ZBNFJAX% -tmpantxml:_ant_%INPUT%.xml -zbnf4an
 %ZMAKE_EXE% %INPUT% -tmp=%TMP_ZBNFJAX% -tmpantxml:_ant_%INPUT%.xml -zbnf4ant=xsl/ZmakeStd.zbnf -xslt4ant=xsl/ZmakeStd.xslp --rlevel:333 --report:%TMP_ZBNFJAX%/_Zmake_%INPUT%.log 1>>%LOG% 2>>%ERRLOG%
 if errorlevel 1 goto :errorZmake
 
+REM calling ANT to execute the script. Without special argument it is 'ant_%INPUT%.xml'.
+REM On Execution ANT the CLASSPATH to zmakeAnt.jar should know because org/vishia/ant/Zcopy. 
+REM ANT uses the CLASSPATH evironment variable.
+echo on
+set CLASSPATH=%ZBNFJAX_HOME%/zmakeAnt.jar;%CLASSPATH%
 echo calling ANT: 
 call %ANT_HOME%\bin\ant -f %TMP_ZBNFJAX%/_ant_%INPUT%.xml -DcurDir=%CD% 1>>%LOG% 2>>%ERRLOG%
+echo off
 if errorlevel 1 goto :errorAnt
 
 echo restore current dir: %_ENTRYDIR%
