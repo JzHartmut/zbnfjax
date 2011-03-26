@@ -5,6 +5,7 @@
 >
 
 <!-- Changes
+ 2011-03-11 Hartmut adap: IllegalArgumentException instead AccessException, see org/vishia/byteData/ByteDataAccess
  2010-02-07 Hartmut Annotation @lastUndefsizeArray in Header, element "description/lastUndefsizeArray": Not regarded as normal alement.
 
 -->
@@ -108,7 +109,7 @@ public class </xsl:text><xsl:value-of select="$outFile" /><xsl:text>
     /** Constructs as a child inside another ByteDataAccess*/
     public </xsl:text><xsl:value-of select="@name" /><xsl:text>(ByteDataAccess parent, int idxChildInParent)
     { try{ assignAtIndex(idxChildInParent, parent); }
-      catch(AccessException exc)
+      catch(IllegalArgumentException exc)
       { //it won't be have any exception because specifyLengthElement() inside this class is the only source for it.
       }
     }
@@ -119,7 +120,7 @@ public class </xsl:text><xsl:value-of select="$outFile" /><xsl:text>
       <xsl:if test="not(boolean(variante)) and not(boolean(type/@pointer)) and not(boolean(type/@constPointer)) and not(contains('(int)(float)(short)(char)(uint)(ushort)(byte)(int8)(int16)(int32)(uint8)(uint16)(uint32)(Int8)(Int16)(Int32)(UInt8)(UInt16)(UInt32)(int16BigEndian)(int32BigEndian)(int64BigEndian)(floatBigEndian)(doubleBigEndian)(ptrBigEndian)',$typetest))">
         <xsl:text>
     public void assignDowncast(</xsl:text><xsl:value-of select="type/@name" /><xsl:text> parent)
-    throws AccessException
+    throws IllegalArgumentException
     { assignDowncast_i(parent);
     }
         </xsl:text>
@@ -140,7 +141,7 @@ public class </xsl:text><xsl:value-of select="$outFile" /><xsl:text>
       }
     }
 
-    protected int specifyLengthElement() throws AccessException
+    protected int specifyLengthElement() throws IllegalArgumentException
     {
       return kIdxAfterLast;
     }
@@ -164,7 +165,7 @@ public class </xsl:text><xsl:value-of select="$outFile" /><xsl:text>
     <!-- NOTE: generate setBigEndian for all classes, elsewhere super.setBigEndian may be not work if it is a derivated class. -->
       <xsl:text>
       /**Because the method has fix childs, the assignDataToFixChilds method is overridden to apply to all fix childs. */
-      @Override protected void assignDataToFixChilds() throws ByteDataAccess.AccessException
+      @Override protected void assignDataToFixChilds() throws IllegalArgumentException
       {
       </xsl:text>
       <xsl:for-each select="attribute">
@@ -355,7 +356,7 @@ public class </xsl:text><xsl:value-of select="$outFile" /><xsl:text>
       <xsl:choose><xsl:when test="description/lastUndefsizeArray">
       
         <xsl:text>
-    public void set_</xsl:text><xsl:value-of select="@name" /><xsl:text>(String val) throws ByteDataAccess.AccessException
+    public void set_</xsl:text><xsl:value-of select="@name" /><xsl:text>(String val) throws IllegalArgumentException
     { addChildString(val);  //The last element is designated with '@lastUndefsizeArray' in Header-file, therefore the element is added as child,
     }
 	  </xsl:text>
@@ -403,7 +404,7 @@ public class </xsl:text><xsl:value-of select="$outFile" /><xsl:text>
 	      <xsl:choose>
 	      <xsl:when test="$setMethod != '???'">
 	        <xsl:text>
-	    public void set_</xsl:text><xsl:value-of select="@name" /><xsl:text>(</xsl:text><xsl:value-of select="$valueType" /><xsl:text> val</xsl:text><xsl:choose><xsl:when test="count(arraysize)>0"><xsl:text>, int idx</xsl:text></xsl:when></xsl:choose><xsl:text>) throws ByteDataAccess.AccessException
+	    public void set_</xsl:text><xsl:value-of select="@name" /><xsl:text>(</xsl:text><xsl:value-of select="$valueType" /><xsl:text> val</xsl:text><xsl:choose><xsl:when test="count(arraysize)>0"><xsl:text>, int idx</xsl:text></xsl:when></xsl:choose><xsl:text>) throws IllegalArgumentException
 	    { //type of struct-attribut is </xsl:text><xsl:value-of select="type/@name" /><xsl:text>
 	      </xsl:text><xsl:value-of select="$setMethod" /><xsl:text>val);
 	    }
