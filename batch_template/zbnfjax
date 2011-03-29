@@ -26,8 +26,15 @@ export JAVA_JDK="/usr/share/JDK"
 
 ## call of java. It may be inside a special JDK, or it may be the standard-java on your system.
 ## Hint: $JAVA_EXE can be set to a JRE independently from JAVA_JDK.
-export JAVA_EXE="java"
+
+##variant: use java-call direct.
+#export JAVA_EXE="java"
+
+##variant: use existing JAVA_HOME-variable:
 #if test -d $JAVA_HOME/bin; then export JAVA_EXE="$JAVA_HOME/bin/java"; fi ##set it only if it doesn't exists.
+
+##other variant: use JRE inside installed JDK:
+export JAVA_HOME="$JAVA_JDK/jre"
 export JAVA_EXE="$JAVA_JDK/jre/bin/java"
 
 

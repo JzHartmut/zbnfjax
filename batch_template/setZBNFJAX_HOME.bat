@@ -37,26 +37,33 @@ set XML_TOOLS=V:\Progs\XML_Tools
 
 REM =====================================================================================================
 REM Location of the Java JDK installation, it should be at least version 6. 
-REM The Java-VM may be located anywhere other. See %JAVA_EXE%
-REM Hint: Don't write a path with spaces in names in ""!
 
-set JAVA_HOME=D:\Progs\JAVA\jdk1.6.0_21
+set JAVA_JDK=D:\Progs\JAVA\jdk1.6.0_21
 
 
 REM =====================================================================================================
 REM Calling command to invoke java for command line and for GUI
-REM The JAVA_EXE may located in a jre folder.
-REM The JAVA_EXE can be a newer version of jre as the java-compiler.
-REM Set it only to "java" if "java" is found in the PATH.
+REM The JAVA_EXE may located in a the jre folder of the used JAVA_JDK
+REM or it can be anther (maybe newer) version as the java-compiler, located in another folder.
 
-::set JAVA_EXE="%JAVA_HOME%\jre\bin\java.exe"
-::set JAVAW_EXE="%JAVA_HOME%\jre\bin\javaw.exe"
-::set JAVA_EXE="%JAVA_HOME%\bin\java.exe"
-::set JAVAW_EXE="%JAVA_HOME%\bin\javaw.exe"
-::set JAVA_EXE="D:\Progs\JAVA\jdk1.6.0_21\bin\java.exe"
-::set JAVAW_EXE="D:\Progs\JAVA\jdk1.6.0_21\bin\javaw.exe"
-set JAVA_EXE=java
-set JAVAW_EXE=javaw
+REM variant: use java-call direct.
+::set JAVA_EXE=java
+::set JAVAW_EXE=javaw
+
+REM variant: use existing JAVA_HOME-variable:
+::set JAVA_EXE=%JAVA_HOME%/bin/java
+::set JAVAW_EXE=%JAVA_HOME%/bin/javaw
+
+REM other variant: use JRE inside installed JDK:
+set JAVA_HOME=%JAVA_JDK%\jre
+set JAVA_EXE=%JAVA_JDK%\jre\bin\java"
+set JAVAW_EXE=%JAVA_JDK%\jre\bin\javaw"
+
+REM other variant: Only jre is installed:
+::set JAVA_HOME=D:\Programs\JAVA\jre1.6.0_21
+::set JAVA_EXE=%JAVA_HOME%\bin\java
+::set JAVAW_EXE=%JAVA_HOME%\bin\javaw
+
 
   
 REM =====================================================================================================
@@ -152,10 +159,10 @@ echo JAVACP_Header2Reflection=%JAVACP_Header2Reflection%
 echo ============================================================================
 
 set ERRORMSG=
-if not exist %TMP_ZBNFJAX% set ERRORMSG=TMP_ZBNFJAX
-if not exist %ANT_HOME%\lib\ant.jar set ERRORMSG=%ERRORMSG% ANT_HOME
-if not exist %ZBNFJAX_HOME%\XmlDocu_xsl set ERRORMSG=%ERRORMSG% ZBNFJAX_HOME
-%JAVA_EXE% -version
+if not exist "%TMP_ZBNFJAX%" set ERRORMSG=TMP_ZBNFJAX
+if not exist "%ANT_HOME%\lib\ant.jar" set ERRORMSG=%ERRORMSG% ANT_HOME
+if not exist "%ZBNFJAX_HOME%\XmlDocu_xsl" set ERRORMSG=%ERRORMSG% ZBNFJAX_HOME
+"%JAVA_EXE%" -version
 if errorlevel 1 set ERRORMSG=%ERRORMSG% JAVA_EXE
 ::if not exist "%JAVA_HOME%\bin\java.exe" set ERRORMSG=%ERRORMSG% JAVA_HOME
 
