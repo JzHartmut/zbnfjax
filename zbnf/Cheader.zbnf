@@ -14,7 +14,7 @@ $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 ##methodTyp instead @name name because construct {<$?name>?::}
 ##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
 
-$keywords=return|if|else|while|do|public|private|protected|inline|static|virtualstatic_cast|struct|class|union|enum|operator.
+$keywords=return|if|else|while|do|public|private|protected|inline|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
 
 Cheader::=
 [{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
@@ -50,33 +50,24 @@ headerBlock::=<?>
 [ <invalidBlock?+@>
 | <validBlock?>
 | <conditionBlock?+conditionBlock>
+| <undefDefinition>
 ##| extern <variableDecl?+@> ;
-| extern <attribute?+?>
+| [extern_C|extern] <attribute?+?>
 | EX <attribute?+?>       ##special case for a special programming style, EX is per define 'extern' or empty.
+| extern_C_BLOCK_
+| _END_extern_C_BLOCK
 | <enumDefinition> ;
 | struct <structDefinition?+?> ;
 | union <unionDefinition?+@> ;
-##| <?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
-| <?constDef> [static<?staticConst>] const <attribute?+?>
-| typedef
-  [ xx
-  | <?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
-  | <methodPtrTypedef?+@>
-  | <methodTypedef?+@>
-  | struct <structDefinition?+@> ;
-  | union <unionDefinition?+@> ;
-  | <?+classDefinition> <classDef> <$?@name> ;
-  |<enumDefinition> ;
-  | <?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
-  | <?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
-  ]
+##|<?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
+|<?constDef> [static<?staticConst>] const <attribute?+?>
+| [METHOD_C|C_TYPE|] typedef <typedef?>
 | inline <inlineMethod>
 | inline <operatorDef?operator> [;|<statementBlock>]
 | <includeDef?+@>
 | #define CONST<defineDefinition?+const_initializer>
 | #define NULL<defineDefinition?+null_initializer>
 | #define <defineDefinition?+@>
-| <undefDefinition?+@>
 | #error [<""?compilerError> | <*\n?compilerError>]
 | #pragma <*\n?pragma>
 | <classDecl?+@>
@@ -174,14 +165,28 @@ enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
 \} [<$?@name>] .
 
 
+
+typedef::=
+  struct <structDefinition?+@> ;
+| union <unionDefinition?+@> ;
+|<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
+| <methodPtrTypedef?+@>
+| <methodTypedef?+@>
+| <?+classDefinition> <classDef> <$?@name> ;
+|<enumDefinition> ;
+|<?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
+|<?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
+.
+
+
 ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
 implicitStructAttribute::=[/**<description>*/] struct <structDefinition?><?@implicitStruct> ;.
 
-methodDef::= [METHOD_C|extern "C"|extern|] <type> {<$?name>? ::} ([|<methodArgumentList?>] ).
+methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] ).
 
-methodPtrTypedef::= [METHOD_C|extern "C"|] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]);.
+methodPtrTypedef::= [METHOD_C |extern "C"|extern_C |extern |C_TYPE |] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]);.
 
-methodTypedef::= [METHOD_C|extern "C"|] <type> [<$?class> :: ] <$?name> ( [|<methodArgumentList?>] );.
+methodTypedef::= [METHOD_C|extern "C" |extern_C |extern |C_TYPE |] <type> [<$?class> :: ] <$?name> ( [|<methodArgumentList?>] );.
 
 
 ##a defineArgument is a define which replaces a type name - argument specification with a simple identifier. It's used for special cases.
@@ -263,7 +268,7 @@ type::= [<?@modifier>volatile|const|]
                                           | long int <?@name=int32>
                                           | long     <?@name=int32>
                                           | char     <?@name=int8>
-                                          |  <?@name=int>]
+                                          | <?@name=int>]
   | [{ <$?environmentClass> ::}] [ short int<?@name=short> 
                                  | long int<?@name=long> 
                                  | long long<?@name=int64> 
@@ -308,7 +313,7 @@ superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
 ##     But it doesn't consider a asterix here like int *name,*other. The first asterix is parsed associated to the type, the second cause an parse error here.
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
 ##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,};.
-attribute::=<?> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,} ;.  ##[//<endlineComment?*?>].
+attribute::=<?> [/**<description?-?>*/] [extern "C"|extern_C\ |extern\ |] <type?-?> {<attributedef?+attribute>  ?,} ;.  ##[//<endlineComment?*?>].
 attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ]].
 
 ##The short form doesn't work yet:# attribute::=<?*> [/**<description?-?>*/] <type?-?> {<?+attribute> <$?@name> [<arraysize>| = <value> |] ?,};.
@@ -316,7 +321,7 @@ attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue
 
 ##NOTE: \{ ... \} are defined outside to faster parse.
 ##NOTE: In C it is possible to write "{ 1,2,}" (comma on end), therefore the number is optional in repetition.
-arrayValue::= { \{ <arrayValue> \} | <value> |  <?noValue>? , }.  
+arrayValue::= { \{ <arrayValue> \} | <value> | <?noValue>? , }.  
 ?arrayValue::="constant definition of an array in C writing { value, value...}, whereby nesting is possible.".
 
 description::= <*{ * }|*/?!test_description>.
@@ -336,7 +341,7 @@ test_description::= <*|\e|\@?text>
  | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
  | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
  | @refl:{ <*,\.\e?refl>? ,}[ \.]
- | <?auxDescription> @<$?@name> <*@\e?@value>
+ |<?auxDescription> @<$?@name> <*@\e?@value>
  | <*|\e|\@?text>
  }] \e.
 
@@ -362,21 +367,21 @@ structContent::=<?>
 | [/**<description?-?>*/]
   typedef
   [ xx
-  | <?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
+  |<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
   | <methodPtrTypedef?+@>
   | <methodTypedef?+@>
   | struct <structDefinition?+@> ;
   | union <unionDefinition?+?> ;
-  | <?+classDefinition> <classDef?> <$?@name> ;
+  |<?+classDefinition> <classDef?> <$?@name> ;
   | <enumDefinition?+?> ;
-  | <?typedef> <$?type> <$?newType> ;
+  |<?typedef> <$?type> <$?newType> ;
   ]
 | [/**<description?-?>*/] union <unionDefinition?+attribute> ;
 | <enumDefinition> ;
 | <implicitStructAttribute>
 | <attribute>
 | [/**<description?-?>*/] #define <defineDefinition?+?>
-| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
+##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
 | <structContentInsideCondition>
 | <methodPtrTypedef?+@>
 ].
@@ -389,17 +394,17 @@ classContent::=<?>
 | [inline] virtual <operatorDef?virtualOperator> [<?@modifier>volatile|const|] [;|<statementBlock>];
 | static <methodDef?staticMethod>  [<?@modifier>volatile|const|] [;|<statementBlock>]
 | static <attribute?+staticAttribute>
-| <?friendClass> friend [class] <outerClassName> ;
+|<?friendClass> friend [class] <outerClassName> ;
 | <enumDefinition> ;
-| <?classForward> class <$?@name> ;
-| <?structForward> struct <$?@name> ;
-| <?implicitAttribute> <classDef> <$?name> ;
+|<?classForward> class <$?@name> ;
+|<?structForward> struct <$?@name> ;
+|<?implicitAttribute> <classDef> <$?name> ;
 | <classDef>;
 ##| <structDef?+@>
 | <Destructor>
 | [inline] <operatorDef?operator> [<?@modifier>volatile|const|] [;|<statementBlock>]
 | [inline] <methodDef> [<?@modifier>volatile|const|] [;|<statementBlock>]
-| <?constructor> <$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>]
+|<?constructor> <$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>]
 | <attribute?+?>
 ##| <variableDecl>;
 | <structContent?>
@@ -408,8 +413,8 @@ classContent::=<?>
 
 ##TODO experience
 outerClassName::=<$?name>[ :: <outerClassName>].
-##outerClassName::=<$?-name> [::<outerClassName?+outerClass>| <?+name>].
-##outerClassName::=<$?@name> :: [<outerClassName>| <?+name>].
+##outerClassName::=<$?-name> [::<outerClassName?+outerClass>|<?+name>].
+##outerClassName::=<$?@name> :: [<outerClassName>|<?+name>].
 
 Destructor::= [virtual] ~<$?className> ( ) [ = 0 ;<?@abstract>| ;|<statementBlock>].
 
@@ -448,8 +453,8 @@ value::=
   | <refCasting> <value>  ##must be arranged before ( <value> ) because confusion with, example (type)value and (variable)
   | ( <value> )
   | 0x<#x?number>[<?@longModifier>L]
-##  | <?floatNumber> <#f?>[<?@floatModifier>F| <?@longModifier>L|]  ##it doesn't work. TODO search why!
-  | <#f?floatNumber>[<?@floatModifier>F| <?@longModifier>L|]
+  |<?floatNumber> <#f?>[<?@floatModifier>F|<?@longModifier>L|]  ##it doesn't work. TODO search why!
+##  | <#f?floatNumber>[<?@floatModifier>F|<?@longModifier>L|]
   | <#-?number>[<?@longModifier>L]
 ##  | <simpleMethodCall>
   | <methodCall>
@@ -494,14 +499,14 @@ structContentInsideCondition::=
 AccessRight::=[<?accessRight/@value> public | private | protected |].
 
 ##arraysize can be simple, or a complex value. NOTE: Only the simpe variants are regarded in Header2Reflection. 
-arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }|  <?unknown>] \] [<arraysize>].
+arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }| <?unknown>] \] [<arraysize>].
 ##arraysize::=\[ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> | <*\ \]?value>] \] [<arraysize>].
 ##arraysize::=\[ [ <*\ \]?value> ] \] [<arraysize>].
 
 ?en:arraysize.unknown::="An unknown arraysize is possible on extern declarations of arrays writing 'extern type name[];' ".
 
 ## An enum value is a constant. It may be written as term "konst + konst". A konst is a number or a symbolic const.
-enumValue::= {0x<#x?hexnumber>[<?@longModifier>L] | <#-?intnumber>[<?@longModifier>L] | <macro> | { <$?symbol>? ::} ? [<?operation/@value> +|-|*|\|] }.
+enumValue::= { [-] 0x<#x?hexnumber>[<?@longModifier>L] | <#-?intnumber>[<?@longModifier>L] | <macro> | { <$?symbol>? ::} ? [<?operation/@value> +|-|*|\|] }.
 
 
 
