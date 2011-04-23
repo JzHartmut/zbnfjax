@@ -46,7 +46,7 @@ if not "%1" == "winCCvarFromSCL" goto :nwinCCvarFromSCL
   %ZBNFJAX_HOME%\batch\winCCvarFromSCL.bat %2 %3
   goto :ende
 :nwinCCvarFromSCL
-  echo fault command %1, expected: call, genDocu, java, javacjar, zmake, zbnf2xml
+  echo fault command %1, expected: call, genDocu, java, javacjar, zmakeAnt, zmake, zbnf2xml
   pause
   goto :ende
 :ende  

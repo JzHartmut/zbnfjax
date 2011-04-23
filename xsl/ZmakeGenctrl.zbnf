@@ -7,6 +7,7 @@ ZmakeGenctrl::=
 { <ZmakeTarget> 
 | <genFile> 
 | (\?= <variableAssignment?setVariable> (\?/=\?)
+| \<= <variableAssign?setVariable> \<\.=\>
 } \e.
 
 ##A Zmake-Script contains of targets, which are to do.
@@ -17,14 +18,20 @@ ZmakeGenctrl::=
 
 ZmakeTarget::= (\?:target = <$?@name> \?) 
   <genContent?>
-(\?/target\?).
+(\?/target\?)
+| \<:target = <$?@name> \> 
+  <genContent?>
+\<\.target\>.
 
 
 ##A genControl script should have a part (?:file?)....(?/file?) which describes how the whole file should build.
 
 genFile::= (\?:file\?)
   <genContent?>
-(\?/file\?).
+(\?/file\?)
+|\<:file\>
+  <genContent?>
+\<\.file\>.
   
   
 
@@ -33,15 +40,18 @@ genFile::= (\?:file\?)
 
 genContent::=
 { (\?= <variableAssignment?setVariable> (\?/=\?)
+| \<= <variableAssign?setVariable> \<\.=\>
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+| \<:forInput\> <genContent?forInputContent> \<\.forInput\>
 | (\?:for : <forVariable> (\?/for\?)
 | \<: for : <forVariable> \<\.for\>
 | (\?:forList : <forList> (\?/forList\?)
 | (\?+ <variableAssignment?addToList> (\?/+\?)
 | (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
-| \<* <$?fnEmpty>() \.\>
-| \<* <valueElement> \.\>
+| \<* <$?variableValue> \>
+| \<* <$?fnEmpty>() \>
+| \<* <valueElement> \>
 | (\?*\?)<?listElement>
 | (\?*<valueElement>\?)               ##element of the (?*for:name?)...list where name is given here.
 | (\?<$?variableValue>\?)
@@ -53,17 +63,21 @@ genContent::=
 
 
 
-valueElement::=<$?name>[\.<$?elementPart>].
+valueElement::=<$?name>\.<$?elementPart>.
 
 genContentNoWhitespace::=<$NoWhiteSpaces>
 { [?\<\.\>|(\?/\?)]
 [ (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+| \<:forInput\> <genContent?forInputContent> \<\.forInput\>
 | (\?:for : <forVariable> (\?/for\?)
+| \<: for : <forVariable> \<\.for\>
 | (\?*\?)<?listElement>
 | (\?*<valueElement>\?)
-| \<* <valueElement> \.\>
+| \<* <$?variableValue> \>
+| \<* <$?fnEmpty>() \>
+| \<* <valueElement> \>
 | (\?<$?variableValue>\?)
 | <*|(\?|\<:|\<*|\<\.?text>           ##text after whitespace but inclusive trailing whitespaces
 ]
@@ -72,6 +86,7 @@ genContentNoWhitespace::=<$NoWhiteSpaces>
 
 
 variableAssignment::= <$?@name> \?)<genContent?> .
+variableAssign::= <$?@name> \> <genContent?> .
 
 forVariable::= <$?@name>[\?)|\>] <genContent?> .
 
