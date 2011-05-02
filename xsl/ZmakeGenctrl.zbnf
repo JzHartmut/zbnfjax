@@ -70,14 +70,14 @@ genContentNoWhitespace::=<$NoWhiteSpaces>
 [ (\?input\.<$?inputValue>\?)    
 | (\?output\.<$?outputValue>\?)
 | (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
-| \<:forInput\> <genContent?forInputContent> \<\.forInput\>
+| \<:forInput\><genContentNoWhitespace?forInputContent>\<\.forInput\>
 | (\?:for : <forVariable> (\?/for\?)
-| \<: for : <forVariable> \<\.for\>
+| \<: for : <forVariableNoWhitespace?forVariable> \<\.for\>
 | (\?*\?)<?listElement>
 | (\?*<valueElement>\?)
-| \<* <$?variableValue> \>
-| \<* <$?fnEmpty>() \>
-| \<* <valueElement> \>
+| \<*<$?variableValue>\>
+| \<*<$?fnEmpty>()\>
+| \<*<valueElement>\>
 | (\?<$?variableValue>\?)
 | <*|(\?|\<:|\<*|\<\.?text>           ##text after whitespace but inclusive trailing whitespaces
 ]
@@ -89,6 +89,8 @@ variableAssignment::= <$?@name> \?)<genContent?> .
 variableAssign::= <$?@name> \> <genContent?> .
 
 forVariable::= <$?@name>[\?)|\>] <genContent?> .
+
+forVariableNoWhitespace::= <$?@name>[\?)|\>] <genContentNoWhitespace?> .
 
 forList::= <$?@name>\?) <genContent?> .
 
