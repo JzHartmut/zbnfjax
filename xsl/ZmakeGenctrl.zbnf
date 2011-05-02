@@ -6,7 +6,6 @@ $endlineComment=\#\#.  ##The ## is the start chars for an endline-comment or com
 ZmakeGenctrl::= 
 { <ZmakeTarget> 
 | <genFile> 
-| (\?= <variableAssignment?setVariable> (\?/=\?)
 | \<= <variableAssign?setVariable> \<\.=\>
 } \e.
 
@@ -16,20 +15,14 @@ ZmakeGenctrl::=
 ##This file describes how a genControl script should be build.
 
 
-ZmakeTarget::= (\?:target = <$?@name> \?) 
-  <genContent?>
-(\?/target\?)
-| \<:target = <$?@name> \> 
+ZmakeTarget::= \<:target = <$?@name> \> 
   <genContent?>
 \<\.target\>.
 
 
 ##A genControl script should have a part (?:file?)....(?/file?) which describes how the whole file should build.
 
-genFile::= (\?:file\?)
-  <genContent?>
-(\?/file\?)
-|\<:file\>
+genFile::= \<:file\>
   <genContent?>
 \<\.file\>.
   
@@ -39,26 +32,22 @@ genFile::= (\?:file\?)
 ##The textual content of any target, file, variable etc.
 
 genContent::=
-{ (\?= <variableAssignment?setVariable> (\?/=\?)
-| \<= <variableAssign?setVariable> \<\.=\>
-| (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
+{ \<= <variableAssign?setVariable> \<\.=\>
 | \<:forInput\> <genContent?forInputContent> \<\.forInput\>
-| (\?:for : <forVariable> (\?/for\?)
-| \<: for : <forVariable> \<\.for\>
-| (\?:forList : <forList> (\?/forList\?)
-| (\?+ <variableAssignment?addToList> (\?/+\?)
-| (\?input\.<$?inputValue>\?)    
-| (\?output\.<$?outputValue>\?)
-| \<* <$?variableValue> \>
-| \<* <$?fnEmpty>() \>
-| \<* <valueElement> \>
-| (\?*\?)<?listElement>
-| (\?*<valueElement>\?)               ##element of the (?*for:name?)...list where name is given here.
-| (\?<$?variableValue>\?)
-| (\?:\?)<genContentNoWhitespace?>(\?/\?)
+| \<:for:<forVariable>\<\.for\>
+##| (\?:forList : <forList> (\?/forList\?)
+| \<:forList:<forList>\<\.forList\>
+##| (\?+ <variableAssignment?addToList> (\?/+\?)
+| \<+<variableAssignment?addToList>\<\.+\>
+| \<*<$?variableValue>\>
+| \<*<$?fnEmpty>()\>
+| \<*<valueElement>\>
+##| (\?*\?)<?listElement>
+| \<*\><?listElement>
 | \<:\><genContentNoWhitespace?>\<\.\>
-| (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
-| <*|(\?|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces
+##| (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
+##TODO doesn't work in parser | \<:text\> <*|\<\.text\>?text>\<\.text\>  ##text in <:text>.....<.text> with all control elements and whitespaces uninterpreted 
+| <*|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces
 }.
 
 
@@ -66,31 +55,23 @@ genContent::=
 valueElement::=<$?name>\.<$?elementPart>.
 
 genContentNoWhitespace::=<$NoWhiteSpaces>
-{ [?\<\.\>|(\?/\?)]
-[ (\?input\.<$?inputValue>\?)    
-| (\?output\.<$?outputValue>\?)
-| (\?:forInput\?) <genContent?forInputContent> (\?/forInput\?)
-| \<:forInput\><genContentNoWhitespace?forInputContent>\<\.forInput\>
-| (\?:for : <forVariable> (\?/for\?)
+{ [?\<\.\>]              ##abort on <.>
+[ \<:forInput\><genContentNoWhitespace?forInputContent>\<\.forInput\>
 | \<: for : <forVariableNoWhitespace?forVariable> \<\.for\>
-| (\?*\?)<?listElement>
-| (\?*<valueElement>\?)
 | \<*<$?variableValue>\>
 | \<*<$?fnEmpty>()\>
 | \<*<valueElement>\>
-| (\?<$?variableValue>\?)
-| <*|(\?|\<:|\<*|\<\.?text>           ##text after whitespace but inclusive trailing whitespaces
+| <*|\<:|\<*|\<\.?text>           ##text inclusive leading and trailing whitespaces
 ]
 }.
 
 
 
-variableAssignment::= <$?@name> \?)<genContent?> .
 variableAssign::= <$?@name> \> <genContent?> .
 
-forVariable::= <$?@name>[\?)|\>] <genContent?> .
+forVariable::= <$?@name>\> <genContent?> .
 
-forVariableNoWhitespace::= <$?@name>[\?)|\>] <genContentNoWhitespace?> .
+forVariableNoWhitespace::= <$?@name>\> <genContentNoWhitespace?> .
 
-forList::= <$?@name>\?) <genContent?> .
+forList::= <$?@name>\> <genContent?> .
 
