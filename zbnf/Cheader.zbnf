@@ -255,7 +255,7 @@ defineUse::= <$?defineMethod> ( { <$?defineparameter> ? , } ).
 
 classDecl::=class <$?name> ;.
 
-structDecl::=struct <$?name> ;.
+structDecl::=[C_TYPE] struct <$?name> ;.
 
 
 type::= [<?@modifier>volatile|const|] 
