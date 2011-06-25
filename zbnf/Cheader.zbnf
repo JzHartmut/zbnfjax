@@ -46,7 +46,7 @@ Cheader::=
 ##Block of definition in header. This is the first one information to evaluate a header but also a inner element.
 headerBlock::=<?>
 [ /**<description?-?>*/]
-[/*<implementDescription?-?>*/]
+[ /*<implementDescription?-?>*/]
 [ <invalidBlock?+@>
 | <validBlock?>
 | <conditionBlock?+conditionBlock>
@@ -61,7 +61,17 @@ headerBlock::=<?>
 | union <unionDefinition?+@> ;
 ##|<?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
 |<?constDef> [static<?staticConst>] const <attribute?+?>
-| [METHOD_C|C_TYPE|] typedef <typedef?>
+| [METHOD_C|C_TYPE|] typedef 
+  [ struct <structDefinition?+@> ;
+	| union <unionDefinition?+@> ;
+	|<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
+	| <methodPtrTypedef?+@>
+	| <methodTypedef?+@>
+	| <?+classDefinition> <classDef> <$?@name> ;
+	|<enumDefinition> ;
+	|<?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
+	|<?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
+  ]
 | inline <inlineMethod>
 | inline <operatorDef?operator> [;|<statementBlock>]
 | <includeDef?+@>
@@ -166,17 +176,6 @@ enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
 
 
 
-typedef::=
-  struct <structDefinition?+@> ;
-| union <unionDefinition?+@> ;
-|<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
-| <methodPtrTypedef?+@>
-| <methodTypedef?+@>
-| <?+classDefinition> <classDef> <$?@name> ;
-|<enumDefinition> ;
-|<?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
-|<?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
-.
 
 
 ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
@@ -313,8 +312,11 @@ superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
 ##     But it doesn't consider a asterix here like int *name,*other. The first asterix is parsed associated to the type, the second cause an parse error here.
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
 ##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,};.
-attribute::=<?> [/**<description?-?>*/] [extern "C"|extern_C\ |extern\ |] <type?-?> {<attributedef?+attribute>  ?,} ;.  ##[//<endlineComment?*?>].
+attribute::=<?> [/**<description?-?>*/] [extern "C"|extern_C\ |extern\ |] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
+attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ]] ; [//:<*\n?description/text>].
 attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ]].
+
+?attributedefDescr::="Possibility to write //: as endline comment description. It is applicable if only one attribute is defined, not more as one separated with colon ".
 
 ##The short form doesn't work yet:# attribute::=<?*> [/**<description?-?>*/] <type?-?> {<?+attribute> <$?@name> [<arraysize>| = <value> |] ?,};.
 
