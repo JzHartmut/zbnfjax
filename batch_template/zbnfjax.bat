@@ -1,7 +1,8 @@
 echo off
 REM shell for invoking commands for ZBNF or ZBNFJAX_HOME
 
-call setZBNFJAX_HOME.bat
+call setZBNFJAX_HOME.bat silent
+::echo on
 
 if not "%1" == "call" goto :nCall
   %2 %3 %4 %5 %6 %7 %8 %9
@@ -28,8 +29,12 @@ if not "%1" == "zmake" goto :nZmake
   %ZBNFJAX_HOME%\batch\zmakeAnt.bat %2
   goto :ende
 :nZmake
+if not "%1" == "zmakeGen" goto :nZmakeGen
+  %JAVA_EXE% -cp "%ZBNFJAX_HOME%/zbnf.jar" org.vishia.zmake.Zmake %2 %3 %4 %5 %6 %7 %8 %9
+  goto :ende
+:nZmakeGen
 if not "%1" == "zbnf2xml" goto :nZbnf2Xml
-  %JAVA_EXE% -cp %JAVACP_ZBNF% org.vishia.zbnf.Zbnf2Xml %2
+  %JAVA_EXE% -cp %JAVACP_ZBNF% org.vishia.zbnf.Zbnf2Xml %2 %3 %4 %5 %6 %7 %8 %9
   goto :ende
 :nZbnf2Xml
 if not "%1" == "zbnf2xml" goto :nCHeader2JB
@@ -46,6 +51,11 @@ if not "%1" == "winCCvarFromSCL" goto :nwinCCvarFromSCL
   %ZBNFJAX_HOME%\batch\winCCvarFromSCL.bat %2 %3
   goto :ende
 :nwinCCvarFromSCL
+if not "%1" == "vxslt" goto :nvxslt
+  echo on
+  %JAVA_EXE% -cp %JAVACP_XSLT% org.vishia.xml.Xslt %2 %3 %4 %5 %6 %7 %8 %9
+  goto :ende
+:nvxslt
   echo fault command %1, expected: call, genDocu, java, javacjar, zmakeAnt, zmake, zbnf2xml
   pause
   goto :ende

@@ -3,6 +3,11 @@
  2007-12-27 TODO detecting of superclass, important to build reflection with base Object_Jc.
  2007-12-25 JcHartmut processing of inner struct, inner class and implicit struct.
  -->
+<!-- This file should be translated using makeXsl_fromXslp before using for a XSLT translation, see http://www.vishia.org/Xml/html/Xsltpre.html -->
+<!-- made by Hartmut Schorrig www.vishia.org
+  2011-06-26 Hartmut consider typedef struct inside a @CLASS_C block with naming Name_ClassCName as inner classes in XMI, adjust some details for description 
+  2007..2011 Hartmut some changes
+  2007       Hartmut created -->                       
 <xsl:stylesheet 
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -272,7 +277,7 @@
     <xsl:variable name="className" select="@name" />
     <xsl:variable name="structName" select="@structName" />
     <xsl:value-of select="substring($Indent,1,number($IndentPos))" />
-    <xsl:comment><xsl:text> Class </xsl:text><xsl:value-of select="$className" /><xsl:text>/</xsl:text><xsl:value-of select="$structName" /><xsl:text> </xsl:text></xsl:comment>
+    <xsl:comment><xsl:text> generate named class </xsl:text><xsl:value-of select="$className" /><xsl:text> / struct </xsl:text><xsl:value-of select="$structName" /><xsl:text> </xsl:text></xsl:comment>
     <!-- NOTE: use $Input as reference to the input tree to select because otherwise / means the root in context $Classname -->
     <xsl:for-each select="$Input">
       <xsl:call-template name="GenerateNamedClass">
@@ -280,6 +285,7 @@
         <xsl:with-param name="className" select="$className" />
         <xsl:with-param name="classNameFull" select="$structName" /><!-- to get xmi.id -->
         <xsl:with-param name="structName" select="$structName" />
+        <xsl:with-param name="classNameXmi" select="$structName" />
       </xsl:call-template>
     </xsl:for-each>  
   </xsl:for-each>
@@ -300,6 +306,7 @@
 <xsl:param name="fromCurrent" select="'no'" />
 <xsl:param name="className" />
 <xsl:param name="structName" />
+<xsl:param name="classNameXmi" /><!-- The name used for the XMI element to generate, not used in search paths. --> 
 <xsl:param name="classNameFull" select="$className"/><!-- full class name from root focus -->
   <xsl:value-of select="substring($Indent,1,number($IndentPos))" />
   
@@ -309,7 +316,7 @@
           | /root/Cheader/outside//classDef[@name=$className]
           | /root/Cheader/outside/structDefinition[@name=$classNameFull]
            " />
-  <UML:Class name="{$structName}" xmi.id="{$classId}" headerStruct="true" nameRootFocus_info="{$classNameFull}">
+  <UML:Class name="{$classNameXmi}" xmi.id="{$classId}" headerStruct="true" nameRootFocus_info="{$classNameFull}">
     <xsl:if test="$nodeClassStruct/description/GUID">
       <xsl:attribute name="xmi.uuid"><xsl:value-of select="$nodeClassStruct/description/GUID/@value" /></xsl:attribute>
     </xsl:if>
@@ -321,7 +328,7 @@
         <xsl:if test="local-name()='structDefinition'">
           <UML:TaggedValue tag="headerStruct" value="true" />
         </xsl:if>
-        <xsl:for-each select=".[$fromCurrent='yes']/structDefinition[@name=$classNameFull] 
+        <xsl:for-each select=".[$fromCurrent='yes'] 
 				                    | /root/Cheader//CLASS_C[@name=$classNameFull]/structDefinition[@name=$className] 
                             | /root/Cheader/outside//classDef[@name=$className]
                             | /root/Cheader/outside/structDefinition[@name=$classNameFull]
@@ -371,7 +378,7 @@
           <xsl:variable name="type"><xsl:value-of select="type/@name" /></xsl:variable>
           <xsl:value-of select="substring($Indent,1,number($IndentPos)+4)" />
           <!-- NOTE: UML:Method isn't accepted by XMI-Import of Rhapsody. -->
-          <UML:Operation name="{name}" xmi.id="{$xmi-id}"><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)" />
+          <UML:Operation name="{name}{@name}" xmi.id="{$xmi-id}"><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)" />
             <UML:ModelElement.taggedValue><xsl:value-of select="substring($Indent,1,number($IndentPos)+8)"/>
               <UML:TaggedValue tag="documentation" value="{description/text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							<xsl:for-each select="description/auxDescription">
@@ -434,8 +441,27 @@
     </UML:Classifier.feature><xsl:value-of select="substring($Indent,1,number($IndentPos))" />
 
     <UML:Namespace.ownedElement><xsl:value-of select="substring($Indent,1,number($IndentPos))" />
-      <xsl:for-each select="/root/Cheader//classDef[@name=$className] | /root/Cheader//structDefinition[@name=$className]">
-        <xsl:for-each select="structDefintion | classDef | classVisibilityBlock/classDef">                   
+
+      <!-- Inner classes as definitions with same suffix name inside a CLASS_C are inner classes in C: -->
+      <xsl:for-each select="/root/Cheader//CLASS_C[@name=$className]/structDefinition[@name ne $className and ends-with(@name, $className)]">
+        <xsl:message>inner CLASS_C: <xsl:value-of select="@name" /></xsl:message>
+        <xsl:comment><xsl:text> inner C-class </xsl:text><xsl:value-of select="@name" /><xsl:text> </xsl:text></xsl:comment>
+        <xsl:variable name="classNameInner" select="@name" />
+        <xsl:call-template name="GenerateNamedClass">
+          <xsl:with-param name="IndentPos" select="number($IndentPos)+8" />
+          <xsl:with-param name="fromCurrent" select="'yes'" />
+          <xsl:with-param name="className" select="$classNameInner" />
+          <xsl:with-param name="structName" select="$classNameInner" />
+          <xsl:with-param name="classNameXmi" select="substring-before($classNameInner, $className)" />
+          <xsl:with-param name="classNameFull"  select="$classNameInner" />
+        </xsl:call-template>
+      </xsl:for-each>
+
+      <!-- inner classes (C++): -->
+      <xsl:for-each select="/root/Cheader//classDef[@name=$className] | /root/Cheader//structDefinition[@name=$className]"><!-- select the named class or struct --> 
+        <!-- current node: inside the struct or class definition -->
+        <xsl:comment><xsl:text> check for inner classes </xsl:text><xsl:value-of select="@name" /><xsl:text> </xsl:text></xsl:comment>
+        <xsl:for-each select="structDefintion | classDef | classVisibilityBlock/classDef"><!--struct or class inside another one. -->                   
           <xsl:message>inner class: <xsl:value-of select="@name" /></xsl:message>
           <xsl:variable name="classNameInner" select="@name" />
           <xsl:call-template name="GenerateNamedClass">
@@ -443,9 +469,12 @@
             <xsl:with-param name="fromCurrent" select="'yes'" />
             <xsl:with-param name="className" select="$classNameInner" />
             <xsl:with-param name="structName" select="$classNameInner" />
+            <xsl:with-param name="classNameXmi" select="$classNameInner" />
             <xsl:with-param name="classNameFull" ><xsl:value-of select="$classNameFull" /><xsl:text>::</xsl:text><xsl:value-of select="$classNameInner" /></xsl:with-param>
           </xsl:call-template>
         </xsl:for-each>  
+        <xsl:value-of select="substring($Indent,1,number($IndentPos))" />
+        <xsl:comment><xsl:text> gen attributes </xsl:text><xsl:value-of select="$className" /><xsl:text>/</xsl:text><xsl:value-of select="$structName" /><xsl:text> </xsl:text></xsl:comment>
         <xsl:for-each select="attribute[@tagname]">                   
           <xsl:message>inner implicit class: <xsl:value-of select="@tagname" /></xsl:message>
           <xsl:variable name="classNameInner" select="@tagname" />
@@ -454,9 +483,11 @@
             <xsl:with-param name="fromCurrent" select="'yes'" />
             <xsl:with-param name="className" select="$classNameInner" />
             <xsl:with-param name="structName" select="$classNameInner" />
+            <xsl:with-param name="classNameXmi" select="$classNameInner" />
             <xsl:with-param name="classNameFull" ><xsl:value-of select="$classNameFull" /><xsl:text>::</xsl:text><xsl:value-of select="$classNameInner" /></xsl:with-param>
           </xsl:call-template>
         </xsl:for-each>  
+        <xsl:value-of select="substring($Indent,1,number($IndentPos))" />
       </xsl:for-each>  
    </UML:Namespace.ownedElement><xsl:value-of select="substring($Indent,1,number($IndentPos))" /> 
 

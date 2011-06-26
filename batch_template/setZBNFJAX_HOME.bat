@@ -43,10 +43,12 @@ set JAVA_JDK=D:\Progs\JAVA\jdk1.6.0_21
 
 REM =====================================================================================================
 REM Calling command to invoke java for command line and for GUI
-REM The JAVA_EXE may located in a the jre folder of the used JAVA_JDK
-REM or it can be anther (maybe newer) version as the java-compiler, located in another folder.
+REM The JAVA_EXE may located in the jre folder of the used JAVA_JDK
+REM or it can be another (maybe newer) version as the java-compiler, located in another folder.
+REM Hint: Don't write the content of set in "", also the path may contain spaces!
 
 REM variant: use java-call direct.
+::set JAVA_HOME=%JAVA_JDK%
 ::set JAVA_EXE=java
 ::set JAVAW_EXE=javaw
 
@@ -100,7 +102,7 @@ set XML_TOOLBASE=%ZBNFJAX_HOME%
 REM Some JAVA_CP_xxx are used also in ANT-scripts.
 
 REM Java-Classpath for Execution only Zbnf, Zbnf2Xml
-set JAVACP_ZBNF=%ZBNFJAX_HOME%/zbnf.jar
+set JAVACP_ZBNF=%ZBNFJAX_HOME%/zbnf.jar;%ZBNFJAX_HOME%/zmakeAnt.jar
 
 
 REM Java-Classpath for the additional download parts saxon and jdom:
@@ -139,6 +141,7 @@ REM The next statements test the correctness of the settings, don't change it!
 REM If any error occurs, the batch process is stopped! Please correct the settings in the first block
 REM or install the tools!
 
+if "%1"=="silent" goto :silent
 echo ========================================ZBNFJAX_HOME environment ===========
 ::echo PATH=%PATH%
 echo TMP_ZBNFJAX=%TMP_ZBNFJAX%
@@ -157,17 +160,19 @@ echo JAVACP_ZBNF=%JAVACP_ZBNF%
 echo JAVACP_XSLT=%JAVACP_XSLT%
 echo JAVACP_Header2Reflection=%JAVACP_Header2Reflection%
 echo ============================================================================
+"%JAVA_EXE%" -version
+if errorlevel 1 set ERRORMSG=JAVA_EXE
+echo ============================================================================
+:silent
 
 set ERRORMSG=
-if not exist "%TMP_ZBNFJAX%" set ERRORMSG=TMP_ZBNFJAX
+if not exist "%TMP_ZBNFJAX%" set ERRORMSG=%ERRORMSG% TMP_ZBNFJAX
 if not exist "%ANT_HOME%\lib\ant.jar" set ERRORMSG=%ERRORMSG% ANT_HOME
 if not exist "%ZBNFJAX_HOME%\XmlDocu_xsl" set ERRORMSG=%ERRORMSG% ZBNFJAX_HOME
-"%JAVA_EXE%" -version
-if errorlevel 1 set ERRORMSG=%ERRORMSG% JAVA_EXE
 ::if not exist "%JAVA_HOME%\bin\java.exe" set ERRORMSG=%ERRORMSG% JAVA_HOME
 
 if "%ERRORMSG%"=="" goto :ok
-  echo setZBNFJAX_HOME.bat: Environemnt variable(s) %ERRORMSG% are not correct. abort.!
+  echo setZBNFJAX_HOME.bat: Environemnt variable(s) %ERRORMSG% is/are not correct. abort.!
   pause
 	::if "%NOPAUSE%" = "" pause
   exit 255
