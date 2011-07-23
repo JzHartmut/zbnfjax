@@ -21,7 +21,7 @@ export XML_TOOLS="/usr/share/XML_Tools"
 
 ## =====================================================================================================
 
-## Location of the Java JDK installation, it should be version 6 or newer. 
+## Location of the Java JDK installation, it should be version 6 or newer.
 export JAVA_JDK="/usr/share/JDK"
 
 ## call of java. It may be inside a special JDK, or it may be the standard-java on your system.
@@ -34,8 +34,10 @@ export JAVA_JDK="/usr/share/JDK"
 #if test -d $JAVA_HOME/bin; then export JAVA_EXE="$JAVA_HOME/bin/java"; fi ##set it only if it doesn't exists.
 
 ##other variant: use JRE inside installed JDK:
-export JAVA_HOME="$JAVA_JDK/jre"
-export JAVA_EXE="$JAVA_JDK/jre/bin/java"
+#export JAVA_HOME="$JAVA_JDK/jre"
+export JAVA_HOME="/usr/share/JRE"
+
+export JAVA_EXE="$JAVA_HOME/bin/java"
 
 
 ## =====================================================================================================
@@ -76,7 +78,7 @@ export JAVACP_ZBNF="$ZBNFJAX_HOME/zbnf.jar"
 ## see http://www.jdom.org, http://www.saxonica.com/
 export JAVACP_SAXON="$XML_TOOLS/jdom.jar:$XML_TOOLS/saxon9.jar:$XML_TOOLS/saxon9-jdom.jar"
 
-## Java-Classpath for Execution of Xslt. 
+## Java-Classpath for Execution of Xslt.
 export JAVACP_XSLT="$JAVACP_ZBNF:$ZBNFJAX_HOME/zmake.jar:$ZBNFJAX_HOME/Xslt.jar:$JAVACP_SAXON"
 
 ## Java-Classpath for Execution of Header2Reflection.
@@ -112,24 +114,6 @@ if test ! -d $TMP_ZBNFJAX; then mkdir $TMP_ZBNFJAX; fi
 ## If any error occurs, the batch process is stopped! Please correct the settings in the first block
 ## or install the tools!
 
-echo ========================================ZBNFJAX_HOME environment ===========
-#echo PATH=$PATH
-echo TMP_ZBNFJAX=$TMP_ZBNFJAX
-echo ZBNFJAX_HOME=$ZBNFJAX_HOME
-echo JAVA_HOME = $JAVA_HOME
-echo JAVA_EXE = $JAVA_EXE
-echo ANT_HOME = $ANT_HOME
-echo ECLIPSE_CP=$ECLIPSE_CP
-echo JAVACP_ZBNF=$JAVACP_ZBNF
-echo JAVACP_XSLT=$JAVACP_XSLT
-echo JAVACP_Header2Reflection=$JAVACP_Header2Reflection
-#echo ==== composed environment ==================================================
-#echo CLASSPATH = $CLASSPATH
-#echo JAX_EXE = $JAX_EXE
-#echo ZBNF2XML_EXE = $ZBNF2XML_EXE
-#echo XSLT_EXE = $XSLT_EXE
-#echo ZMAKE_EXE = $ZMAKE_EXE
-echo ============================================================================
 
 ERRORMSG=""
 #if test -f $TMP_ZBNFJAX; then OK=OK
@@ -140,8 +124,26 @@ if test ! -d $ZBNFJAX_HOME; then ERRORMSG=ZBNFJAX_HOME ; fi
 if test ! -d $JAVA_HOME ; then ERRORMSG=JAVA_HOME ; fi
 
 
-if test ! "$ERRORMSG" = ""
-then echo setZBNFJAX_HOME.sh Environemnt variable $ERRORMSG are not correct. abort.
+if test ! "$ERRORMSG" = ""; then
+  echo ========================================ZBNFJAX_HOME environment ===========
+  #echo PATH=$PATH
+  echo TMP_ZBNFJAX=$TMP_ZBNFJAX
+  echo ZBNFJAX_HOME=$ZBNFJAX_HOME
+  echo JAVA_HOME = $JAVA_HOME
+  echo JAVA_EXE = $JAVA_EXE
+  echo ANT_HOME = $ANT_HOME
+  echo ECLIPSE_CP=$ECLIPSE_CP
+  echo JAVACP_ZBNF=$JAVACP_ZBNF
+  echo JAVACP_XSLT=$JAVACP_XSLT
+  echo JAVACP_Header2Reflection=$JAVACP_Header2Reflection
+  #echo ==== composed environment ==================================================
+  #echo CLASSPATH = $CLASSPATH
+  #echo JAX_EXE = $JAX_EXE
+  #echo ZBNF2XML_EXE = $ZBNF2XML_EXE
+  #echo XSLT_EXE = $XSLT_EXE
+  #echo ZMAKE_EXE = $ZMAKE_EXE
+  echo ============================================================================
+  echo setZBNFJAX_HOME.sh Environemnt variable $ERRORMSG are not correct. abort.
 else
   if test "$1" = "call";  then
     export ZBNFJAX_CALL="call"  #sign call
@@ -156,6 +158,9 @@ else
   elif test "$1" = "java";  then
     echo java $2 $3
     $JAX_EXE $2 $3
+  elif test "$1" = "execfile";  then
+    echo execute for each file
+    $JAX_EXE org.vishia.cmd.Filecmd $2 $3 $4 $5 $6 $7 $8 $9
   elif test "$1" = "zmakeAnt";  then
     $ZBNFJAX_HOME/unixscript/zmakeAnt $2
   elif test "$1" = "zmakeGen";  then
