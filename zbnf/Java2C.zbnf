@@ -181,7 +181,7 @@ throwsDeclaration::= throws { [<?ThrowsException> {<$?>?\.}|!] ? , }.
 interfaceDefinition::=
   { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> } 
   interface <$?classident>[\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
-  [extends [<?SuperInterface> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]]
+  [extends {[<?SuperInterface> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]? , }]
 \{
   [{  <variableDefinition> ;
     | <methodDefinition>
@@ -323,7 +323,7 @@ simpleValue::=<?>
 | 0x<#x?hexNumber>[L]
 | - 0x<#x?hexNumberNegative>[L]
 | <#-?intNumber>[?\.][L|F|]
-| <#f?floatNumber>F
+| <#f?floatNumber>[F|f]
 | <#f?doubleNumber>
 | new <newArray> 
 | <newObject> 
