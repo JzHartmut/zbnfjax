@@ -47,6 +47,7 @@ genContent::=
 | \<:\><genContentNoWhitespace?>\<\.\>
 ##| (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
 ##TODO doesn't work in parser | \<:text\> <*|\<\.text\>?text>\<\.text\>  ##text in <:text>.....<.text> with all control elements and whitespaces uninterpreted 
+| \<:expandFiles\> <?expandFiles>
 | <*|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces
 }.
 

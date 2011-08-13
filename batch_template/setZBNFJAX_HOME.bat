@@ -10,7 +10,7 @@ REM More Samples of user locations are provided as commented lines.
 REM =====================================================================================================
 REM Location of the zbnfjax tools. The default for setup is given. 
 
-set ZBNFJAX_HOME=V:\vishia\ZBNF\sf\ZBNF\zbnfjax
+set ZBNFJAX_HOME=D:\vishia\ZBNF\sf\ZBNF\zbnfjax
 ::set ZBNFJAX_HOME=D:\Progs\zbnfjax
 
 
