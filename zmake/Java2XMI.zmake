@@ -32,7 +32,7 @@ echo off
 <:file>
   <:>
 @echo off
-set TMP_ZBNFJAX=..\..\..\tmpDocu
+if "%TMP_ZBNFJAX%" == "" set TMP_ZBNFJAX=..\..\..\tmpDocu
 call setZBNFJAX_HOME.bat silent    
 <*target>
 

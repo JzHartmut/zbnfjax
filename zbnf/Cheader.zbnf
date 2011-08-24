@@ -14,7 +14,7 @@ $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 ##methodTyp instead @name name because construct {<$?name>?::}
 ##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
 
-$keywords=return|if|else|while|do|public|private|protected|inline|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
+$keywords=return|if|else|while|do|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
 
 Cheader::=
 [{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
@@ -72,7 +72,7 @@ headerBlock::=<?>
 	|<?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
 	|<?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
   ]
-| inline <inlineMethod>
+| [inline|INLINE_Fwc] <inlineMethod>
 | inline <operatorDef?operator> [;|<statementBlock>]
 | <includeDef?+@>
 | #define CONST<defineDefinition?+const_initializer>
@@ -455,9 +455,10 @@ value::=
   | <refCasting> <value>  ##must be arranged before ( <value> ) because confusion with, example (type)value and (variable)
   | ( <value> )
   | 0x<#x?number>[<?@longModifier>L]
-  |<?floatNumber> <#f?>[<?@floatModifier>F|<?@longModifier>L|]  ##it doesn't work. TODO search why!
+  |<?floatNumber> <#f?>[<?@floatModifier>[F|f]|<?@longModifier>L|]  ##it doesn't work. TODO search why!
 ##  | <#f?floatNumber>[<?@floatModifier>F|<?@longModifier>L|]
   | <#-?number>[<?@longModifier>L]
+  | 0 <?number0>
 ##  | <simpleMethodCall>
   | <methodCall>
   | <variable>
@@ -522,7 +523,7 @@ externObject::= { [<simpleMethodCall>|<$?association>[ \[ <value?index> \]] ] [-
 
 
 
-if_statement::=if ( <condition> ) [<statementBlock>|<statement>] [ else [<statementBlock>|<statement>] ].
+if_statement::=if ( <value?condition> ) [<statementBlock>|<statement>] [ else [<statementBlock>|<statement>] ].
 
 while_statement::=while ( <condition> ) [<statementBlock>|<statement>].
 
