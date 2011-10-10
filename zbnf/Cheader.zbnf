@@ -3,6 +3,7 @@ $xmlns:topics="http://www.vishia.de/2006/Topics".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 
 ##yyyy-mm-dd who      what
+##2010-10-11 Hartmut for::=, using INLINE_Fwc in headerfiles whith some expressions
 ##2009       Hartmut some details
 ##2008-04-16 Hartmut implicitStructAttribute instead attribut with @implicitStruct
 ##                   because it is better detectable by evaluating parse result, improve calculatin time!
@@ -14,7 +15,7 @@ $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 ##methodTyp instead @name name because construct {<$?name>?::}
 ##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
 
-$keywords=return|if|else|while|do|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
+$keywords=return|if|else|while|do|for|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
 
 Cheader::=
 [{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
@@ -432,10 +433,12 @@ statement::=
   return [| <value?returnAssignment>] ;
 | <variabledefinition>
 | <simpleMethodCall> ;
-| <assignment>
+| <assignment> ;
 | <if_statement>
 | <while_statement>
+| <for_statement>
 | <try_statement>
+| <statementBlock>
 .
 
 
@@ -444,9 +447,9 @@ variabledefinition::=<type> <$?attribute> [ = [<objectAccess>|<value>] ];.
 
 
 
-returnAssignment::= [<objectAccess>;|<value>;|<assignment>].
+returnAssignment::= [<objectAccess> ;|<value> ;|<assignment> ;].
 
-assignment::= <variable> <assignOperator> [<objectAccess>;| <value>;|<assignment>].
+assignment::= <variable> <assignOperator> [<objectAccess>| <value>|<assignment>].
 
 value::=
 { [|<unaryOperator>]
@@ -462,7 +465,8 @@ value::=
   | 0 <?number0>
 ##  | <simpleMethodCall>
   | <methodCall>
-  | <variable>
+  |<?variable> [ -- <?preDecrement>| ++ <?preIncrement>|] <variable?> [ -- <?postDecrement>| ++ <?postIncrement>|]
+##  | <variable>
   ##    | <!'.'?simpleChar>
   ]
 ?
@@ -527,6 +531,15 @@ externObject::= { [<simpleMethodCall>|<$?association>[ \[ <value?index> \]] ] [-
 if_statement::=if ( <value?condition> ) [<statementBlock>|<statement>] [ else [<statementBlock>|<statement>] ].
 
 while_statement::=while ( <condition> ) [<statementBlock>|<statement>].
+
+for_statement::=for ( 
+  [<variabledefinition> ; | <assignment?startAssignment> ;]  
+  <condition?endCondition> ; 
+  [ <assignment?iteratorAssignment> | <value?iteratorExpression>]  ##NOTE: a simpleValue contains the pre- and post-increment/decrement forex: ++ix 
+  ) <statement>.
+
+
+
 
 try_statement::=try <statementBlock> { catch ( <$?exceptionType> <$?exceptionObj> ) <statementBlock> }.
 

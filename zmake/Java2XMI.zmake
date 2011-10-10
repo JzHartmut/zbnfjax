@@ -23,6 +23,7 @@ echo on
 %XSLT_EXE% <:forInput><:expandFiles><:>-i%TMP_ZBNFJAX%/<*input.localFile>.xml <.><.forInput> -i%TMP_ZBNFJAX%/types-xmi.xml -t%ZBNFJAX_HOME%/xsl/gen/Java2xmi.xsl -w+ -y<*output.absFile>
 <:>
 echo off
+pause
 <.>
 <.target>
 
