@@ -107,6 +107,10 @@
     <!-- set an anchor for navigation from generated directory, style: <a name="chapter_3.2.1"/> -->
     <xsl:variable name="label">chapter_<xsl:value-of select="$chapterNr"/></xsl:variable>
     <a id="{generate-id()}" name="{$label}"/>
+    
+    <xsl:variable name="labela"><xsl:value-of select="xhtml:body/@id"/></xsl:variable>
+    <a id="{$labela}" name="{$labela}" test="labela" />
+    
     <xsl:if test="count(@id)>0"><a id="{generate-id()}" name="{@id}" /></xsl:if>
     <xsl:variable name="chapterId" select="@id" /><!-- may be emtpy -->
     <!-- xsl:apply-templates select="anchor"/ -->
@@ -143,9 +147,9 @@
 
 
   <xsl:template match="xhtml:body">
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <!-- xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if -->
     <div class="{@class}">
-      <xsl:if test="boolean(@id)"><xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute></xsl:if>
+      <!-- xsl:if test="boolean(@id)"><xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute></xsl:if -->
       <xsl:apply-templates />
     </div>
     <br clear="all" /><!-- to force break if any img is above. -->
@@ -305,7 +309,7 @@
   </xsl:template>
 
   <xsl:template match="xhtml:anchor">
-    <a id="{generate-id()}" name="{@label}" />
+    <!-- a id="{generate-id()}" name="{@label}" / -->  <!-- do nothing, the anchor label is written already -->
   </xsl:template>
 
   <xsl:template match="xhtml:a">
