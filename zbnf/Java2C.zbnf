@@ -171,7 +171,7 @@ constructorDefinition::=
 [<Modifier>] <$?constructor>
 ( [<argumentList>] )  ##a
 [ <throwsDeclaration>]
-\{ [<?superCall> super ( [<actualArguments>] ); ]
+\{ [<?superCall> [<reference>]super ( [<actualArguments>] ); ]
    [<statementsOrDefinition> ]
 \}.
 
@@ -202,7 +202,7 @@ AccessRight::=<?>[ public<?public> | private<?private> | protected<?protected> |
 
 ##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
 ##      it is a Java specification problem!
-Modifier::=<?>{[synchronized<?synchronized> | static<?static> | final<?final> | volatile<?volatile> | abstract<?abstract> | <AccessRight> ]}.
+Modifier::=<?>{[synchronized<?synchronized> | static<?static> | final<?final> | volatile<?volatile> | abstract<?abstract> | <AccessRight> | @Override<?A_Override> ]}.
 
 
 statement::=
