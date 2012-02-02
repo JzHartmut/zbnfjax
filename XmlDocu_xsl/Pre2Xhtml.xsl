@@ -309,7 +309,8 @@
   </xsl:template>
 
   <xsl:template match="xhtml:anchor">
-    <!-- a id="{generate-id()}" name="{@label}" / -->  <!-- do nothing, the anchor label is written already -->
+    <!-- b>====An anchor:<xsl:value-of select="@label" />====</b -->
+    <a name="{@label}" />
   </xsl:template>
 
   <xsl:template match="xhtml:a">
