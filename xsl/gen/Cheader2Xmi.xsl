@@ -371,6 +371,7 @@
         <xsl:for-each select="(classVisibilityBlock | .)/(conditionBlock | .)/
 				  ( virtualMethod|method
 				  | methodDef
+					| inlineMethod/methodDef
 					| defineDefinition[parameter]
 					)">
 					<!-- NOTE: define-Macros with parameter are accepted as methods too. --> 
@@ -380,7 +381,7 @@
           <!-- NOTE: UML:Method isn't accepted by XMI-Import of Rhapsody. -->
           <UML:Operation name="{name}{@name}" xmi.id="{$xmi-id}"><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)" />
             <UML:ModelElement.taggedValue><xsl:value-of select="substring($Indent,1,number($IndentPos)+8)"/>
-              <UML:TaggedValue tag="documentation" value="{description/text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
+              <UML:TaggedValue tag="documentation" value="{description/text | ../description/text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							<xsl:for-each select="description/auxDescription">
 							  <UML:TaggedValue tag="{@name}" value="{@value}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							</xsl:for-each>

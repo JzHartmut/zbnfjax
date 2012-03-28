@@ -73,7 +73,7 @@ headerBlock::=<?>
 	|<?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
 	|<?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
   ]
-| [inline|INLINE_Fwc] <inlineMethod>
+| [inline|INLINE_Fwc] <inlineMethod?+@>
 | inline <operatorDef?operator> [;|<statementBlock>]
 | <includeDef?+@>
 | #define CONST<defineDefinition?+const_initializer>
@@ -289,7 +289,7 @@ type::= [<?@modifier>volatile|const|]
   [<?@modifier2>volatile|const|].
 
 
-inlineMethod::=<methodDef> [const] [;|<statementBlock>].
+inlineMethod::=<methodDef?+@> [const] [;|<statementBlock>].
 
 
 ##typedParameter::= <type> [ <$?@name>[ \[ <value?sizeof> \]] [ = <value?defaultValue>] ].

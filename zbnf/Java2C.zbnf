@@ -14,7 +14,7 @@
 JavaSrc::=
 [package <classpath?PackageDefinition> ; ]
 [ {<?importStatement> [/**[><description>*/]] import {<$?package>\.}[<$?class>|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap|*<?allClasses>] ; } ]
-{ <classDefinition> | <interfaceDefinition> }
+{ [<classDefinition> | <interfaceDefinition> |]}
 .
 
 $keywords::=class|interface|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.

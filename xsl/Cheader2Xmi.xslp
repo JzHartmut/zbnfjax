@@ -5,6 +5,7 @@
  -->
 <!-- This file should be translated using makeXsl_fromXslp before using for a XSLT translation, see http://www.vishia.org/Xml/html/Xsltpre.html -->
 <!-- made by Hartmut Schorrig www.vishia.org
+  2012-03-25 Hartmut inlideMethod (usage of Inline_Fwc in Header)
   2011-06-26 Hartmut consider typedef struct inside a @CLASS_C block with naming Name_ClassCName as inner classes in XMI, adjust some details for description 
   2007..2011 Hartmut some changes
   2007       Hartmut created -->                       
@@ -371,6 +372,7 @@
         <xsl:for-each select="(classVisibilityBlock | .)/(conditionBlock | .)/
 				  ( virtualMethod|method
 				  | methodDef
+					| inlineMethod/methodDef
 					| defineDefinition[parameter]
 					)">
 					<!-- NOTE: define-Macros with parameter are accepted as methods too. --> 
@@ -380,7 +382,7 @@
           <!-- NOTE: UML:Method isn't accepted by XMI-Import of Rhapsody. -->
           <UML:Operation name="{name}{@name}" xmi.id="{$xmi-id}"><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)" />
             <UML:ModelElement.taggedValue><xsl:value-of select="substring($Indent,1,number($IndentPos)+8)"/>
-              <UML:TaggedValue tag="documentation" value="{description/text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
+              <UML:TaggedValue tag="documentation" value="{description/text | ../description/text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							<xsl:for-each select="description/auxDescription">
 							  <UML:TaggedValue tag="{@name}" value="{@value}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							</xsl:for-each>
