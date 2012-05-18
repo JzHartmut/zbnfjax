@@ -30,6 +30,7 @@ if not "%1" == "zmake" goto :nZmake
   goto :ende
 :nZmake
 if not "%1" == "zmakeGen" goto :nZmakeGen
+  echo zbnfjax zmakeGen: %2 %3 %4 %5 %6 %7 %8 %9 >>%TMP_ZBNFJAX%\zbnfjax.log"
   %JAVA_EXE% -cp "%ZBNFJAX_HOME%/zbnf.jar" org.vishia.zmake.Zmake %2 %3 %4 %5 %6 %7 %8 %9
   goto :ende
 :nZmakeGen

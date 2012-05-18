@@ -14,8 +14,8 @@
 JavaSrc::=
 [package <classpath?PackageDefinition> ; ]
 [ {<?importStatement> [/**[><description>*/]] import {<$?package>\.}[<$?class>|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap|*<?allClasses>] ; } ]
-{ [<classDefinition> | <interfaceDefinition> |]}
-.
+{ [<classDefinition> | <interfaceDefinition> |]} 
+\e.
 
 $keywords::=class|interface|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.
 
@@ -90,7 +90,7 @@ Java2CAnnotation::=
 ?en:java2cTag/nonPersistent::="A reference which is designed as non-persistent, shouldn't be stored and used in another threads.".
 
 classDefinition::= 
-  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> } 
+  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | [<Modifier?>] } 
   class <$?classident>
   [\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
   [extends [<?Superclass> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]]
@@ -136,6 +136,7 @@ nonArrayType::= <typeIdent?>   ##nonArrayType produces the same result as typeId
       [ \?<?undefGeneric>    [ extends <type?baseGeneric>]    | <type?ContainerElementType>] 
  \>
 ]
+[<?va_arg>\.\.\.]
 .
 
 ##A type has the same content like a nonArrayType, but additionally an array identification may be part of them.
@@ -179,11 +180,12 @@ throwsDeclaration::= throws { [<?ThrowsException> {<$?>?\.}|!] ? , }.
 
 
 interfaceDefinition::=
-  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> } 
+  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | [<Modifier?>] } 
   interface <$?classident>[\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
   [extends {[<?SuperInterface> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]? , }]
 \{
-  [{  <variableDefinition> ;
+  [ [<Modifier?>]
+   {  <variableDefinition> ;
     | <methodDefinition>
     | <interfaceDefinition>
     | <classDefinition>
@@ -202,7 +204,7 @@ AccessRight::=<?>[ public<?public> | private<?private> | protected<?protected> |
 
 ##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
 ##      it is a Java specification problem!
-Modifier::=<?>{[synchronized<?synchronized> | static<?static> | final<?final> | volatile<?volatile> | abstract<?abstract> | <AccessRight> | @Override<?A_Override> ]}.
+Modifier::=<?>{synchronized<?synchronized> | static<?static> | final<?final> | volatile<?volatile> | abstract<?abstract> | @Override<?A_Override> | @<$?Annotation>| <AccessRight> }.
 
 
 statement::=
@@ -218,7 +220,8 @@ statement::=
 | <forElement_statement>
 | <for_statement>
 ##|<?throwNew> throw new <$?exceptionClass> ( <value?text> [, <value?value2>] ) ;
-|<?throwNew> throw new <type?exceptionClass> ( <value?text> [ , <value?value2> ] ) ;
+|<?throwNew> throw new <type?exceptionClass> ( [<value?text>] [ , <value?value2> ] ) ;  ##Note: not all exception parameters are accepted for Java2C, only the usual.
+|<?throwExc> throw <$?ExcVariable> ;
 | <try_statement>
 |<?return> return[!<!\\W?>] [ <value> |] ;  ##no word char expected after return, but not processed
 |<?break_statement> break ;
@@ -241,7 +244,7 @@ while_statement::=while ( <condition> ) [<statement>].
 dowhile_statement::=do <statement> while ( <condition> );.
 
 for_statement::=for ( 
-  [<variableDefinition> ; | <assignment?startAssignment> ;]  
+  [[<variableDefinition>] ; | <assignment?startAssignment> ;]  
   <condition?endCondition> ; 
   [ <assignment?iteratorAssignment> | <simpleValue?iteratorExpression>]  ##NOTE: a simpleValue contains the pre- and post-increment/decrement forex: ++ix 
   ) <statement>.
@@ -250,9 +253,9 @@ forElement_statement::=for ( <variableDefinition> : <value?forContainer> ) <stat
 
 switch_statement::=switch ( <value?switchValue> ) 
 \{ [{<?case> { case <value?caseValue> : }    ##more as one case value: after another is predictable, it are more cases to the same statements.  
-     <statementsOrDefinition>                      ##but at least one statement should be written.
+     [<statementsOrDefinition>]                      ##but at least one statement should be written.
    }]
-   [<?default> default : <statementsOrDefinition> ] 
+   [<?default> default : [<statementsOrDefinition>] ] 
 \}.
 
 try_statement::=try <statementBlock> {<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> }.
@@ -333,6 +336,7 @@ simpleValue::=<?>
 | ( <value?parenthesisExpression> )
 |<?nullRef> null
 ]
+[<arrayElementAccess?>]
 .
 
 
@@ -343,12 +347,18 @@ unaryOperator::=<?> [<?unaryOperator> - | ~ | ! ].
 
 ##superAccess::=super\..
 
+arrayElementAccess::=<?>{ \[ <value?arrayIndex> \] }.
+
+
 ##A reference is all things left from point.
 ##A referenceValue may be also a simpleMethodCall, but in parenthesis. A simpleMethodCall without () is more immediate. The same is with referenceAssociation.
 reference::=[ this \.<?this> | super \.<?super> | ( <newObject> ) \.| ( <value?referenceValue> ) \.| <simpleMethodCall?referenceMethod> \.| <simpleVariable?referenceAssociation> \.] [<reference>].
 
 ##A variable is either a left value or a kind of value.
 simpleVariable::= <$?variableName>[{ \[ <value?arrayIndex> \] }].
+
+
+
 
 maybeReferencedVariable::= [<reference>] <simpleVariable?>.
 
@@ -357,7 +367,7 @@ simpleMethodCall::=<$?methodName> ( [<actualArguments>] ).
 actualArguments::={ <value> ? , }.
 
 ##formal parameter or argument list of methods and constructors:
-argumentList::=<?>{<?argument> <Modifier?> <type> <$?variableName>[\[\]<?array>] ?, }.
+argumentList::=<?>{<?argument> [<Modifier?>] <type> <$?variableName>[\[\]<?array>] ?, }.
 
 ##A syntactical variableDefinition is such as "int a,b,c". But a semantical variableDefinition is "int a", "int b".
 ##Therefore the type is assigned to the syntactical <variableInstance?...>, this is semantical the <...?+variableDefinition>.

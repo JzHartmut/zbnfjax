@@ -278,15 +278,20 @@ type::= [<?@modifier>volatile|const|]
                                  | <$?@name> 
                                  ] [ \< <type?templateType> \> ] 
   ]
-  [{ * *<?@pointer2>
+  [<typeRefModifier?>]
+  [<?@modifier2>volatile|const|].
+
+
+
+typeRefModifier::=
+  { * *<?@pointer2>
   | * &<?@pointerRef>
   | *<?@pointer>
   | const **<?@constPointer2>
   | const *<?@constPointer>
   | volatile *<?@volatilePointer>
   | &<?cppRef>
-  }] 
-  [<?@modifier2>volatile|const|].
+  }. 
 
 
 inlineMethod::=<methodDef?+@> [const] [;|<statementBlock>].
@@ -443,15 +448,15 @@ statement::=
 
 
 ##variabledefinition::=<$?type> <$?attribute> [ = [<objectAccess>|<value>] ];.
-variabledefinition::=<type> <$?attribute> [ = [<objectAccess>|<value>] ];.
+variabledefinition::=<type> { [<typeRefModifier>] <$?attribute> [ = [<objectAccess>|<value>] ] ? , };.
 
 
 
 returnAssignment::= [<objectAccess> ;|<value> ;|<assignment> ;].
 
-assignment::= <variable> <assignOperator> [<objectAccess>| <value>|<assignment>].
+assignment::= [* <variable?Refvariable>|<variable>]  <assignOperator> [<objectAccess>| <value>|<assignment>].
 
-value::=
+value::= <assignment> |
 { [|<unaryOperator>]
   [ <""?simpleStringLiteral>
   | <''?simpleCharLiteral>
@@ -482,7 +487,7 @@ assignOperator::= = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>=.
 unaryOperator::= - | ~ | ! | * | & .
 
 ##TRICKY-ZBNF: use [<?semantic> ...] to store the string value. use <?> to circumvent double storing.
-binaryOperator::=<?>[<?binaryOperator> + | - | * | / | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ ].
+binaryOperator::=<?>[<?binaryOperator> + | - | * | / | % | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ ].
 ##binaryOperator::= + | - | * | / | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ .
 
 
