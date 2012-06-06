@@ -32,7 +32,7 @@ REM * saxon9-jdom.jar         http://www.saxonica.com
 REM * saxon9.jar              http://www.saxonica.com
 REM * saxon9he.jar    - it isn't sufficient.
 
-set XML_TOOLS=V:\Progs\XML_Tools
+set XML_TOOLS=D:\Progs\XML_Tools
 
 
 REM =====================================================================================================
@@ -58,8 +58,8 @@ REM variant: use existing JAVA_HOME-variable:
 
 REM other variant: use JRE inside installed JDK:
 set JAVA_HOME=%JAVA_JDK%\jre
-set JAVA_EXE=%JAVA_JDK%\jre\bin\java"
-set JAVAW_EXE=%JAVA_JDK%\jre\bin\javaw"
+set JAVA_EXE=%JAVA_JDK%\jre\bin\java
+set JAVAW_EXE=%JAVA_JDK%\jre\bin\javaw
 
 REM other variant: Only jre is installed:
 ::set JAVA_HOME=D:\Programs\JAVA\jre1.6.0_21
@@ -85,7 +85,7 @@ set ECLIPSE_CP=
 
 REM =====================================================================================================
 REM Location of the Java2C_Toolbase scripts. It is not a part of zbnfjax.
-set JAVA2C_TOOLBASE=D:\Progs\Java2C
+set JAVA2C_TOOLBASE=D:\vishia\Java2C\sf\Java2C
 
 
 REM === End of adaption =================================================================================

@@ -3,6 +3,7 @@ $xmlns:topics="http://www.vishia.de/2006/Topics".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 
 ##yyyy-mm-dd who      what
+##2012-06-08 Hartmut switch-statement. Some corrections while parsing normal C-files.
 ##2010-10-11 Hartmut for::=, using INLINE_Fwc in headerfiles whith some expressions
 ##2009       Hartmut some details
 ##2008-04-16 Hartmut implicitStructAttribute instead attribut with @implicitStruct
@@ -15,7 +16,7 @@ $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 ##methodTyp instead @name name because construct {<$?name>?::}
 ##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
 
-$keywords=return|if|else|while|do|for|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
+$keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
 
 Cheader::=
 [{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
@@ -87,6 +88,7 @@ headerBlock::=<?>
 | <classDef?+@> ;
 | <attribute>
 | <methodDef?+@> ;
+| <methodWithBody>
 | <operatorDef?operator> [;|<statementBlock>]
 | <defineUse?+@>
 | ;  ##NOTE: an empty unnecessary semicolon is acceptable in C
@@ -183,6 +185,7 @@ enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
 ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
 implicitStructAttribute::=[/**<description>*/] struct <structDefinition?><?@implicitStruct> ;.
 
+##it is a method head, declaration.
 methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] ).
 
 methodPtrTypedef::= [METHOD_C |extern "C"|extern_C |extern |C_TYPE |] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]);.
@@ -296,6 +299,9 @@ typeRefModifier::=
 
 inlineMethod::=<methodDef?+@> [const] [;|<statementBlock>].
 
+##It is a method definition.
+methodWithBody::=<methodDef?+@> [const <?constThis>] <statementBlock>.
+
 
 ##typedParameter::= <type> [ <$?@name>[ \[ <value?sizeof> \]] [ = <value?defaultValue>] ].
 typedParameter::= <type> [ <$?@name>[<arraysize>] [ = <value?defaultValue>] ].
@@ -320,8 +326,8 @@ superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
 ##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,};.
 attribute::=<?> [/**<description?-?>*/] [extern "C"|extern_C\ |extern\ |] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
-attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ]] ; [//:<*\n?description/text>].
-attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ]].
+attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |] ; [//:<*\n?description/text>].
+attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |].
 
 ?attributedefDescr::="Possibility to write //: as endline comment description. It is applicable if only one attribute is defined, not more as one separated with colon ".
 
@@ -437,13 +443,18 @@ statementBlock::=
 statement::=
   return [| <value?returnAssignment>] ;
 | <variabledefinition>
-| <simpleMethodCall> ;
+| <simpleMethodCall> [;]   ##NOTE: If it is a call of a parametrized macro, it doesn't may have a semicolon on end.
 | <assignment> ;
 | <if_statement>
 | <while_statement>
 | <for_statement>
+| <switch_statement>
 | <try_statement>
 | <statementBlock>
+| break ;
+| ;  ##NOTE: an empty unnecessary semicolon is acceptable in C
+| <invalidBlock?>
+| <validBlock?>
 .
 
 
@@ -484,7 +495,10 @@ value::= <assignment> |
 
 assignOperator::= = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>=.
 
-unaryOperator::= - | ~ | ! | * | & .
+##NOTE: It is possible in C to have more as one unary operator one before another. But that is usefull only for special situations.
+##      The sequence of unary operators is checked here.  
+
+unaryOperator::= - | + | ~ | !<?unaryNot> | ! !<?unaryCastToBool> | * | & .
 
 ##TRICKY-ZBNF: use [<?semantic> ...] to store the string value. use <?> to circumvent double storing.
 binaryOperator::=<?>[<?binaryOperator> + | - | * | / | % | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ ].
@@ -544,6 +558,13 @@ for_statement::=for (
   ) <statement>.
 
 
+	
+switch_statement::=switch ( <value?switchValue> ) 
+\{ [{<?case> { case <value?caseValue> : }    ##more as one case value: after another is predictable, it are more cases to the same statements.  
+     [{<statement>}]                      ##but at least one statement should be written.
+   }]
+   [<?default> default : [{<statement>}] ] 
+\}.
 
 
 try_statement::=try <statementBlock> { catch ( <$?exceptionType> <$?exceptionObj> ) <statementBlock> }.
