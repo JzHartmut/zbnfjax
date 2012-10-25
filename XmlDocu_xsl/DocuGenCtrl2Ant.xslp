@@ -68,6 +68,7 @@
     <xsl:variable name="targetfile"><xsl:for-each select="output"><xsl:call-template name="absPathfile" /></xsl:for-each></xsl:variable>
     <!-- targets without isUptodate and wiht special target frame: -->
     <xsl:choose><xsl:when test="@translator='TextTopic2Xml'"><xsl:call-template name="TextTopic2Xml"/>
+    </xsl:when><xsl:when test="@translator='StateMachine2Xml'"><xsl:call-template name="StateMachine2Xml"/>
     </xsl:when><xsl:otherwise>
       <xsl:call-template name="genTarget_ZmakeStd" />
     </xsl:otherwise></xsl:choose>
@@ -237,7 +238,7 @@
   <xsl:if test="$dependsOnTools='true'">
     <xsl:for-each select="/GenCtrl/import">
       <!-- dependency from special.xsl (tool) -->
-      <xsl:variable name="dependsToolSrc"><xsl:text>${env.ZBNFJAX_HOME}//(?@dir?)(?if boolean(@dir)?)/(?/if?)(?@href?)(?@type?)</xsl:text></xsl:variable>
+      <xsl:variable name="dependsToolSrc"><xsl:text>${env.ZBNFJAX_HOME}/(?@dir?)(?if boolean(@dir)?)/(?/if?)(?@href?)(?@type?)</xsl:text></xsl:variable>
       <srcfiles file="{$dependsToolSrc}" />
     </xsl:for-each>
     <srcfiles file="{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/DocuGenCtrl2Xsl.xslp" />
@@ -470,6 +471,37 @@
     <arg line ="-cp {'${'}env.JAVACP_ZBNF{'}'} org.vishia.zbnf.Zbnf2Xml" />
     <arg line ="--rlevel:334 --report:{$targetfile}.rpt"/>
     <arg line ="-i:{$srcfile} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/AsciiTopics.zbnf -y:{$targetfile}"/>
+  </exec>
+</xsl:template>
+
+
+
+<!-- This template translates a Zmake-expression like
+
+     target: tmp/*.xml := StateMachine2Xml(file1.stm, file2.stm);
+
+     in some targets to translate the individually files from xslp via Xsltpre.java to xsl.
+     a common target is build with the depends of all some xslp-translating targets.
+ -->
+<xsl:template name="StateMachine2Xml">
+  <xsl:comment>Generated with ZmakeStd.xslp: StateMachine2Xml calling genExecForEachInput: exec_StateMachine2Xml </xsl:comment>
+  <xsl:call-template name="genTargetForEachInput">
+    <xsl:with-param name="genExecForEachInput" select="'exec_StateMachine2Xml'" />
+  </xsl:call-template>
+</xsl:template>
+
+<xsl:template name="exec_StateMachine2Xml"><!-- this template will be called inside for each inputfile. -->
+<xsl:param name="targetfile" />
+<xsl:param name="srcfile" />
+<xsl:param name="xmlInputNode" />
+<xsl:param name="xmlTargetNode" />
+  <!-- the srcfile without extension .h -->
+  <xsl:comment>Generated with ZmakeStd.xslp: exec_StateMachine2Xml </xsl:comment>
+  <echo message="{'StateMachine2Xml: '}{$targetfile}" />
+  <exec dir="{$curDir}" executable= "java" failonerror="true">
+    <arg line ="-cp {'${'}env.JAVACP_ZBNF{'}'} org.vishia.zbnf.Zbnf2Xml" />
+    <arg line ="--rlevel:336 --report:{$targetfile}.rpt"/>
+    <arg line ="-i:{$srcfile} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/StateMachine.zbnf -y:{$targetfile}"/>
   </exec>
 </xsl:template>
 

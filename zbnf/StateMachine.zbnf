@@ -1,0 +1,63 @@
+<?SBNF-www.vishia.de version="1.0" encoding="iso-8859-1" ?>
+$xmlns:topics="http://www.vishia.de/2006/Topics".
+$xmlns:xhtml="http://www.w3.org/1999/xhtml".
+$inputEncodingKeyword="encoding".
+$comment=(?...?).
+$endlineComment=//. ##\#\#.
+
+StateMachine::=                 
+{
+===State <state>
+| === set <variable> ; 
+}
+=== end \e.
+
+variable::= <$?name> = [<""?value>|<*;?value>].
+
+stateStructure::={ + <CompositeState> }.
+
+state::=<$?@stateName>  [ [: | in] <$?enclState>[\.<$?parallelState>] ] ===
+<* |\.|===|\?\??shortdescription><* |===|\?\??description>
+[{ \? <description> }]
+[ ===const: <constDef> ]
+[ ===entry: <action?entry> ]
+[ ===exit:  <action?exit>  ]
+[{ ===trans  <trans>      }]
+.
+
+SimpleState::= <$?@stateName> [ [: | in] <$?enclState> ] 
+[{ \? <description> }]
+.
+
+CompositeState::= <$?@stateName>  [ [: | in] <$?enclState> ]
+[\? <description>]
+\{ { [ \|\| <CompositeState?ParallelState> |+ <CompositeState> | + <SimpleState> |] } \}.
+
+description::=<?> ! <* |\?\.?tododescription> \?\. |+ <* |\?\.?additionaldescription> \?\. |\? <* |\?\.?description> \?\. | <*\n?description>.
+
+
+action::= [{ \?<description>}] <* |===?code>.
+
+trans::= [:| ==\>{ <$?dstState> ? , }] <evCond> [ ==\> { <$?dstState> ? , } ] [;] 
+[{ \? <description> }]
+[ ===action:<* |===|(c)?code> ]
+[ @action:<* |===|(c)|@?code> ]
+[ [(c)|@subcond:] { <subCondition> ? [(c)|@subcond:] }]
+. 
+
+subCondition::= [ ==\> { <$?dstState> ? , } |<* |==\>|(c)|@subcond?cond> ==\> { <$?dstState> ? , }] ;
+[@cond: <* |\?\?|@|===|(c)|@subcond?cond>]
+[{ \? <description> }]
+[ @action:<* |===|(c)|@?code> ]
+.
+
+evCond::=<?> [ tm(<*)?time> ) | \[ <*\]?cond> \]  | @cond:<* |==\>|;|\?\?|@?cond> | <* |\[|==\>|(\?)?event> ] [ \[ <*\]?cond> \]].
+
+
+constDef::={
+[{ \? <description> }]
+[ @ident: <$?ident> ]
+[ @code: <* |===|@?code> ]
+}. 
+
+##dstState::= <$?@name>.

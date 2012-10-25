@@ -5,6 +5,7 @@
  -->
 <!-- This file should be translated using makeXsl_fromXslp before using for a XSLT translation, see http://www.vishia.org/Xml/html/Xsltpre.html -->
 <!-- made by Hartmut Schorrig www.vishia.org
+  2012-03-25 Hartmut inlideMethod (usage of Inline_Fwc in Header)
   2011-06-26 Hartmut consider typedef struct inside a @CLASS_C block with naming Name_ClassCName as inner classes in XMI, adjust some details for description 
   2007..2011 Hartmut some changes
   2007       Hartmut created -->                       
