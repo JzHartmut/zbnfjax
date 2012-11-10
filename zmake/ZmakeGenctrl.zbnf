@@ -1,10 +1,11 @@
 <?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
 ##This script describes the syntax of a Zmake-generation-control-file.
-
+$comment=(?...?).
 $endlineComment=\#\#.  ##The ## is the start chars for an endline-comment or commented line in the parsed script. 
 
 ZmakeGenctrl::= 
 { <ZmakeTarget> 
+| <subtext> 
 | <genFile> 
 | \<= <variableAssign?setVariable> \<\.=\>
 } \e.
@@ -20,7 +21,11 @@ ZmakeTarget::= \<:target = <$?@name> \>
 \<\.target\>.
 
 
-##A genControl script should have a part (?:file?)....(?/file?) which describes how the whole file should build.
+subtext::= \<:subtext : <$?name> \><genContent?> \<\.subtext\>.
+
+
+
+##A genControl script should have a part <:file>....<.file> which describes how the whole file should build.
 
 genFile::= \<:file\>
   <genContent?>
@@ -32,43 +37,59 @@ genFile::= \<:file\>
 ##The textual content of any target, file, variable etc.
 
 genContent::=
-{ \<= <variableAssign?setVariable> \<\.=\>
+{ \<= <variableAssign?setVariable> \<\.=\>                       ##Possibility to have local variables. It is constant text.
+| \<= <referencedData>                                           ##A reference to user data
 | \<:forInput\> <genContent?forInputContent> \<\.forInput\>
 | \<:for:<forVariable>\<\.for\>
-##| (\?:forList : <forList> (\?/forList\?)
+| \<:for:<forContainer>
 | \<:forList:<forList>\<\.forList\>
-##| (\?+ <variableAssignment?addToList> (\?/+\?)
+| \<:if: <ifContainer>
+| \<:hasNext\> <genContent?hasNext> \<\.hasNext\>
 | \<+<variableAssignment?addToList>\<\.+\>
-| \<*<$?variableValue>\>
 | \<*<$?fnEmpty>()\>
+| \<*subtext : <callSubtext>
 | \<*<valueElement>\>
-##| (\?*\?)<?listElement>
 | \<*\><?listElement>
 | \<:\><genContentNoWhitespace?>\<\.\>
-##| (\?:text\?)<*|(\??text>(\?/text\?)  ##text in (?:text?).....(?/text?) with all whitespaces 
-##TODO doesn't work in parser | \<:text\> <*|\<\.text\>?text>\<\.text\>  ##text in <:text>.....<.text> with all control elements and whitespaces uninterpreted 
 | \<:expandFiles\> <?expandFiles>
-| <*|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces
+| <*|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces till next control <: <* <.
 }.
 
 
 
-valueElement::=<$?name>\.<$?elementPart>.
+callSubtext::=<$?name> [ : { <referencedData> ? , }] \>.
+
+
+##valueElement::=<$?name>\.<$?elementPart>.
+valueElement::=<datapath>.
+
+datapath::=<?>{ [<?path>[$|@|][<$-?>]]? \.}.
 
 genContentNoWhitespace::=<$NoWhiteSpaces>
-{ [?\<\.\>]              ##abort on <.>
+{ [?\<\.\>]              ##abort on <.> 
 [ \<:forInput\><genContentNoWhitespace?forInputContent>\<\.forInput\>
 | \<: for : <forVariableNoWhitespace?forVariable> \<\.for\>
-| \<*<$?variableValue>\>
+##| \<*<$?variableValue>\>
 | \<*<$?fnEmpty>()\>
 | \<*<valueElement>\>
 | <*|\<:|\<*|\<\.?text>           ##text inclusive leading and trailing whitespaces
 ]
 }.
 
-
+##datapath::=<?>{ <$?datapath>? \.}.
 
 variableAssign::= <$?@name> \> <genContent?> .
+
+referencedData::= <$?name> = <datapath>.
+
+##<:for:name:datapath> ...content ... <.for>
+forContainer::= <$?@name> : <datapath> \> <genContent?> \<\.for[ : <$?@name> ]\>. ##name is the name of the container element data reference
+
+##<:if:condition> ...content ... <:elsif:condition> ...content ... <:else> ...content ... <.if>
+ifContainer::= <ifBlock> [{ \<:elsif : <ifBlock>  }][ \<:else\> <genContent?elseBlock> ] \<\.if\>.
+ifBlock::= <condition> \> <genContent?>.
+
+condition::=<?><datapath> [[<?operator> != | == ] [<""?value>|<*\>?value>]].
 
 forVariable::= <$?@name>\> <genContent?> .
 
