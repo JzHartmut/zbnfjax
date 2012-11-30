@@ -46,10 +46,10 @@ genContent::=
 | \<:if: <ifContainer>
 | \<:hasNext\> <genContent?hasNext> \<\.hasNext\>
 | \<+<variableAssignment?addToList>\<\.+\>
-| \<*<$?fnEmpty>()\>
+##| \<*<$?fnEmpty>()\>
 | \<*subtext : <callSubtext>
 | \<*<valueElement>\>
-| \<*\><?listElement>
+##| \<*\><?listElement>
 | \<:\><genContentNoWhitespace?>\<\.\>
 | \<:expandFiles\> <?expandFiles>
 | <*|\<:|\<*|\<\.?text>                        ##text after whitespace but inclusive trailing whitespaces till next control <: <* <.
@@ -63,14 +63,16 @@ callSubtext::=<$?name> [ : { <referencedData> ? , }] \>.
 ##valueElement::=<$?name>\.<$?elementPart>.
 valueElement::=<datapath>.
 
-datapath::=<?>{ [<?path>[$|@|][<$-?>]]? \.}.
+datapath::=<?>{ <datapathElement> ? \.}.  ##path elements can start with $ or @ and can contain -
+
+datapathElement::=[<?ident>[$|@|][<$-?>]] [( [{ <#?intArg> | <#f?floatArg> | <""?textArg> | <*,)?textArg> ? ,}<?fn>])].
 
 genContentNoWhitespace::=<$NoWhiteSpaces>
 { [?\<\.\>]              ##abort on <.> 
 [ \<:forInput\><genContentNoWhitespace?forInputContent>\<\.forInput\>
 | \<: for : <forVariableNoWhitespace?forVariable> \<\.for\>
 ##| \<*<$?variableValue>\>
-| \<*<$?fnEmpty>()\>
+##| \<*<$?fnEmpty>()\>
 | \<*<valueElement>\>
 | <*|\<:|\<*|\<\.?text>           ##text inclusive leading and trailing whitespaces
 ]
