@@ -21,7 +21,7 @@ ZmakeTarget::= \<:target = <$?@name> \>
 \<\.target\>.
 
 
-subtext::= \<:subtext : <$?name> \><genContent?> \<\.subtext\>.
+subtext::= \<:subtext : <$?name> [ : { <referencedData> ? , }] \><genContent?> \<\.subtext\>.
 
 
 
@@ -57,11 +57,11 @@ genContent::=
 
 
 
-callSubtext::=<$?name> [ : { <referencedData> ? , }] \>.
+callSubtext::=[<""?name>|<datapath>] [ : { <referencedData> ? , }] \>.
 
 
 ##valueElement::=<$?name>\.<$?elementPart>.
-valueElement::=<datapath>.
+valueElement::=<""?text>|<datapath>.
 
 datapath::=<?>{ <datapathElement> ? \.}.  ##path elements can start with $ or @ and can contain -
 
@@ -82,7 +82,7 @@ genContentNoWhitespace::=<$NoWhiteSpaces>
 
 variableAssign::= <$?@name> \> <genContent?> .
 
-referencedData::= <$?name> = <datapath>.
+referencedData::= <$?name>[ = [ <""?text> | <datapath>]].
 
 ##<:for:name:datapath> ...content ... <.for>
 forContainer::= <$?@name> : <datapath> \> <genContent?> \<\.for[ : <$?@name> ]\>. ##name is the name of the container element data reference
