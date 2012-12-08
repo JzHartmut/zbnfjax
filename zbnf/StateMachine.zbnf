@@ -3,7 +3,7 @@ $xmlns:topics="http://www.vishia.de/2006/Topics".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 $inputEncodingKeyword="encoding".
 $comment=(?...?).
-$endlineComment=//. ##\#\#.
+$endlineComment=\#\#.
 
 StateMachine::=                 
 {
@@ -17,7 +17,7 @@ variable::= <$?name> = [<""?value>|<*;?value>].
 stateStructure::={ + <CompositeState> }.
 
 state::=<$?@stateName>  [ [: | in] <$?enclState>[\.<$?parallelState>] ] ===
-<* |\.|===|\?\??shortdescription><* |===|\?\??description>
+<* |\.|===|\?\?|\?!|\?+?shortdescription><* |===|\?\?|\?!|\?+?description>  ##description not started with ? contains a short description.
 [{ \? <description> }]
 [ ===const: <constDef> ]
 [ ===entry: <action?entry> ]
@@ -33,13 +33,18 @@ CompositeState::= <$?@stateName>  [ [: | in] <$?enclState> ]
 [\? <description>]
 \{ { [ \|\| <CompositeState?ParallelState> |+ <CompositeState> | + <SimpleState> |] } \}.
 
-description::=<?> ! <* |\?\.?tododescription> \?\. |+ <* |\?\.?additionaldescription> \?\. |\? <* |\?\.?description> \?\. | <*\n?description>.
+description::=<?>
+ ! <* |\?\.?tododescription> \?\.           ##?! TODO ?. 
+|+ <* |\?\.?additionaldescription> \?\.     ##?+ additional ?.
+|\? <* |\?\.?description> \?\.              ##?? some lines ?.
+|- <*\n?description>.                       ##?- to endline \n
 
 
 action::= [{ \?<description>}] <* |===?code>.
 
 trans::= [:| ==\>{ <$?dstState> ? , }] <evCond> [ ==\> { <$?dstState> ? , } ] [;] 
-[{ \? <description> }]
+<* |===|\?\?|\?!|\?+?description>  ##description not started with ? .
+[{ \?<description> }]
 [ ===action:<* |===|(c)?code> ]
 [ @action:<* |===|(c)|@?code> ]
 [ [(c)|@subcond:] { <subCondition> ? [(c)|@subcond:] }]

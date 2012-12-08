@@ -1,7 +1,7 @@
 <?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
-##This script describes the syntax of a Zmake-generation-control-file.
+##This script describes the syntax of a text-generation-control-file.
 $comment=(?...?).
-$endlineComment=\#\#.  ##The ## is the start chars for an endline-comment or commented line in the parsed script. 
+$endlineComment=\#\#.  ##The ## is the start chars for an endline-comment or commented line in the generator script. 
 
 ZmakeGenctrl::= 
 { <ZmakeTarget> 
