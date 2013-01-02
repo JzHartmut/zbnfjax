@@ -43,7 +43,7 @@ genContent::=
 | \<:for:<forVariable>\<\.for\>
 | \<:for:<forContainer>
 | \<:forList:<forList>\<\.forList\>
-| \<:if: <ifContainer>
+| \<:if: <if>
 | \<:hasNext\> <genContent?hasNext> \<\.hasNext\>
 | \<+<variableAssignment?addToList>\<\.+\>
 ##| \<*<$?fnEmpty>()\>
@@ -88,7 +88,7 @@ referencedData::= <$?name>[ = [ <""?text> | <datapath>]].
 forContainer::= <$?@name> : <datapath> \> <genContent?> \<\.for[ : <$?@name> ]\>. ##name is the name of the container element data reference
 
 ##<:if:condition> ...content ... <:elsif:condition> ...content ... <:else> ...content ... <.if>
-ifContainer::= <ifBlock> [{ \<:elsif : <ifBlock>  }][ \<:else\> <genContent?elseBlock> ] \<\.if\>.
+if::= <ifBlock> [{ \<:elsif : <ifBlock>  }][ \<:else\> <genContent?elseBlock> ] \<\.if\>.
 ifBlock::= <condition> \> <genContent?>.
 
 condition::=<?><datapath> [[<?operator> != | == ] [<""?value>|<*\>?value>]].

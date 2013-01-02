@@ -56,7 +56,8 @@ output::=<*|\ |\r|\n|:=?!prepFilePath>.
 
 routine::= 
   exec <exec?> 
-|  <$?@translator> ( <inputlist?> )
+| [<?@translator> copyNewerFiles|copyFiles|copyChangedFiles] ( <inputFiles?> )  
+|  <$?@translator> ( <input?> )
 .
 
 specials::=
@@ -77,29 +78,30 @@ exec::= \{ { [<execCmd> | $<$?execVariable/@name>] ; } \}.
 ##Or an input can be a parameter, it is ident = "value"
 ##Or an input can be a filename without "" but to whitespace
 ##It is repeatable with , or + as separator.
-inputlist::=<?>
-{ <param> | <inputarg>
-##| srcpath = <""?!prepSrcpath>
-##| srcext = <""?srcext>
+input::=
+{ \$<inputSet>
+| srcpath = <""?!prepSrcpath>
+| srcext = <""?srcext>
 ##| target = <""?@target>
 ##| task = <""?@target>
-##| <param>
-? , | +
-}.
-
-
-inputarg::=
-[ $<$?referVariable>[: [$$<$?srcpathEnvVariable>|$<$?srcpathVariable>|] [<""?srcpathTargetInput>|<*\ \r\n,)?srcpathTargetInput>]]
+| <param>
 | \{ <target> \}
 | <""?!prepInputfile>
 | <*\ \r\n,)?!prepInputfile>
-].
-
+? , | +
+}.
 
 ?input/srcext::="This extension should be added to any src file.".
 
-##inputSet::=<$?filesetVariable>[: [<""?!prepSrcpath>|<*\ \r\n,)?!prepSrcpath>]]. ##creates the element inputSet with attribute name
-##inputSet::=<$?filesetVariable>[: [$$<$?srcpathEnvVariable>|$<$?srcpathVariable>|] [<""?srcpath>|<*\ \r\n,)?srcpath>]]. ##creates the element inputSet with attribute name
+inputSet::=<$?@name>. ##creates the element inputSet with attribute name
+
+inputFiles::=
+{ \$<inputSet>
+| srcpath = <""?!prepSrcpath>
+| srcext = <""?srcext>
+| <""?!prepInputfile>
+| <*\ \r\n,)?!prepInputfile>
+? , }.
 
 prepSrcpath::=<prepPathbase?srcpath>.
 
@@ -114,12 +116,43 @@ prepInputfile::=<prepFilePath?input>.
 ##NOTE ZBNF: [<*:?@pathbase>[?:=]:] means: all chars until ':', but the ':' must follow. it is optional.
 
 prepPathbase::=<$NoWhiteSpaces><! *?>
-  [$<$?scriptVariable> [/]
-  | [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
-    [ [/|\\]<?@absPath>]
-  ]  
+  [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
+  [ [/|\\]<?@absPath>]
   [<*?@pathbase>]                      ## all until : is the pathbase, not part of the
   .
+
+xxxprepFilePath::=<$NoWhiteSpaces><! *?>
+  [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
+  [ [/|\\]<?@absPath>]
+  [<*:?@pathbase>[?:=]:]                      ## all until : is the pathbase, not part of the
+  [<stringtolastinclChar/\\?@path>]          ## all until \\ or / is the path part of the file
+  <stringtolastExclChar.*@$?@file>
+  [ ** <?@allTree>
+  | *  <?@someFiles>
+  | $  <?@someFileExt>
+  | @  <?@somePathFileExt>
+  ]
+  <* ?@ext>   ##the rest is the ext, may be empty.
+  <! *?>.
+
+oldprepFilePath::=<$NoWhiteSpaces><! *?>
+  [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
+  [ [/|\\]<?@absPath>]
+  [<*:?@pathbase>[?:=]:]                      ## all until : is the pathbase, not part of the
+  [ <*|**?@path>                              ##either a ** is containing, the path is before.
+  | <toLastCharIncl:/\\?@path>           ##or all chars until the last \\ or / is the path part of the file
+  |]                                          ##or no path is given.
+  [ **<?@allTree>                             ##  ** is found, than files in the whole subtree
+    [ <![/\\\\]?>                               ## if / followes, than file and ext may be given.
+      <toLastChar:.?@file><*?@ext>
+    ]
+  | <**?@file>                       ##all chars to *
+    *<?@someFiles>
+    [\.*<?@wildcardExt>]
+    <*?@ext>
+  | <toLastChar:.?@file>
+    <*?@ext>
+  ]<! *?>.
 
 prepFilePath::=<$NoWhiteSpaces><! *?>
 [<!.?@drive>:]               ## only 1 char with followed : is drive
@@ -148,8 +181,7 @@ prepFilePath::=<$NoWhiteSpaces><! *?>
 
 ##prepOutputFilePath::=[<+<</:\\?@path>]<*?@file>.
 
-param::=<$?name> = [ <""?@value> | { <inputarg> ? +} ].
-##[ <$?name> = [ <""?@value>]]   ##if given, it is a named parameter, with a possible value. If not given it is a input file or fileset.
+param::=<$?@name> = [ $<$?variable> | <""?@value> ].
 
 
 

@@ -2,7 +2,7 @@
 $xmlns:gen="http://www.vishia.de/2006/DocuGenCtrl".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 $inputEncodingKeyword="encoding".
-$import "../zmake/ZmakeStd.zbnf".
+$import "../xsl/ZmakeStd.zbnf".
 
 GenCtrl::=[<*|\nDocuGenCtrl_RULES:?> DocuGenCtrl_RULES:] <GenCtrl_i?>.  
 
