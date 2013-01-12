@@ -6,7 +6,6 @@ $comment=[?...?].
 
 Zmake::=<*|\nZMAKE_RULES:?> ZMAKE_RULES:  
 { \$<variable> ; 
-| <forInput> ;  ##deprecated
 | <target> ; 
 } \e.
 
@@ -18,7 +17,26 @@ string::= { <""?literal> | <forInputString> | @<$?inputField> | $<$?contentOfVar
 forInputString::= for ( <input?> : <string?> ).
 ?en:forInputString::="For any input file, a String was built. All strings are concatenated. ".
 
-variable::=<$?@name> = [ fileset ( <fileset> ) | <string> | { <execCmd> } ].
+variable::=<$?@name> = [ fileset ( <fileset> ) | <expression>]. ##<string> ]. ## | { <execCmd> } ].
+
+
+##same syntax is ZText:
+
+expression::={ <value> ? [! + | -] }.
+
+value::= [<?operator> + | -|] [<#?intValue> | 0x<#x?intValue> | <#f?floatValue> | '<!.?charValue>' | <""?textValue> 
+              | $new\  <newJavaClass> | $!<staticJavaMethod> | $$<$?envVariable> | <datapath>].
+
+newJavaClass::= <$\.?javapath> [ ({ <expression?argument> ? , } )].
+staticJavaMethod::= <$\.?javapath> ( [ { <expression?argument> ? , } ] ).
+##a javapath is the full package path and class [.staticmetod] separated by dot. 
+
+datapath::=<?> $<$?startVariable>[\.{ <datapathElement> ? \.}] |{ <datapathElement> ? \.}.  
+
+datapathElement::=<$@-?ident> [( [{ <expression?argument> ? ,}])<?whatisit=r>].
+
+##end part from ZText
+
 
 forInput::= :<$?@target>: for ( <input?> ) : <string?dst> := exec <exec?> .   ##TODO use right side of target::=
 

@@ -12,7 +12,10 @@
 ##<:for:$inputsetPart:$inputset>
 ##<:for:$input:$inputsetPart.filesExpanded()>    ##for all source files call Zbnf2XMI with Cheader.zbnf
   <=cclabel><*$nextNr><.=>  ##build a current number for labels. Note: Windows has a problem if batchfiles are written with 0a instead 0d0a (Unix-Lineend). This is reported untruly by 'label not found'.
+  <=test:$!org.vishia.util.FileSystem.checkNewless($input.absFile(), $$TMP_ZBNFJAX + $input.localFile() + ".xml", 1)>
+  
   <:>
+  echo <*$test>
   if exist %TMP_ZBNFJAX%/<*$input.localFile()>.xml goto :<*$cclabel> 
   call zbnfjax zbnf2xml -i:<*$input.absFile()> -s:%ZBNFJAX_HOME%/zbnf/Java2C.zbnf -y:%TMP_ZBNFJAX%/<*$input.localFile()>.xml "-a:@filename="<*$input.name()>"" --report:%TMP_ZBNFJAX%/<*$input.localDir()>.zbnf.rpt
   :<*$cclabel>
