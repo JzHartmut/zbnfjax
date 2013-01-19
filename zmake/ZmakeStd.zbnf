@@ -44,7 +44,11 @@ forInput::= :<$?@target>: for ( <input?> ) : <string?dst> := exec <exec?> .   ##
 ##old: cmd::= cmd ( <string?executable>) [, { arg(<string?arg>) ? ,}].
 execCmd::= cmd ( <string?executable> ) [, curdir ( <""?curdir> )] [ , { arg (  <string?arg> ) ? , }].
 
-fileset::= 
+fileset::= { <file> ? , }.
+
+
+
+xxxfileset::= 
 { srcpath = <""?!prepSrcpath>
 | srcext = <""?srcext>
 ##| [<?file> [<""?!prepFilePath>|<*\ \r\n,)?!prepFilePath>]] 
@@ -140,20 +144,14 @@ prepPathbase::=<$NoWhiteSpaces><! *?>
   .
 
 prepFilePath::=<$NoWhiteSpaces><! *?>
-[<!.?@drive>:]               ## only 1 char with followed : is drive
+[<!.?@drive>:]               ## only 1 char with followed : is the drive letter
 [ [/|\\]<?@absPath>]         ## starting with / is absolute path
-[<*:?@pathbase>[?:=]:]       ## all until : is pathbase
-[ <*|**?@path>               ## all until ** is path
-| <toLastCharIncl:/\\?@path> ## or all until last \\ or / is path
-|]                           ## or no path is given.
-[ **<?@allTree>[/\\] ]       ## ** is found, than files in subtree
-[ <**?@file>                 ## all until * is the file (begin)
-  *<?@someFiles>             ## * detect: set someFiles
-| <toLastChar:.?@file>       ## or all until dot is the file
-|]                           ## or no file is given.
-[\.*<?@wildcardExt>]         ## .* is wildcard-extension
-[ <* \e?@ext> ]              ## the rest is the extension
-.
+[ <*:?@pathbase>[?:=]:]      ## all until : is pathbase, but not till a :=
+[ <toLastCharIncl:/\\?@path>]## all until last \\ or / is path
+[ <toLastChar:.?@name>       ## all until exclusive dot is the name
+  <*\e?@ext>                 ## from dot to end is the extension
+| <*\e?@name>                ## No dot is found, all is the name. 
+] .
 
 
 ##  [ **<?@allTree><*?@ext>                     ## ** means: all files also in subfolders. The rest after** is extension.
