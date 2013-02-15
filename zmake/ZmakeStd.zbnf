@@ -6,6 +6,7 @@ $comment=[?...?].
 
 Zmake::=<*|\nZMAKE_RULES:?> ZMAKE_RULES:  
 { \$<variable> ; 
+| &<filesetdef?variable> ; 
 | <target> ; 
 } \e.
 
@@ -17,7 +18,9 @@ string::= { <""?literal> | <forInputString> | @<$?inputField> | $<$?contentOfVar
 forInputString::= for ( <input?> : <string?> ).
 ?en:forInputString::="For any input file, a String was built. All strings are concatenated. ".
 
-variable::=<$?@name> = [ fileset ( <fileset> ) | <expression>]. ##<string> ]. ## | { <execCmd> } ].
+variable::=<$?@name> = [ fileset ( <fileset> ) | file ( <file> ) | <expression>]. ##<string> ]. ## | { <execCmd> } ].
+
+filesetdef::= <$?@name> ( <fileset> ).
 
 
 ##same syntax is ZText:
@@ -44,23 +47,17 @@ forInput::= :<$?@target>: for ( <input?> ) : <string?dst> := exec <exec?> .   ##
 ##old: cmd::= cmd ( <string?executable>) [, { arg(<string?arg>) ? ,}].
 execCmd::= cmd ( <string?executable> ) [, curdir ( <""?curdir> )] [ , { arg (  <string?arg> ) ? , }].
 
-fileset::= { <file> ? , }.
+fileset::= [ commonpath = <file?commonpath> , ] { <file> ? , }.
 
-
-
-xxxfileset::= 
-{ srcpath = <""?!prepSrcpath>
-| srcext = <""?srcext>
-##| [<?file> [<""?!prepFilePath>|<*\ \r\n,)?!prepFilePath>]] 
-| <file>
-? , | + 
-}.
 
 
 file::=<""?!prepFilePath>|<*\ \r\n,)?!prepFilePath>.
 
 ##The translator is written like a function. It may be nested.
-target::=  [:<$?@target>:] 
+target::=[:<$?@targetName>:] <output> := <$?@translator> ( { <param> | <inputvalue> ? ,} ).
+
+
+XXXtarget::=  [:<$?@target>:] 
 [ <specials?do>  ##action without dst file. 
 |
   ##<*|\ |\r|\n|:=?!prepOutputfile> :=  
@@ -100,30 +97,22 @@ exec::= \{ { [<execCmd> | $<$?execVariable/@name>] ; } \}.
 ##Or an input can be a filename without "" but to whitespace
 ##It is repeatable with , or + as separator.
 inputlist::=<?>
-{ <param> | <inputarg>
-##| srcpath = <""?!prepSrcpath>
-##| srcext = <""?srcext>
-##| target = <""?@target>
-##| task = <""?@target>
-##| <param>
-? , | +
-}.
+{ <param> | <inputvalue>? , }.
 
 
-inputarg::=
-[ $<$?referVariable>[: [$$<$?srcpathEnvVariable>|$<$?srcpathVariable>|] [<""?srcpathTargetInput>|<*\ \r\n,)?srcpathTargetInput>]]
-| \{ <target> \}
-| <""?!prepInputfile>
-| <*\ \r\n,)?!prepInputfile>
+inputvalue::=
+##[ $<$?referVariable>[: [$$<$?srcpathEnvVariable>|$<$?srcpathVariable>|] [<""?srcpathTargetInput>|<*\ \r\n,)?srcpathTargetInput>]]
+##| 
+[ \{ <target> \}
+| [<""?!prepInputfile>| <*\ \r\n,)&?!prepInputfile>|] [ & <$?fileset> ]
+##| $$<$?srcpathEnvVariable> [! ,| )]
+##| $<$?srcpathVariable> [! ,| )]
+##| <""?!prepInputfile>
+##| <*\ \r\n,)&?!prepInputfile>
 ].
 
 
 ?input/srcext::="This extension should be added to any src file.".
-
-##inputSet::=<$?filesetVariable>[: [<""?!prepSrcpath>|<*\ \r\n,)?!prepSrcpath>]]. ##creates the element inputSet with attribute name
-##inputSet::=<$?filesetVariable>[: [$$<$?srcpathEnvVariable>|$<$?srcpathVariable>|] [<""?srcpath>|<*\ \r\n,)?srcpath>]]. ##creates the element inputSet with attribute name
-
-prepSrcpath::=<prepPathbase?srcpath>.
 
 prepInputfile::=<prepFilePath?input>.
 
@@ -135,22 +124,18 @@ prepInputfile::=<prepFilePath?input>.
 ##NOTE ZBNF: [?:=] means: if := occurs, it doesnot match.
 ##NOTE ZBNF: [<*:?@pathbase>[?:=]:] means: all chars until ':', but the ':' must follow. it is optional.
 
-prepPathbase::=<$NoWhiteSpaces><! *?>
-  [$<$?scriptVariable> [/]
-  | [<!.?@drive>:]                              ## only 1 char with followed : is a drive like D:
-    [ [/|\\]<?@absPath>]
-  ]  
-  [<*?@pathbase>]                      ## all until : is the pathbase, not part of the
-  .
 
 prepFilePath::=<$NoWhiteSpaces><! *?>
-[<!.?@drive>:]               ## only 1 char with followed : is the drive letter
-[ [/|\\]<?@absPath>]         ## starting with / is absolute path
-[ <*:?@pathbase>[?:=]:]      ## all until : is pathbase, but not till a :=
-[ <toLastCharIncl:/\\?@path>]## all until last \\ or / is path
-[ <toLastChar:.?@name>       ## all until exclusive dot is the name
-  <*\e?@ext>                 ## from dot to end is the extension
-| <*\e?@name>                ## No dot is found, all is the name. 
+[ $$<$?@envVariable> [\\|/|]    ##path can start with a environment variable's content
+| $<$?@scriptVariable> [\\|/|]  ##path can start with a scriptvariable's content
+| [<!.?@drive>:]                 ## only 1 char with followed : is the drive letter
+  [ [/|\\]<?@absPath>]           ## starting with / is absolute path
+|]  
+[ <*:?@pathbase>[?:=]:]          ## all until : is pathbase, but not till a :=
+[ <toLastChar:/\\?@path>[\\|/|]] ## all until last \\ or / is path
+[ <toLastChar:.?@name>           ## all until exclusive dot is the name
+  <*\e?@ext>                     ## from dot to end is the extension
+| <*\e?@name>                    ## No dot is found, all is the name. 
 ] .
 
 
@@ -164,7 +149,7 @@ prepFilePath::=<$NoWhiteSpaces><! *?>
 
 ##prepOutputFilePath::=[<+<</:\\?@path>]<*?@file>.
 
-param::=<$?name> = [ <""?@value> | { <inputarg> ? +} ].
+param::=<$?name> = [ <""?@value> | { <inputvalue> ? +} ].
 ##[ <$?name> = [ <""?@value>]]   ##if given, it is a named parameter, with a possible value. If not given it is a input file or fileset.
 
 
