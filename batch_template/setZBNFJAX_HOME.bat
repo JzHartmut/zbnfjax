@@ -39,7 +39,17 @@ REM ============================================================================
 REM Location of the Java JDK installation, it should be at least version 6. 
 
 set JAVA_JDK=D:\Progs\JAVA\jdk1.6.0_21
-
+if exist %JAVA_JDK%\bin goto :okJdk
+set JAVA_JDK=D:\Tools\Java\Jdk7.0_02
+if exist %JAVA_JDK%\bin goto :okJdk
+set JAVA_JDK=D:\Tools\Java\Jdk6.0_21
+if exist %JAVA_JDK%\bin goto :okJdk
+set JAVA_JDK=D:\SFC\Tools\Java\jdk6.0_21
+if exist %JAVA_JDK%\bin goto :okJdk
+echo Java-JDK not found. Please correct setZBNFJAX_Sbox.bat
+pause
+exit /B
+:okJdk
 
 REM =====================================================================================================
 REM Calling command to invoke java for command line and for GUI

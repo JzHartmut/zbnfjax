@@ -80,9 +80,34 @@ java2cTag::=
 ].
 
 
-Java2CAnnotation::=
+Java4CAnnotation::=<?>
 [FixArraySize(<#?simpleArray>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
 |DynamicCall <?dynamic-call>
+|exclude <?exclude>
+|<?simpleVariableRef> simpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
+|<?staticInstance> staticInstance            ##to class
+|<?embeddedYElements> embeddedArrayElements  ##to array def: all elements are embedded
+|<?noObject> noObject             ##to class: no superclass ObjectJc
+|<?noGC> noGC                     ##only simple, not an enhanced refernece
+|<?noGC> simpleRef                ##only simple, not an enhanced refernece
+|<?nonPersistent> nonPersistent   ##attribute to param TODO unused yet. Ask it onnly in paramDesciption.
+|<?stackInstance> stackInstance   ##new creates an instance in stack
+|<?zeroTermString> zeroTermString ##to String name; a const char*
+|<?ByteStringJc> ByteStringJc     ##to a byte[] array, it is generated as ByteStringJc
+|<?return-this> return-this
+|<?return-new> return-new
+|<?dynamic-call> dynamic-call     ##to declare a enhanced Mtbl-reference in stack.
+|<?xxxoverride-able> override-able   ##virtual method
+| stacktrace: [ no-param <?noThCxt>| no <?noStacktrace>| yes]
+| instanceType : <""?instanceType>
+| embedded Type : <$?embeddedType>
+|<?stackSize> stackSize ( { <#?bytes> | <* )+?type> ? + } )  ##only valid at thread.start()
+|<?toStringNonPersist> toStringNonPersist             ##The String is designated as non-persistant, especially located in ThreadContext
+|<?nonPersistent> nonPersistent                       ##The String is used only non-Persist. Written on definition of String variable.
+|<?declarePersist> declarePersist                     ##a StringJc is declared as persistent, the programmer knows it.
+| StringBuilderInStack [:|=] <#?StringBuilderInStack> ##used for String concatenation
+|<?StringBuilderInThreadCxt> StringBuilderInThreadCxt ##used for String concatenation and returned Strings
+|<?returnInThreadCxt> returnInThreadCxt ##used to copy a returned an instance in stack in the thread context.
 ].
 
 
@@ -158,6 +183,7 @@ methodDefinition::=
 [{ /**[><description>*/]
  | @Override<?A_Override>
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+ | @Java4C\.<Java4CAnnotation>
 }]
 [<Modifier>] <type> <$?name> ( [<argumentList?>] )
 [ <throwsDeclaration>]
@@ -168,6 +194,7 @@ methodDefinition::=
 constructorDefinition::=
 [{ /**[><description>*/]
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+ | @Java4C\.<Java4CAnnotation>
 }]
 [<Modifier>] <$?constructor>
 ( [<argumentList>] )  ##a
@@ -374,7 +401,7 @@ argumentList::=<?>{<?argument> [<Modifier?>] <type> <$?variableName>[\[\]<?array
 variableDefinition::=<?> 
 [{ /**[><description?-?>*/]
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
- | @Java4C\.<Java2CAnnotation>
+ | @Java4C\.<Java4CAnnotation?-?>
 }]
 [<Modifier?-?>] <type?-?> {<variableInstance?+variableDefinition>  ? , }.
 variableInstance::=<$?variableName> [ \[\]<?array> ] 

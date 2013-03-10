@@ -1,0 +1,184 @@
+<?ZBNF-www.vishia.de version="1.0" encoding="iso-8859-1" ?>
+$xmlns:gen="http://www.vishia.de/2006/DocuGenCtrl".
+$xmlns:xhtml="http://www.w3.org/1999/xhtml".
+$inputEncodingKeyword="encoding".
+$import "./ZmakeStd.zbnf".
+
+GenCtrl::=[<*|\nDocuGenCtrl_RULES:?> DocuGenCtrl_RULES:] <GenCtrl_i?>.  
+
+GenCtrl_i::=<?GenCtrl>
+[\<\?DocuGenCtrl-www\.vishia\.[de|org] {version=<""?@version-GenDocuCtr>|encoding=<""?@encoding>} \?\>]
+genCtrl: <*\ ;?@file> ;
+[<?hrefCtrl> hrefCtrl: <*\ ;?!prepFilePath> ; ]
+[ importXsl ( {<import> ? , } ) ; ]
+[{ target: <target>; | \$<variable>; }]                              ##some Zmake-targets 
+##[{ target: }]                              ##some Zmake-targets 
+[{ prepXml: <prepXml> }]
+{ <document> }
+[ HyperlinkAssociation <HyperlinkAssociations> ]
+\e.
+
+
+import::=[<*:\ \r\n,)?@dir>:]<*|.xsl|.xslp?@href>[<?@type>\.xslp|\.xsl].
+
+prepXml::=
+[ \{  { <*\ \r\n-,?!prepInputfile> ? ,} \}  ##more as one inputfile in {input, input, ...}
+| <*\ \r\n-?!prepInputfile>                 ##NOTE: - as terminate char is the first of followed "-> symbol"
+]
+ -\> <$?@translator> [-\> <*;\ \r\n-?@outputfile>] ; .
+
+##see ZmakeStd.zbnf prepInputfile::=<prepInputFilePath?input>.
+
+##see ZmakeStd.zbnf prepInputFilePath::=[<+<</:\\?@path>]<*?@file>.
+
+document::=Document <""?@title> ident = <$?@ident>  ##the ident is the identification of the document for generating process. Old form, it is the file name in html/ident.html and word/ident.xml
+[{ html = <file?outHtml>    ##this file with path will be produced as html-file
+| css  = <""?cssHtml>      ##this file with path is linked as css file in the html-file
+| word = <file?outWord>    ##this file with path will be produced as word-file
+}]
+\{
+[{ input: <prepXmlInput?input> ;                    ##The input files for generating the XhtmlPre, possible preprocessed, see <prepXml>
+ | inputCrossRef: <prepXmlInput?inputCrossRef> ;
+ | inset: <inset> ;                                 ##association between inset proxy label and associated topic
+}]
+[xslCrossRef: <import?xslCrossRef> ; ]
+{ chapter <chapter>                                   ##at least one, or more toplevel chapters
+| <content?>
+| HyperlinkAssociation <HyperlinkAssociations>
+}
+\}
+.
+
+
+?topic::="topic content without sub-topics. Use /* on end of select string to get the content without the topic-title.".
+?topictree::="topic with all sub-topics as sub-chapters.".
+?freemindtopictree::="topic with all sub-topics as sub-chapters from freemind.mm.".
+
+prepXmlInput::=<*;\ \r\n-?@inputfile> [ -\> <$?@translator> [ -\> <*;\ \r\n-?@outputfile>]].
+
+##association between inset label and a topic. Just now only topic association is supported.
+##in the future more as that is able, hence the <topic> is produced.
+inset::=<*\ =?@label> = [<?topic> topic ( <*)\ ?@select> )| none].
+
+
+chapter::= <""?title> [({ id=<*,) ?@id> ?, })]  ##the id produce a hyperlink anchor in the output document for this chapter.
+\{ { [chapter <chapter>|[<content?>]]}
+\}.
+
+
+
+
+content::=
+{ p <""?p>
+   | inset <inset>
+   | topic( <topic> );
+   | topictree( <topic?topictree> );
+   | freemindtopic( <topic?freemindtopic> );
+   | freemindtopictree( <topic?freemindtopictree> );
+   | freemindtable(<topic?freemindtable>);
+   |<?file> file( <""?@path> [, <""?@from> \.\. [<""?@to> ]]);  ##input from a file, it is able to select a part from .. to specified text, exclusive this labels. 
+   | picture( <picture> );
+   | umlPkg ( <umlPkg> );
+   | umlClass ( <umlClass> );
+   | umlIfc ( <umlClass?umlIfc> );
+   | umlMethod ( <umlMethod> );
+   | umlIfcMethod ( <umlMethod?umlIfcMethod> );
+   | umlMethodBody ( <umlMethod?umlMethodBody> );
+   | umlIfc ( <umlIfc> );
+   | umlComment ( <umlComment> );
+   | umlSQD ( <umlSQD> );
+   | umlStateD ( <umlStateD> );
+   | umlStateReport ( <umlStateReport> );
+   | umlEnumeration( <umlEnumeration> );
+   | umlDatatype( <umlDatatype> );
+   | CLASS_C(<*)?CLASS_C/@select>);
+   | dataStruct ( <umlClass> );
+   | headerCClass(<*)?CLASS_C/@select>);
+   | DEFINE_C(<*)?DEFINE_C/@select>);
+   | crossRef( <crossRef> );
+   | call <call> ;
+   }
+.
+
+call::=<$?@name> ( <*,)\ ?@select> ).
+
+##The syntax of topic is also used for ?topictree-semantic. It is the same.
+topic::=<*,)\ ?@select>
+[,{
+  divStyle=[<$?@divStyle>|<""?@divStyle>]
+| pStyle=[<$?@pStyle>|<""?@pStyle>]
+| ulStyle=[<$?@ulStyle>|<""?@ulStyle>]
+| olStyle=[<$?@olStyle>|<""?@olStyle>]
+| dlStyle=[<$?@dlStyle>|<""?@dlStyle>]
+| tableStyle=[<$?@tableStyle>|<""?@tableStyle>]
+| style:<styleTransform>
+? , }].
+
+?topic/select::="selection string started at root of topics. 
+  An /* on end means: Use the topic content without its title.".
+
+picture::=<""?@title> [: <""?@file>] [ , <#?xPx> x <#?yPx> px ]
+[ , {
+  imgMap=[<$?@imgMap>|<""?@imgMap>]
+? , }].
+
+
+
+styleTransform::=[<$?@srcStyle>|<""?@srcStyle>]-\>[<$?@dstStyle>|<""?@dstStyle>].
+
+umlClass::=<*,)\ ?@select>
+[,{
+  title = <""?@title>            ##if a title is given, the umlClass will be placed in an own chapter with this title.
+| methods = [<?@methods>all|public-only|withDescription-only|no|body|onlybody]
+| methodstyle = [<?@methodstyle>shortdescription|body|onlybody]
+| attributes = [<?@attributes>all|public-only|withDescription-only|bytes|no]
+| associations = [<?@associations>all|public-only|withDescription-only|no]
+| header<?@header>
+? , }].
+
+
+umlMethod::=<*,)\ ?@select> 
+[,{
+  title = <""?@title> 
+| methodstyle=[<?@methodstyle>shortdescription|body|onlybody] 
+| methodblock = <""?@methodblock>\.\.<""?@methodblockEnd>
+? , }].
+
+umlEnumeration::=<*,)\ ?@select> 
+[,{
+  title = <""?@title> 
+| content = [<?@content>onlydocu] 
+? , }].
+
+umlDatatype::=<*,)\ ?@select> 
+[,{
+  title = <""?@title> 
+| content = [<?@content>onlydocu] 
+? , }].
+
+umlIfc::=<*,)\ ?@select> [, title = <""?@title> ].
+
+umlPkg::=<*,)\ ?@select>.
+
+
+
+umlComment::=<*,)\ ?@select>.
+
+
+umlSQD::=<*,)\ ?@select>
+.
+
+
+umlStateD::=<*,)\ ?@select>
+.
+
+umlStateReport::=<*,)\ ?@select>
+.
+
+
+crossRef::=<*,)\ ?@content>.
+
+
+
+HyperlinkAssociations::= \{ {<?Association> <*\ =?@href> = <""?@dst> [: <$?@content>] ; } \}.
+

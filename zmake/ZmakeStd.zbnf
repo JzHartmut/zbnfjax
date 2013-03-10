@@ -126,8 +126,8 @@ prepInputfile::=<prepFilePath?input>.
 
 
 prepFilePath::=<$NoWhiteSpaces><! *?>
-[ $$<$?@envVariable> [\\|/|]    ##path can start with a environment variable's content
-| $<$?@scriptVariable> [\\|/|]  ##path can start with a scriptvariable's content
+[ $$<$?@envVariable> [\\|/|]     ##path can start with a environment variable's content
+| $<$?@scriptVariable> [\\|/|]   ##path can start with a scriptvariable's content
 | [<!.?@drive>:]                 ## only 1 char with followed : is the drive letter
   [ [/|\\]<?@absPath>]           ## starting with / is absolute path
 |]  

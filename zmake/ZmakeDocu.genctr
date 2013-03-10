@@ -1,0 +1,35 @@
+
+<:scriptclass:org.vishia.zmake.ZmakeDocuGen>
+
+<:include:ZmakeStd.zText>
+
+<:subtext:file2Html:target>
+<:>
+echo file2Html Target: <*$target.targetName>
+echo out-base=<*$target.output.basepath()>;out-local=<*$target.output.localdir()>; out-file=<*$target.output.namext()>
+<.>
+<=inputFilesExpanded:$target.allInputFilesExpanded()>
+<=inputFiles:$target.allInputFiles()>
+<:for:$input:$inputFiles>
+  <:>%JAX_EXE% org.vishia.xml.Textfile2Html -i<*$input.file()> -o<*$target.output.absfile($input)>
+<.>
+<.for>
+<.subtext>
+
+
+
+
+
+<:file>
+<:>
+call setZBNFJAX_HOME.bat silent
+<.>
+<:for:$target:targets>
+  ##Generate and insert the subtext for each target in the users script.
+  <*subtext:$target.translator: target=$target><:>
+<.>  
+<.for>
+<:>
+...some special end statements
+<.>
+<.file>
