@@ -149,7 +149,7 @@ prepFilePath::=<$NoWhiteSpaces><! *?>
 
 ##prepOutputFilePath::=[<+<</:\\?@path>]<*?@file>.
 
-param::=<$?name> = [ <""?@value> | { <inputvalue> ? +} ].
+param::=<$?name> [ = <""?@value> | [ = | : ]{ <inputvalue> ? +} ] .
 ##[ <$?name> = [ <""?@value>]]   ##if given, it is a named parameter, with a possible value. If not given it is a input file or fileset.
 
 
