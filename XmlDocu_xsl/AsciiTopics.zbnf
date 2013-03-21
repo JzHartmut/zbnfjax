@@ -3,41 +3,53 @@ $xmlns:topics="http://www.vishia.de/2006/Topics".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 $inputEncodingKeyword="encoding".
 
+
+
 Topics::=                 
 [\<\?Topics<*\ ?>                ##may be start with <?Topics... ident = "name" encoding = "..." attr... = "value..." ?>
-  { [?\?\>] ident = <""?@ident> 
+  { [?\?\>] ident [=] <""?@ident> 
   | encoding = <""?@encoding> 
   | <$?attribute> = <""?value> 
   } \?\> 
 ]
-{ <topic2?topics:topic> }.       ##some topic level 2 beginning with == , contains level 3 etc.
+{ <topic2?topics:topic> }       ##some topic level 2 beginning with == , contains level 3 etc.
+\e.
+
 
 topic2::= == <*|==?@title> ==    ##all chars from "==" until " ==" are the title chars.
-[@ident=<*\ \r\n?@ident>]              ##the ident of this chapter
-<*|\n==|\e?xhtml:body+>          ## all until \n== is content, \n== introduce either a deeper chapter or the end of chapter level2
+[<topicAttrib>]
+[<*|\n==|\e?xhtml:body+>]          ## all until \n== is content, \n== introduce either a deeper chapter or the end of chapter level2
 [{ <topic3?topics:topic>}].      ##deeper chapter level 3 follows or not
 
 topic3::= === <*|===?@title> ===
-[@ident=<*\ \r\n?@ident>]
-<*|\n==|\e?xhtml:body+>
+[<topicAttrib>]
+[<*|\n==|\e?xhtml:body+>]
 [{ <topic4?topics:topic>}].                    ##deeper chapter level 3 follows or not
 
 
 topic4::= ==== <*|====?@title> ====
-[@ident=<*\ \r\n?@ident>]
-<*|\n==|\e?xhtml:body+>
+[<topicAttrib>]
+[<*|\n==|\e?xhtml:body+>]
 [{ <topic5?topics:topic>}].                    ##deeper chapter level 4 follows or not
 
 
 topic5::= ===== <*|=====?@title> =====
-[@ident=<*\ \r\n?@ident>]
-<*|\n==|\e?xhtml:body+>
+[<topicAttrib>]
+[<*|\n==|\e?xhtml:body+>]
 [{ <topic6?topics:topic>}].                    ##deeper chapter level 4 follows or not
 
 
 topic6::= ====== <*|======?@title> ======
-[@ident=<*\ \r\n?@ident>]
-<*|\n==|\e?xhtml:body+>.
+[<topicAttrib>]
+[<*|\n==|\e?xhtml:body+>]
+.
 
 
+
+topicAttrib::=<?>
+{ @ident [=] <*\ \r\n?@ident>              ##the ident of this chapter
+| @date [=] <*\ \r\n?@date>            ##last time of correcture of this topic
+| @obsolete [=] <*\ \r\n?@obsolete>    ##remark that this topic is obsolete, use a text with timestamp after this remark.
+| @class [=] <*\ \r\n?@class>          ##classification of this topic. Able to use for generation selection.
+}.
 

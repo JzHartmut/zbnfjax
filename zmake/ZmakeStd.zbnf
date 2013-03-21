@@ -104,6 +104,7 @@ inputvalue::=
 ##[ $<$?referVariable>[: [$$<$?srcpathEnvVariable>|$<$?srcpathVariable>|] [<""?srcpathTargetInput>|<*\ \r\n,)?srcpathTargetInput>]]
 ##| 
 [ \{ <target> \}
+| & <$?fileset>
 | [<""?!prepInputfile>| <*\ \r\n,)&?!prepInputfile>|] [ & <$?fileset> ]
 ##| $$<$?srcpathEnvVariable> [! ,| )]
 ##| $<$?srcpathVariable> [! ,| )]

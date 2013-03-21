@@ -143,7 +143,9 @@
     </xsl:if>
 
     <xsl:if test='$testOutput&gt;1'>
-      <testOutput level="2">Topic:[<xsl:value-of select="$topicIdent" />]</testOutput>
+      <testOutput level="2">Topic:[<xsl:value-of select="$topicIdent" />]
+        <xsl:if test="count(./@date)>0"> Last changed:<xsl:value-of select="./@date" /> </xsl:if>
+      </testOutput>
     </xsl:if>
 
     <xsl:for-each select="xhtml:body"><!-- topics:topic contains xhtml:body or topics:topic. --> 
@@ -263,6 +265,15 @@
       <xsl:if test="name(..)='topics:topic'">
         <xhtml:p class="debug"><xsl:text>Topic:</xsl:text><xsl:call-template name="assembleTopicAnchor" /></xhtml:p>
       </xsl:if>
+      <xsl:if test="count(../@date)>0">
+        <xhtml:p>Last changed: <xsl:value-of select="../@date" /></xhtml:p>
+      </xsl:if>
+
+      <xsl:if test="count(../@obsolete)>0">
+        <xhtml:p>Obsolte: <xsl:value-of select="../@obsolete" /></xhtml:p>
+      </xsl:if>
+
+
       <xhtml:p class="debug">
         <!-- xsl:text>Topic:</xsl:text><xsl:value-of select="$topicIdent"/ -->
         <!-- xsl:if test="not($paraStyle_li='-')"><xsl:text>paraStyle_li="</xsl:text><xsl:value-of select="$paraStyle_li"/><xsl:text>"; </xsl:text></xsl:if -->
