@@ -23,6 +23,7 @@ state::=<$?@stateName>  [ [: | in] <$?enclState>[\.<$?parallelState>] ] ===
 [ ===entry: <action?entry> ]
 [ ===exit:  <action?exit>  ]
 [{ ===trans  <trans>      }]
+[ ===action-in-state: <action?instate> ]
 .
 
 SimpleState::= <$?@stateName> [ [: | in] <$?enclState> ] 
