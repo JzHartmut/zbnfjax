@@ -54,7 +54,7 @@ headerBlock::=<?>
 | <conditionBlock?+conditionBlock>
 | <undefDefinition>
 ##| extern <variableDecl?+@> ;
-| [extern_C|extern] <attribute?+?>
+| [<?modifier> extern_C| extern| static] <attribute?+?>
 | EX <attribute?+?>       ##special case for a special programming style, EX is per define 'extern' or empty.
 | extern_C_BLOCK_
 | _END_extern_C_BLOCK

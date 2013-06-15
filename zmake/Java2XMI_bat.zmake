@@ -8,25 +8,29 @@
 ##The only one target of this generate-script: parse the header and translate to a XML-image, Then builds XMI. */
 <:subtext:genXMI:inputset, output, target>
 <=inputsExpanded:$target.allInputFilesExpanded()>
+REM subtext genXMI - zbnf2xml for all inputs.
 <:for:$input:$inputsExpanded>
-##<:for:$inputsetPart:$inputset>
-##<:for:$input:$inputsetPart.filesExpanded()>    ##for all source files call Zbnf2XMI with Cheader.zbnf
   <=cclabel><*$nextNr><.=>  ##build a current number for labels. Note: Windows has a problem if batchfiles are written with 0a instead 0d0a (Unix-Lineend). This is reported untruly by 'label not found'.
-  <=test:$!org.vishia.util.FileSystem.checkNewless($input.absFile(), $$TMP_ZBNFJAX + $input.localFile() + ".xml", 1)>
-  
+  <=cclabelParse><*$nextNr><.=>
+  ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
+  <=test:$!org.vishia.util.FileSystem.checkNewless($input.absfile(), $$TMP_ZBNFJAX + $input.localfile() + ".xml", 1)>
   <:>
-  echo <*$test>
-  if exist %TMP_ZBNFJAX%/<*$input.localFile()>.xml goto :<*$cclabel> 
-  call zbnfjax zbnf2xml -i:<*$input.absFile()> -s:%ZBNFJAX_HOME%/zbnf/Java2C.zbnf -y:%TMP_ZBNFJAX%/<*$input.localFile()>.xml "-a:@filename="<*$input.name()>"" --report:%TMP_ZBNFJAX%/<*$input.localDir()>.zbnf.rpt
+  ::echo <*$test>
+  if not exist %TMP_ZBNFJAX%/<*$input.localfile()>.xml goto :<*$cclabelParse>
+    echo isparsed: <*$input.localfile()>
+    goto :<*$cclabel> 
+  :<*$cclabelParse>  
+    call zbnfjax zbnf2xml -i:<*$input.absfile()> -s:%ZBNFJAX_HOME%/zbnf/Java2C.zbnf -y:%TMP_ZBNFJAX%/<*$input.localfile()>.xml "-a:@filename="<*$input.name()>"" --report:%TMP_ZBNFJAX%/<*$input.localfile()>.zbnf.rpt --rlevel:335
   :<*$cclabel>
   <.>
 <.for>
 ##<.for>
+pause
 REM All parsed headers can transform via XSLT-2 using saxon in 2 steps.
 echo building XMI
 echo --rlevel=333 >%TMP_ZBNFJAX%\input.arg
 <:for:$input:$inputsExpanded> ##<:expandFiles>
-  echo -i%TMP_ZBNFJAX%/<*$input.localFile()>.xml >>%TMP_ZBNFJAX%\input.arg
+  echo -i%TMP_ZBNFJAX%/<*$input.localfile()>.xml >>%TMP_ZBNFJAX%\input.arg
 <.for>
 type %TMP_ZBNFJAX%\input.arg
 echo on

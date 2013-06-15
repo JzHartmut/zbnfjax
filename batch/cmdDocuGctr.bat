@@ -10,6 +10,8 @@ if "%ZBNFJAX_HOME%" == "" call setZBNFJAX_HOME.bat
 if errorlevel 1 goto :error
 call %ANT_HOME%\bin\ant -f %TMP_ZBNFJAX%/_antcmdDocuGctr.xml  -DcurDir="%CD%"
 if errorlevel 1 goto :error
+REM don't copy the htmlstd.css here, because the destination directory is unknown really.
+REM it should done in the calling script or done manually.
 ::copy %ZBNFJAX_HOME%\XmlDocu_xsl\htmlstd.css ..\html\*.*
 pause
 goto :ende

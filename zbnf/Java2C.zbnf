@@ -1,5 +1,6 @@
 
 ##This script describes the syntax of java language to use for Java2C-translating and for Java2XMI. The syntax is tested with some Java sources, there may be some unregarded java features yet.
+##This syntax may be lesser strong as necessary for exact syntax analyzes of a Java source. It is only used for parsing Java sources which have a correct syntax (tested by any javac-Compiler).
 ##written by hartmut.schorrig@vishia.de, www.vishia.org as part of Java2C-project. 
 
 ##changes:
@@ -14,10 +15,15 @@
 JavaSrc::=
 [package <classpath?PackageDefinition> ; ]
 [ {<?importStatement> [/**[><description>*/]] import {<$?package>\.}[<$?class>|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap|*<?allClasses>] ; } ]
-{ [<classDefinition> | <interfaceDefinition> |]} 
+[{ ##can contain some more classDefinition etc. in any order.
+  <classDefinition> 
+| <interfaceDefinition> 
+| <annotationDefinition> 
+}
+] ##may be empty
 \e.
 
-$keywords::=class|interface|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.
+$keywords::=class|interface|enum|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.
 
 
 description::= <*{ * }|*/?!test_description>.
@@ -114,24 +120,46 @@ Java4CAnnotation::=<?>
 
 ?en:java2cTag/nonPersistent::="A reference which is designed as non-persistent, shouldn't be stored and used in another threads.".
 
+interfaceDefinition::=
+  [{ @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> }] 
+  interface <$?classident> [<generic>] 
+  [extends {[<?SuperInterface> {<$?>?\.} |xxx] [<generic>] ? , }]
+\{
+  [ [<Modifier?>]
+   {  <variableDefinition> ;
+    | <methodDefinition>
+    | <interfaceDefinition>
+    | <annotationDefinition>
+    | <classDefinition>
+  }]
+\}.
+
+
+##it is the primitive form yet only. 
+annotationDefinition::= 
+  [{ <annotation> | <rententionpolicy> | /**[><description>*/] | <Modifier?> }]
+  \@ interface <$?ident> \{ [{ [<?param> <type> <$?ident> ( ) ; ] ?, }] \}.
+
+
 classDefinition::= 
   { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | [<Modifier?>] } 
-  class <$?classident>
-  [\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
-  [extends [<?Superclass> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]]
-  [implements { [<?ImplementedInterface> {<$?>?\.}][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>] ? , }]
-  \{ <classContent?>
-  \}.
+  class <$?classident> [<generic>]
+  [extends [<?Superclass> {<$?>?\.} ][<generic>] ]
+  [implements { [<?ImplementedInterface> {<$?>?\.}][<generic>] ? , }]     
+\{ [<classContent?>]
+\}.
 
 
 
 classContent::=
 { ##[/**<description?-?>*/]
-  [ <variableDefinition> ;
+  [ <enumDefinition>
+  | <variableDefinition> ;
   | <methodDefinition>
   | <constructorDefinition>
   | <classDefinition>
   | <interfaceDefinition>
+  | <annotationDefinition>
   | static <statementBlock?initializingBlockStatic>
   | <statementBlock?initializingBlock>
   | ;
@@ -156,11 +184,13 @@ typeIdent::= [<envIdent>] <$?@name>.
 
 ##A nonArrayType has the same content like a typeIdent, but additionally an element type (generic type) of a container 
 
-nonArrayType::= <typeIdent?>   ##nonArrayType produces the same result as typeIdent
-[\< [ [ \?<?undefGenericKey> [ extends <type?baseGenericKey>] | <type?ContainerElementKey>]  , ] 
-      [ \?<?undefGeneric>    [ extends <type?baseGeneric>]    | <type?ContainerElementType>] 
- \>
-]
+generic::=
+\< { [ \?<?undefGenericType>| <nonArrayType?GenericType>]    ##The generic type or ? for any derived type. 
+      [ extends {<nonArrayType?baseGenericKey> ? & } ]   ? , } \>.  ##a generic type may be derived from one or more sub types.
+
+
+
+nonArrayType::= <typeIdent?> [<generic?>]  ##nonArrayType produces the same result as typeIdent
 [<?va_arg>\.\.\.]
 .
 
@@ -206,28 +236,23 @@ constructorDefinition::=
 throwsDeclaration::= throws { [<?ThrowsException> {<$?>?\.}|!] ? , }.
 
 
-interfaceDefinition::=
-  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | [<Modifier?>] } 
-  interface <$?classident>[\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]
-  [extends {[<?SuperInterface> {<$?>?\.} ][\< [ <type?GenericKey>  , ] [ \?<?undefGeneric> [ extends <Type?baseGeneric>] | <type?GenericType>] \>]? , }]
-\{
-  [ [<Modifier?>]
-   {  <variableDefinition> ;
-    | <methodDefinition>
-    | <interfaceDefinition>
-    | <classDefinition>
-  }]
-\}.
+  
+annotation::=<?>
+{ @ SuppressWarnings ( <""?SuppressWarnings> )
+}.
 
-
-
-
-
+rententionpolicy::=<?> @ Retention ( RetentionPolicy \. [<?RententionPolicy> RUNTIME | CLASS | SOURCE ] ).
+  
+  
 classpath::={<$?packageClassName>?\.}.
 
 importpath::={<$?package>\.}[<$?class>|*<?allClasses>].
 
 AccessRight::=<?>[ public<?public> | private<?private> | protected<?protected> |].
+
+enumDefinition::= 
+  [/**[><description>*/] ] [{ <annotation> }] [{ <Modifier?> }]
+  enum <$?ident> \{  [{ <$?value> ? , }] \}.
 
 ##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
 ##      it is a Java specification problem!
@@ -357,11 +382,12 @@ simpleValue::=<?>
 | <#f?doubleNumber>
 | new <newArray> 
 | <newObject> 
-|<?methodCall> [<reference>]<simpleMethodCall?>
+|<?methodCall> [<reference>] <simpleMethodCall?>
 |<?reflectionType> <$?Type>  \. class [?<!\\w>]
 |<?variable> [ -- <?preDecrement>| ++ <?preIncrement>|] [ <reference>] <simpleVariable?>[ -- <?postDecrement>| ++ <?postIncrement>|]
 | ( <value?parenthesisExpression> )
 |<?nullRef> null
+| <assignment>
 ]
 [<arrayElementAccess?>]
 .
@@ -379,7 +405,7 @@ arrayElementAccess::=<?>{ \[ <value?arrayIndex> \] }.
 
 ##A reference is all things left from point.
 ##A referenceValue may be also a simpleMethodCall, but in parenthesis. A simpleMethodCall without () is more immediate. The same is with referenceAssociation.
-reference::=[ this \.<?this> | super \.<?super> | ( <newObject> ) \.| ( <value?referenceValue> ) \.| <simpleMethodCall?referenceMethod> \.| <simpleVariable?referenceAssociation> \.] [<reference>].
+reference::=[ this \.<?this> | super \.<?super> | ( <newObject> ) \.| ( <value?referenceValue> ) \.| <simpleMethodCall?referenceMethod> \.| <simpleVariable?referenceAssociation> \.] [ <reference>].
 
 ##A variable is either a left value or a kind of value.
 simpleVariable::= <$?variableName>[{ \[ <value?arrayIndex> \] }].
@@ -411,7 +437,7 @@ variableInstance::=<$?variableName> [ \[\]<?array> ]
 		| <value>
 		] ].
 
-newObject::= [<reference>] new <nonArrayType?newClass> ( [<actualArguments>] ) [\{ <classContent?impliciteImplementationClass> \}].
+newObject::= [<reference>] new <nonArrayType?newClass> ( [<actualArguments>] ) [\{ [<classContent?impliciteImplementationClass>] \}].
 
 
 newArray::= <nonArrayType?newClass> {\[ [<value>] \]}  [<constArray>] .

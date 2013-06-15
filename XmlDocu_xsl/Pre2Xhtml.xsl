@@ -9,6 +9,7 @@
 
   <xs:annotation><xs:documentation>
     Datum      Wer      Beschreibung der Änderung
+    2013-06-01 Hartmut experience: removed id="{generate-id()}", replaced by no_id="generate-id". Is it necessary?
     2006-07-18 hartmutS anchor not only at start of chapter, also inside.
     2005-12-14 hartmutS Initial-Revision
 
@@ -106,12 +107,12 @@
 
     <!-- set an anchor for navigation from generated directory, style: <a name="chapter_3.2.1"/> -->
     <xsl:variable name="label">chapter_<xsl:value-of select="$chapterNr"/></xsl:variable>
-    <a id="{generate-id()}" name="{$label}"/>
+    <a no_id="generate-id" name="{$label}"/>
     
     <xsl:variable name="labela"><xsl:value-of select="xhtml:body/@id"/></xsl:variable>
     <a id="{$labela}" name="{$labela}" test="labela" />
     
-    <xsl:if test="count(@id)>0"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="count(@id)>0"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <xsl:variable name="chapterId" select="@id" /><!-- may be emtpy -->
     <!-- xsl:apply-templates select="anchor"/ -->
 
@@ -147,7 +148,7 @@
 
 
   <xsl:template match="xhtml:body">
-    <!-- xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if -->
+    <!-- xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if -->
     <div class="{@class}">
       <!-- xsl:if test="boolean(@id)"><xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute></xsl:if -->
       <xsl:apply-templates />
@@ -160,7 +161,7 @@
 
 
   <xsl:template match="xhtml:div"><!-- some textual content with a section style, possible overloadable by user. -->
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <div class="{@class}">
       <xsl:apply-templates/>
     </div>
@@ -170,7 +171,7 @@
 
 
   <xsl:template match="xhtml:dl"><!-- some textual content with a section style, possible overloadable by user. -->
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
       <dl class="{@class}">
         <xsl:apply-templates/>
       </dl>
@@ -179,7 +180,7 @@
 
 
   <xsl:template match="xhtml:dt"><!-- some textual content with a section style, possible overloadable by user. -->
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
       <dt class="{@class}"><!-- the style must be defined in HTML with #name -->
         <xsl:apply-templates/>
       </dt>
@@ -188,7 +189,7 @@
 
 
   <xsl:template match="xhtml:dd"><!-- some textual content with a section style, possible overloadable by user. -->
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
       <dd  class="{@class}"><!-- the style must be defined in HTML with #name -->
         <xsl:apply-templates/>
       </dd>
@@ -198,7 +199,7 @@
 
 
   <xsl:template match="xhtml:p">
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <p class="{@class}">
       <xsl:apply-templates select="text()|xhtml:b|xhtml:i|xhtml:stroke|xhtml:em|xhtml:u|xhtml:code|xhtml:span|xhtml:br|xhtml:a|xhtml:img"/><!-- select see PreHtml.xsd -->
     </p>
@@ -216,7 +217,7 @@
 
 
   <xsl:template match="xhtml:ul">
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <xsl:choose><xsl:when test="count(@class)>0">
       <ul class="{@class}">
         <xsl:apply-templates/>
@@ -228,7 +229,7 @@
 
 
   <xsl:template match="xhtml:li">
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <xsl:choose><xsl:when test="count(@class)>0">
       <li class="{@class}">
         <xsl:apply-templates/>
@@ -240,7 +241,7 @@
 
 
   <xsl:template match="xhtml:table">
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <table class="{@class}">
       <xsl:if test="@border"><xsl:attribute name="border"><xsl:value-of select="@border" /></xsl:attribute></xsl:if>
       <xsl:apply-templates><xsl:with-param name="classTable" select="@class" /></xsl:apply-templates>
@@ -271,7 +272,7 @@
   </xsl:template>
 
   <xsl:template match="xhtml:pre">
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <xsl:choose><xsl:when test="count(@class)>0">
       <pre class="{@class}">
         <xsl:apply-templates/>
@@ -284,13 +285,13 @@
 
   <xsl:template match="xhtml:p/xhtml:xxximg">
     <!-- the tag ist the same like html, copy also all attributes! -->
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <xsl:copy-of select="."/>
   </xsl:template>
 
   <xsl:template match="xhtml:img|img">
     <!-- the tag ist the same like html, copy also all attributes! -->
-    <xsl:if test="boolean(@id)"><a id="{generate-id()}" name="{@id}" /></xsl:if>
+    <xsl:if test="boolean(@id)"><a no_id="generate-id" name="{@id}" /></xsl:if>
     <!-- xsl:copy-of select="."/ -->
     <br clear="all" /><!-- to force break if any other img is above. -->
     <a href="{@src}">
@@ -318,7 +319,7 @@
       <a href="{@href}"><xsl:apply-templates/></a>
     </xsl:if>
     <xsl:if test="boolean(@name)">
-      <a id="{generate-id()}" name="{@name}"><xsl:apply-templates/></a>
+      <a no_id="generate-id" name="{@name}"><xsl:apply-templates/></a>
     </xsl:if>
   </xsl:template>
 
