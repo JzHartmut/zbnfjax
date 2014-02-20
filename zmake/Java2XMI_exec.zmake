@@ -1,46 +1,69 @@
-##Zmake generate control file for XMI-generation from header files.
-##The generated script should be called with following environments:
-##CURDIR the current directory as base for the relativ file names
-
-## Note: the currDir-variable is used internally to build an absolute path with <*input.absFile>
-<=currDir><*var.currdir.text()><.=>
-
-##The only one target of this generate-script: parse the header and translate to a XML-image, Then builds XMI. */
-<:subtext:genXMI:inputset, output, target>
-<=inputsExpanded:$target.allInputFilesExpanded()>
-REM subtext genXMI - zbnf2xml for all inputs.
-<:for:$input:$inputsExpanded>
-  ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
-  <:if:$!org.vishia.util.FileSystem.checkNewless($input.absfile(), $$TMP_ZBNFJAX + $input.localfile() + ".xml", 1) ?ge 1>
-    <=test:$!org.vishia.zbnf.Zbnf2Xml.smain("-i:"+$input.absfile(), "-s:"+$$ZBNFJAX_HOME+"/zbnf/Java2C.zbnf"
-      , "-y:"+$$TMP_ZBNFJAX + "/" + $input.localfile()+".xml", "-a:@filename="+$input.name()
-      , "--report:"+$$TMP_ZBNFJAX+"/"+$input.localfile()+".zbnf.rpt", "--rlevel:335") >
-  <:else>
-    <:> isparsed: <*$input.localfile()>
-    <.>
-  <.if>
-<.for>
-<.subtext>
+##Zmake generate control file for XMI-generation from header or Java files.
 
 
 
 
-<:file>
-  <:>
-@echo off
-if "%TMP_ZBNFJAX%" == "" set TMP_ZBNFJAX=..\..\..\tmpDocu
-call setZBNFJAX_HOME.bat silent    
-<.>
-<:for:$target:targets>
-  ##Generate and insert the subtext for each target in the users script.
-  <*subtext:$target.translator: target=$target, inputset=var.inputJava, output=$target.output>
-<.for>
-<:>
-pause
-goto :ende
-:error
-  echo error
-:ende  
-<.>
-<.file>
+main()
+{ <+> output <.n+>
+  for(target: zmake.targets){
+    call *target.translator(target=target, inputset=zmake.var.inputJava, output=target.output);
+  }
+}
+
+
+##This method is used as an target. The Zmake user script file can contain 'dst := genXMI(sources);'
+sub genXMI(Obj inputset, Obj output, Obj target)
+{
+
+  List inputsExpanded = target.allInputFilesExpanded();
+
+  ##parse:
+  for(input:inputsExpanded) {
+    ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
+    if(%org.vishia.util.FileSystem.checkNewless(input.absfile(), <:><*$$TMP_ZBNFJAX><*input.localfile()>.xml<.>, 1) ?ge 1) {
+      String exec = %org.vishia.zbnf.Zbnf2Xml.smain(<:>-i:<*input.absfile()><.>, <:>-s:<*$$ZBNFJAX_HOME>/zbnf/Java2C.zbnf<.>
+        , <:>-y:<*$$TMP_ZBNFJAX>/<*input.localfile()>.xml<.>, <:>-a:@filename=<*input.name()><.>
+        , <:>--report:<*$$TMP_ZBNFJAX>/<*input.localfile()>.zbnf.rpt<.>, "--rlevel:335");
+      <+>*parse: <*input.localfile()> : <*exec><.n+>
+    } else {
+      <+>*is parsed: <*input.localfile()><.n+>
+    }
+  } ##for
+  
+  ##gather all inputs as argument for Xslt:
+  Stringjar inputfiles = "";                                            ##variable with all input files
+  List listInputs;
+  for(input:inputsExpanded) {
+    <+inputfiles>-i:<*$$TMP_ZBNFJAX><*input.localfile()><.n+>;    
+    listInputs += <:>-i:<*$$TMP_ZBNFJAX><*input.localfile()>.xml<.>;
+  }
+  <+>
+    Inputfiles:
+    <*inputfiles>
+  <.+>
+
+  ##translate all input files with Java2xmiTypes.xsl to gather all types. build a temporary types-xmi.xml to use for second pass
+  List xsltArgs;
+  xsltArgs += <:>-t<*$$ZBNFJAX_HOME>/xsl/Java2xmiTypes.xsl<.>;
+  xsltArgs += "-w+"; 
+  xsltArgs += <:>-y<*$$TMP_ZBNFJAX>/types-xmi.xml<.>;
+  xsltArgs += listInputs;
+  String xsltresult = java org.vishia.xml.Xslt.exec(conv.stringArray(xsltArgs));
+  <+out><*xsltresult><.n+>
+  
+  ##translate all input files with Java2xmi.xsl and the types in types-xmi.xml to the output.xmi
+  xsltArgs.clear();
+  xsltArgs += <:>-t<*$$ZBNFJAX_HOME>/xsl/gen/Java2xmi.xsl<.>;
+  xsltArgs += "-w+"; 
+  xsltArgs += <:>-y<*output><.>;
+  xsltArgs += <:>-i<*$$TMP_ZBNFJAX>/types-xmi.xml<.>;
+  xsltArgs += listInputs;
+  String xsltresult = java org.vishia.xml.Xslt.exec(conv.stringArray(xsltArgs));
+  <+out><*xsltresult><.n+>
+
+  
+}
+
+
+
 

@@ -442,6 +442,7 @@ created by Hartmut Schorrig
     <w:tc>
       <w:tcPr>
         <!-- w:tcW w:w="2665" w:type="dxa"/ -->
+        <!-- w:gridSpan w:val="4"/ -->
       </w:tcPr>
       <xsl:if test="count(div|p|ul|table|img|xhtml:div|xhtml:p|xhtml:ul|xhtml:table)=0">
         <!-- simple tablecell content: no complex tags, generate last as one w:p -->

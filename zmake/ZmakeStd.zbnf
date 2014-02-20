@@ -18,12 +18,18 @@ string::= { <""?literal> | <forInputString> | @<$?inputField> | $<$?contentOfVar
 forInputString::= for ( <input?> : <string?> ).
 ?en:forInputString::="For any input file, a String was built. All strings are concatenated. ".
 
-variable::=<$?@name> = [ fileset ( <fileset> ) | file ( <file> ) | <expression>]. ##<string> ]. ## | { <execCmd> } ].
+variable::=<$?@name> = [ fileset ( <fileset> ) | file ( <file> ) | <textExpr> | <expression>]. ##<string> ]. ## | { <execCmd> } ].
 
 filesetdef::= <$?@name> ( <fileset> ).
 
 
 ##same syntax is ZText:
+
+textExpr::=<?>  <""?text> | \<:\><genContentNoWhitespace?genString>\<\.\>
+ | new <newJavaClass> | [java |$!] <staticJavaMethod> 
+ | info ( <?info> <datapath?>  )
+ | $$<$?envVariable> | <datapath?>
+.
 
 expression::={ <value> ? [! + | -] }.
 
