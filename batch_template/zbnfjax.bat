@@ -1,4 +1,4 @@
-echo off
+::echo off
 REM shell for invoking commands for ZBNF or ZBNFJAX_HOME
 
 call setZBNFJAX_HOME.bat silent
@@ -31,7 +31,7 @@ if not "%1" == "zmake" goto :nZmake
 :nZmake
 if not "%1" == "zmakeGen" goto :nZmakeGen
   echo zbnfjax zmakeGen: %2 %3 %4 %5 %6 %7 %8 %9 >>%TMP_ZBNFJAX%\zbnfjax.log"
-  %JAVA_EXE% -cp "%ZBNFJAX_HOME%/zbnf.jar" org.vishia.zmake.Zmake %2 %3 %4 %5 %6 %7 %8 %9
+  %JAVA_EXE% -cp "%JAVACP_XSLT%" org.vishia.zmake.Zmake %2 %3 %4 %5 %6 %7 %8 %9
   goto :ende
 :nZmakeGen
 if not "%1" == "zbnf2xml" goto :nZbnf2Xml

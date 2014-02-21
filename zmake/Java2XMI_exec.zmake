@@ -6,24 +6,32 @@
 main()
 { <+> output <.n+>
   for(target: zmake.targets){
-    call *target.translator(target=target, inputset=zmake.var.inputJava, output=target.output);
+    call *target.translator(target=target);
   }
 }
 
 
 ##This method is used as an target. The Zmake user script file can contain 'dst := genXMI(sources);'
-sub genXMI(Obj inputset, Obj output, Obj target)
+sub genXMI(Obj target)
 {
+
+  ##The ZmakeUserscript should contain a variable 'tmpxml'
+  String tmpxml;
+  if(zmake.var.tmpxml){ tmpxml = zgensub.evalString(zmake.var.tmpxml); }
+  else { tmpxml = <:><*$$TMP>/tmpxml<.>; }  ##System should provide a TMP, elsewhere error. 
 
   List inputsExpanded = target.allInputFilesExpanded();
 
   ##parse:
   for(input:inputsExpanded) {
     ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
-    if(%org.vishia.util.FileSystem.checkNewless(input.absfile(), <:><*$$TMP_ZBNFJAX><*input.localfile()>.xml<.>, 1) ?ge 1) {
+    String xml = <:><*tmpxml>/<*input.localfile()>.xml<.>;
+    Obj checkNew = %org.vishia.util.FileSystem.checkNewless(input.absfile(), xml, 1);
+    <+out><*xml>: checkNew = <*checkNew><.n+>
+    if(checkNew >= 1) {
       String exec = %org.vishia.zbnf.Zbnf2Xml.smain(<:>-i:<*input.absfile()><.>, <:>-s:<*$$ZBNFJAX_HOME>/zbnf/Java2C.zbnf<.>
-        , <:>-y:<*$$TMP_ZBNFJAX>/<*input.localfile()>.xml<.>, <:>-a:@filename=<*input.name()><.>
-        , <:>--report:<*$$TMP_ZBNFJAX>/<*input.localfile()>.zbnf.rpt<.>, "--rlevel:335");
+        , <:>-y:<*tmpxml>/<*input.localfile()>.xml<.>, <:>-a:@filename=<*input.name()><.>
+        , <:>--report:<*tmpxml>/<*input.localfile()>.zbnf.rpt<.>, "--rlevel:335");
       <+>*parse: <*input.localfile()> : <*exec><.n+>
     } else {
       <+>*is parsed: <*input.localfile()><.n+>
@@ -34,8 +42,8 @@ sub genXMI(Obj inputset, Obj output, Obj target)
   Stringjar inputfiles = "";                                            ##variable with all input files
   List listInputs;
   for(input:inputsExpanded) {
-    <+inputfiles>-i:<*$$TMP_ZBNFJAX><*input.localfile()><.n+>;    
-    listInputs += <:>-i:<*$$TMP_ZBNFJAX><*input.localfile()>.xml<.>;
+    <+inputfiles>-i:<*tmpxml>/<*input.localfile()><.n+>;    
+    listInputs += <:>-i:<*tmpxml>/<*input.localfile()>.xml<.>;
   }
   <+>
     Inputfiles:
@@ -46,7 +54,7 @@ sub genXMI(Obj inputset, Obj output, Obj target)
   List xsltArgs;
   xsltArgs += <:>-t<*$$ZBNFJAX_HOME>/xsl/Java2xmiTypes.xsl<.>;
   xsltArgs += "-w+"; 
-  xsltArgs += <:>-y<*$$TMP_ZBNFJAX>/types-xmi.xml<.>;
+  xsltArgs += <:>-y<*tmpxml>/types-xmi.xml<.>;
   xsltArgs += listInputs;
   String xsltresult = java org.vishia.xml.Xslt.exec(conv.stringArray(xsltArgs));
   <+out><*xsltresult><.n+>
@@ -55,8 +63,8 @@ sub genXMI(Obj inputset, Obj output, Obj target)
   xsltArgs.clear();
   xsltArgs += <:>-t<*$$ZBNFJAX_HOME>/xsl/gen/Java2xmi.xsl<.>;
   xsltArgs += "-w+"; 
-  xsltArgs += <:>-y<*output><.>;
-  xsltArgs += <:>-i<*$$TMP_ZBNFJAX>/types-xmi.xml<.>;
+  xsltArgs += <:>-y<*target.output><.>;
+  xsltArgs += <:>-i<*tmpxml>/types-xmi.xml<.>;
   xsltArgs += listInputs;
   String xsltresult = java org.vishia.xml.Xslt.exec(conv.stringArray(xsltArgs));
   <+out><*xsltresult><.n+>
