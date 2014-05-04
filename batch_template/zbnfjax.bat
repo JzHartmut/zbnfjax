@@ -8,6 +8,10 @@ if not "%1" == "call" goto :nCall
   %2 %3 %4 %5 %6 %7 %8 %9
   goto :ende
 :nCall 
+if not "%1" == "jzcmd" goto :njzcmd
+  %JAX_EXE% org.vishia.zcmd.JZcmd %2 %3 %4 %5 %6 %7 %8 %9
+  goto :ende
+:njzcmd  
 if not "%1" == "genDocu" goto :nGenDocu
   %ZBNFJAX_HOME%\batch\cmdDocuGctr.bat %2
   goto :ende
@@ -38,7 +42,7 @@ if not "%1" == "zbnf2xml" goto :nZbnf2Xml
   %JAVA_EXE% -cp %JAVACP_ZBNF% org.vishia.zbnf.Zbnf2Xml %2 %3 %4 %5 %6 %7 %8 %9
   goto :ende
 :nZbnf2Xml
-if not "%1" == "zbnf2xml" goto :nCHeader2JB
+if not "%1" == "header2JavaByteCoding" goto :nCHeader2JB
   %ZBNFJAX_HOME%\batch\CHeader2JavaByteCoding.bat %2
   goto :ende
 :nCHeader2JB
@@ -48,15 +52,6 @@ if not "%1" == "Header2Reflection" goto :nHeader2Refl
   @echo off
 	goto :ende
 :nHeader2Refl
-if not "%1" == "winCCvarFromSCL" goto :nwinCCvarFromSCL
-  %ZBNFJAX_HOME%\batch\winCCvarFromSCL.bat %2 %3
-  goto :ende
-:nwinCCvarFromSCL
-if not "%1" == "vxslt" goto :nvxslt
-  echo on
-  %JAVA_EXE% -cp %JAVACP_XSLT% org.vishia.xml.Xslt %2 %3 %4 %5 %6 %7 %8 %9
-  goto :ende
-:nvxslt
   echo fault command %1, expected: call, genDocu, java, javacjar, zmakeAnt, zmake, zbnf2xml
   pause
   goto :ende

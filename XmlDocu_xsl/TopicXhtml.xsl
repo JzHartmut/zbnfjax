@@ -274,18 +274,15 @@
       </xsl:if>
 
 
-      <xhtml:p class="debug">
-        <!-- xsl:text>Topic:</xsl:text><xsl:value-of select="$topicIdent"/ -->
-        <!-- xsl:if test="not($paraStyle_li='-')"><xsl:text>paraStyle_li="</xsl:text><xsl:value-of select="$paraStyle_li"/><xsl:text>"; </xsl:text></xsl:if -->
-        <!-- xsl:if test="not($listStyle='-')">   <xsl:text>listStyle="</xsl:text><xsl:value-of select="$listStyle"/><xsl:text>"; </xsl:text></xsl:if -->
-
+      <!-- xhtml:p class="debug">
+     
         <xsl:if test="$divStyle!='-'"><xsl:text> divStyle=</xsl:text><xsl:value-of select="$divStyle"/></xsl:if>
         <xsl:if test="$pStyle!='-'"><xsl:text> pStyle=</xsl:text><xsl:value-of select="$pStyle"/></xsl:if>
         <xsl:if test="$ulStyle!='-'"><xsl:text> ulStyle=</xsl:text><xsl:value-of select="$ulStyle"/></xsl:if>
         <xsl:if test="$olStyle!='-'"><xsl:text> olStyle=</xsl:text><xsl:value-of select="$olStyle"/></xsl:if>
         <xsl:if test="$dlStyle!='-'"><xsl:text> dlStyle=</xsl:text><xsl:value-of select="$dlStyle"/></xsl:if>
         <xsl:if test="$tableStyle!='-'"><xsl:text> tableStyle=</xsl:text><xsl:value-of select="$tableStyle"/></xsl:if>
-      </xhtml:p>
+      </xhtml:p -->
       <xsl:apply-templates >
           <xsl:with-param name="divStyle"   select="$divStyle" />
           <xsl:with-param name="pStyle"     select="$pStyle" />

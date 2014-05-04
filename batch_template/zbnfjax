@@ -158,6 +158,8 @@ else
   elif test "$1" = "java";  then
     echo java $2 $3
     $JAX_EXE $2 $3
+  elif test "$1" = "jzcmd";  then
+    $JAX_EXE org.vishia.zcmd.JZcmd $2 $3 $4 $5 $6 $7 $8 $9
   elif test "$1" = "execfile";  then
     echo execute for each file
     $JAX_EXE org.vishia.cmd.Filecmd $2 $3 $4 $5 $6 $7 $8 $9

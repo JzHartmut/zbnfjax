@@ -23,18 +23,20 @@ JavaSrc::=
 ] ##may be empty
 \e.
 
-$keywords::=class|interface|enum|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.
+$keywords::=class|interface|enum|super|new|return|if|else|while|do|for|switch|case|static|final|abstract|private|protected|public|try|catch|finally|throws|throw|null.  ##|List|LinkedList|ArrayList|Iterator|Class|Map|TreeMap.
+
 
 
 description::= <*{ * }|*/?!test_description>.
 
 ##The test_desciption syntax is used to parse the inner structure of a description.
-test_description::= <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?text>
+test_description::= <*|@param|@throws|@deprecated|@return|@java2c|@Java4C|@since|\e?text>
 [{ @sizeof = <*@\e?sizeofDescription>
  |<?returnDescription> @return <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?!paramDescription>
  |<?param> @param <$?variableName> <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?!paramDescription>
  | <?staticInstance> @Java2C = staticInstance <*@\e?text>
  | @java2c = [>{ <java2cTag?> ? , } [:|\.]] <*@\e?rest>
+ | @Java4C\.<Java4CAnnotation> <*@\e?rest>
  | @ <*@\e?auxDescription>
  }] \e.
 
@@ -89,7 +91,8 @@ java2cTag::=
 Java4CAnnotation::=<?>
 [FixArraySize(<#?simpleArray>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
 |DynamicCall <?dynamic-call>
-|exclude <?exclude>
+| exclude <?exclude>
+| excludeImpl <?excludeImpl>
 |<?simpleVariableRef> simpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
 |<?staticInstance> staticInstance            ##to class
 |<?embeddedYElements> embeddedArrayElements  ##to array def: all elements are embedded
@@ -110,10 +113,12 @@ Java4CAnnotation::=<?>
 |<?stackSize> stackSize ( { <#?bytes> | <* )+?type> ? + } )  ##only valid at thread.start()
 |<?toStringNonPersist> toStringNonPersist             ##The String is designated as non-persistant, especially located in ThreadContext
 |<?nonPersistent> nonPersistent                       ##The String is used only non-Persist. Written on definition of String variable.
+| StringJc <?StringJc>                                ##A CharSequence should be translated to StringJc.
 |<?declarePersist> declarePersist                     ##a StringJc is declared as persistent, the programmer knows it.
 | StringBuilderInStack [:|=] <#?StringBuilderInStack> ##used for String concatenation
 |<?StringBuilderInThreadCxt> StringBuilderInThreadCxt ##used for String concatenation and returned Strings
-|<?returnInThreadCxt> returnInThreadCxt ##used to copy a returned an instance in stack in the thread context.
+|<?returnInThreadCxt> returnInThreadCxt               ##used to copy a returned an instance in stack in the thread context.
+| inline <?inline>                                    ##method should translated to a simple define or inline function
 ].
 
 
@@ -126,13 +131,14 @@ interfaceDefinition::=
   [extends {[<?SuperInterface> {<$?>?\.} |xxx] [<generic>] ? , }]
 \{
   [ [<Modifier?>]
-   {  <variableDefinition> ;
+   {  <enumDefinition>
+    | <variableDefinition> ;
     | <methodDefinition>
     | <interfaceDefinition>
     | <annotationDefinition>
     | <classDefinition>
   }]
-\}.
+\} [;].
 
 
 ##it is the primitive form yet only. 
@@ -147,7 +153,7 @@ classDefinition::=
   [extends [<?Superclass> {<$?>?\.} ][<generic>] ]
   [implements { [<?ImplementedInterface> {<$?>?\.}][<generic>] ? , }]     
 \{ [<classContent?>]
-\}.
+\} [;].
 
 
 
@@ -212,10 +218,11 @@ type::= <nonArrayType?>
 methodDefinition::=
 [{ /**[><description>*/]
  | @Override<?A_Override>
+ | @Deprecated
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
  | @Java4C\.<Java4CAnnotation>
 }]
-[<Modifier>] <type> <$?name> ( [<argumentList?>] )
+[<Modifier>] [ \< <$?defineGenericLocal_WhatIsThat> \>] <type> <$?name> ( [<argumentList?>] )
 [ <throwsDeclaration>]
 [ <?abstractMethod> ;
 | <statementBlock?methodbody>
@@ -224,6 +231,7 @@ methodDefinition::=
 constructorDefinition::=
 [{ /**[><description>*/]
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+ | @Deprecated
  | @Java4C\.<Java4CAnnotation>
 }]
 [<Modifier>] <$?constructor>
@@ -310,7 +318,10 @@ switch_statement::=switch ( <value?switchValue> )
    [<?default> default : [<statementsOrDefinition>] ] 
 \}.
 
-try_statement::=try <statementBlock> {<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> }.
+try_statement::=
+  try <statementBlock> 
+  {<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> } 
+  [finally <statementBlock?finally>].
 
 statementsOrDefinition::=<?>
 { <variableDefinition?+?> ; 

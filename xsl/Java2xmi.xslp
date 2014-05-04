@@ -676,8 +676,12 @@
 
 
 <xsl:template name="getTypeName">
-  <xsl:choose><xsl:when test="type/ContainerElementType">
+  <xsl:choose><xsl:when test="type/ContainerElementType"><!-- old form, obsolete -->
     <xsl:for-each select="type/ContainerElementType" ><xsl:call-template name="getNameEnv" /></xsl:for-each>
+  </xsl:when><xsl:when test="type/GenericType">
+    <xsl:choose><xsl:when test="type/GenericType[2]"><xsl:for-each select="type/GenericType[2]" ><xsl:call-template name="getNameEnv" /></xsl:for-each>
+    </xsl:when><xsl:otherwise><xsl:for-each select="type/GenericType" ><xsl:call-template name="getNameEnv" /></xsl:for-each>
+    </xsl:otherwise></xsl:choose>
   </xsl:when><xsl:otherwise>
     <xsl:for-each select="type" ><xsl:call-template name="getNameEnv" /></xsl:for-each>
   </xsl:otherwise></xsl:choose>
@@ -733,7 +737,7 @@
               association="{$association_id}" 
             >
               <xsl:value-of select="substring($Indent,1,number($IndentPos)+6)" />
-              <xsl:if test="type/ContainerElementType">
+              <xsl:if test="type/GenericType">    <!-- ContainerElementType"> -->
                 <UML:AssociationEnd.multiplicity>
                   <UML:Multiplicity >
                     <UML:Multiplicity.range>
