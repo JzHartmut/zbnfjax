@@ -1,0 +1,344 @@
+Execution and Generation of JZcmd-Files
+made by HSchorrig, Version 1.0, 2013-07-11..2013-12-31
+<INPUT>    pathTo JZcmd-File to execute
+-t:<OUTEXT> pathTo text-File for output
+-currdir:<PATH> path of the current dir. If file-path, then it's dir.
+-debug:<TEST.xml> pathTo Test-File
+-u:userArgs
+--about show the help infos
+--help  show the help infos
+---arg ignore this argument
+--@file use file for further arguments, one argument per line.
+--currdir=PATH Set the currdir variable.
+--report=FILE  write the report (log) into the given file, create or clear the file.
+--report+=FILE add to the end of given file or create the report file.
+--rlevel=R     set the level of report, R is number from 1 to 6.
+--rlevel=DR    also write reports upto level D on display, sample: ..-rlevel:24
+--rlevel=WDR   write output also in report, W is nr from 1 to 3 (error, warning, info
+=== Syntax of a jbat script===
+ $comment=(?...?).
+ $endlineComment=\#\#.  ##The ## is the start chars for an endline-comment or commented line in the generator script.
+ $keywords= new | cmd | cmd_check | start 
+   | stdout | stdin | stderr 
+   | subtext | sub | main | call | cd | CD 
+   | Pipe | StringBuffer | Stringjar | String | List | Openfile | Fileset | Obj | Set | set | include | zbatch 
+   | break | XXXreturn | exit | onerror | for | while | do | if | elsif | else | throw . 
+ 
+ JZcmd::= 
+ [<*|==ZGen==?>==ZGen== ]
+ [<*|==JZcmd==?>==JZcmd== ]
+ [ ! checkJZcmd = <textValue?checkJZcmd> ; ]
+ [{ include <include> ; 
+  | currdir = <textDatapath?cd> ;
+ }] 
+ { <DefVariable?> ; 
+ | subtext  <subtext?subroutine> 
+ | sub <subroutine> 
+ | class <subClass> 
+ | main ( ) \{ <statementBlock?mainRoutine> \} 
+ | //<*\n\r?> ##line comment in C style
+ | /*<*|*/?>*/ ##block commment in C style
+ | ==endJZcmd==<*\e?> 
+ } \e.
+ 
+ 
+ include::= [$<$?envVar>[/|\\]][ <""?path> | <*;\ ?path>].
+ 
+ 
+ subClass::= <$?name> \{ 
+ { subtext  <subtext?subroutine> 
+ | sub <subroutine> 
+ | class <subClass> 
+ } \}. 
+ 
+ 
+ subroutine::= [<?type> String | Append | Openfile | Map | List | Obj |] <$?name> ( [{ <DefVariable?formalArgument> ? , }] ) \{ [<statementBlock>] \}. 
+ 
+ subtext::= <$?name> ( [ { <DefVariable?formalArgument> ? , }] ) <textExpr>.
+ 
+ 
+ statementBlock::= { <statement?> }.
+ 
+ statement::=
+   \{ [<statementBlock>] \} 
+ | REM <*\n\r?> ##Remark like in batch files
+ | //<*\n\r?> ##line commment in C style
+ | /*<*|*/?>*/ ##block commment in C style
+ | currdir = <textDatapath?cd> ;   ##set current directory
+ | [cd|CD] [<textValue?cd> | <*\ ;?cd> ; ]  ##change current directory 
+ | <DefVariable?> ; 
+ | for <forCtrl> 
+ | if <ifCtrl> 
+ | while <whileCtrl> 
+ | do <dowhileCtrl> 
+ | start <cmdLine?cmdStart> 
+ | zmake <zmake> 
+ | move <srcdst?move> ; 
+ | copy <srcdst?copy> ; 
+ | [rm|del] <oneArg?del> ; 
+ | break <?breakBlock> ; 
+ | return <?return> ; 
+ | exit <#?exitScript> ;
+ | throw on errorlevel <#?throwonerror> 
+ | throw <textDatapath?throw> 
+ | onerror <onerror> 
+ | errortoOutput off <?errorToOutput=0> 
+ | errortoOutput <?errorToOutput=1> 
+ | if errorlevel <iferrorlevel> 
+ | debug [<textValue?debug>| <?debug>] ; 
+ | <callSubroutine?call> 
+ | <threadBlock> 
+ | \<+<textOut> 
+ | <cmdLineWait?cmdWait> 
+ | <assignExpr> 
+ | ; 
+ .
+ 
+ 
+ debug::= xxx.
+ 
+ srcdst::= [src=] <textValue?actualArgument> [dst=] <textValue?actualArgument> .
+ oneArg::= <textValue?actualArgument> .
+ 
+ 
+ DefVariable::=
+   String\  <DefStringVar?textVariable> 
+ | Stringjar\  <DefObjVar?Stringjar> 
+ | Num\  <DefNumVar> 
+ | Bool\  <DefBoolVar> 
+ | Pipe\  <DefObjVar?Pipe> 
+ | List\  <DefObjVar?List> 
+ | Map\  <DefMapVar> 
+ | Obj\  <DefObjVar> 
+ | Class\  <DefClassVar> 
+ | Classpath\  <DefClasspath> 
+ | Openfile\  <Openfile> 
+ | Fileset\  <DefFileset> 
+ | Filepath\ <DefFilepath> 
+ | Set\  <DefStringVar?setEnvVar> 
+ | set\  <DefStringVar?setEnvVar> 
+ | SET\  <DefStringVar?setEnvVar> 
+ .
+ 
+ DefNumVar::= [const <?const>] <definePath?defVariable>  [ = <numExpr>].
+ 
+ DefBoolVar::= [const <?const>] <definePath?defVariable>  [ = <boolExpr>].
+ 
+ DefObjVar::= [const <?const>] <definePath?defVariable>  [ = <objExpr?>].
+ 
+ DefClassVar::= [const] <definePath?defVariable>  = 
+   [: <dataAccess?loader> : ]  ## a datapath to a ClassLoader instance, a Classpath variable. 
+   <textValue?>.               ## The package path maybe contained in any expression
+ 
+ DefClasspath::= [const] <definePath?defVariable>  = [ : <$?parentClasspath> : ] { <filesetAccess> ? , }.
+ 
+ DefStringVar::= [const <?const>] <definePath?defVariable> [ = <textDatapath?>].
+ 
+ DefMapVar::= [const <?const>] <definePath?defVariable>.
+ 
+ Openfile::= [const <?const>] <definePath?defVariable> = <textDatapath?> .
+ 
+ 
+ definePath::= <$-?startVariable>[ [?\. \>] \.{ <defineSubelement?datapathElement> ? [?\. \>] \.}].
+ 
+ defineSubelement::= <$-?ident> [( [{ <objExpr?argument> ? ,}])<?whatisit=(>].
+ 
+ 
+ DefFileset::= <definePath?defVariable> [ =  ( 
+ [ commonpath = <Filepath?commonpath> , ] 
+ { [{ //<*\n\r?>}] <Filepath> [{ //<*\n\r?>}] ? , } 
+ ) ] .
+ 
+ DefFilepath::= <definePath?defVariable> [ = <textValue?> ]. 
+ 
+ 
+ Filepath::=<""?!prepFilePath>|<*;\ \r\n,)?!prepFilePath>. 
+ 
+ prepFilePath::=<$NoWhiteSpaces><! *?>
+ [ &$<$?@envVariable> [\\|/|]      ##path can start with a environment variable's content
+ | &<$?@scriptVariable> [\\|/|]    ##path can start with a scriptvariable's content
+ | [<!.?@drive>:]                  ## only 1 char with followed : is the drive letter
+   [ [/|\\]<?@absPath>]            ## starting with / maybe after d: is absolute path
+ |]
+ [ <*:?@pathbase>[?:=]:]           ## all until : is pathbase, but not till a :=
+ [ <toLastChar:/\\?@path>[\\|/|]] ## all until last \ or / is path
+ [ <toLastChar:.?@name>              ## all until exclusive dot is the name
+   <*\e?@ext>                       ## from dot to end is the extension
+ | <*\e?@name>                      ## No dot is found, all is the name.
+ ] . 
+ 
+ 
+ 
+ 
+ 
+ textDatapath::=  <""?text> | \<:\><textExpr>\<\.\> | [& [?(] ] <dataAccess> .
+ 
+ textValue::=  <""?text> | \<:\><textExpr>\<\.\> | & <dataAccess> | <*;,)(\ \r\n?text> .
+ 
+ 
+ objExpr::= 
+   File : <textValue?File>        ## A textValue which defines a file in the currdir 
+ | \{ <dataStruct> \}           ## It is a Map of Variables. 
+ | <""?text>                    ## It is a constant text. 
+ | \<:\><textExpr>\<\.\>     ## It is a text assembled in runtime. 
+ | <numExpr>.                     ## special detection of a simple dataAccess.
+ 
+ dataStruct::= { <DefVariable?> ; }.
+ 
+ 
+ 
+ 
+ dataAccess::= 
+ [ $<$?envVariable> 
+ | [<?startVariable> $<![1-9]?>| $<$?>]    ## $1 .. $9 are the arguments of Jbatch, $name for environment 
+ | [java] new <staticJavaAccess?newJavaClass> 
+ | [%|java] <staticJavaAccess?staticJavaMethod> 
+ | <dataPath?> 
+ ].
+ 
+ 
+ staticJavaAccess::=        ## Access to a Java class 
+   [ & <dataAccess?classVar> : [<$\.$?javapath>]           ## access via Class variable .element
+   | [: <dataAccess?loader> : ] <$\.$?javapath>  ## immediate package.path.Class.element
+   ] [( [ { <objExpr?argument> ? , } ])].         ## arguments
+ 
+ dataPath::= <startDatapath>[ [?\. \>] \.{ <datapathElement> ? [?\. \>] \.}].
+ 
+ ## A datapath cannot start with an JZcmd keyword! 
+ startDatapath::= [ & ( <dataPath> ) | <$-?ident> ] <?whatisit=@> [( [{ <objExpr?argument> ? ,}])<?whatisit=+>].
+ ## Use regex for the second datapath element, it can be a JZcmd keyword too! 
+ datapathElement::= [ & ( <dataPath> ) |[<?ident>[@]<![\\w-]+?>]] [( [{ <objExpr?argument> ? ,}])<?whatisit=(>].
+ 
+ 
+ 
+ 
+ condition::=<andExpr?> [{\|\| <andExpr?boolOrOperation>}].
+ 
+ andExpr::= <boolExpr?> [{ && <boolExpr?boolAndOperation>}].
+ 
+ boolExpr::= [<?boolNot> ! | not|]
+ [ ( <condition?parenthesisCondition> ) 
+ | <numExpr?> [<cmpOperation>]
+ ].
+ 
+ cmpOperation::=[ \?[<?cmpOperator>gt|ge|lt|le|eq|ne] |  [<?cmpOperator> != | == | \>= | \> | \<= | \< ]] <numExpr?>.
+ 
+ conditionInText::=<andExprInText?> [{\|\| <andExprInText?boolOrOperation>}].
+ 
+ andExprInText::= <boolExprInText?> [{ && <boolExprInText?boolAndOperation>}].
+ 
+ boolExprInText::= [<?boolNot> ! | not|]
+ [ ( <conditionInText?parenthesisCondition> ) 
+ | <numExpr?> [<cmpOperationInText?cmpOperation>]
+ ].
+ 
+ cmpOperationInText::=[ \?[<?cmpOperator>gt|ge|lt|le|eq|ne] |  [<?cmpOperator> != | == ]] <numExpr?>.
+ 
+ 
+ numExpr::=  bool ( <boolExpr?> ) 
+             | <multExpr?> [{ + <multExpr?addOperation> | - <multExpr?subOperation>}].
+ 
+ 
+ multExpr::= <value?> [{ * <value?multOperation> | / <value?divOperation> }].
+ 
+ value::= 0x<#x?intValue> | <#?intValue>[?\.] | <#f?doubleValue> |    ##unary - associated to value.
+ [{[<?unaryOperator> ! | ~ | - | + ]}]        ##additional unary operators.
+ [ 0x<#x?intValue> | <#?intValue>  ##ones of kind of value:
+ | '<!.?charValue>' | <""?textValue> 
+ | ( <numExpr?parenthesisExpr> ) 
+ | [& [?(] ] <dataAccess>   ## & is optional, don't confuse with &(variable) 
+ ].
+ 
+ 
+ textExpr::=<$NoWhiteSpaces>
+ { [?\<\.\>]              ##abort on <.> 
+ [ \<:for:<forInText?forCtrl>
+ | \<:if: <ifInText?ifCtrl>
+ | \<:hasNext\> <textExpr?hasNext> \<\.hasNext\>
+ | \<:subtext : <callSubtext?call>
+ | \<:scriptdir<?scriptdir>\>
+ | \<:debug[:<textDatapath?debug>| <?debug>]\>
+ | \<&<dataText>
+ | \<: [<?transcription>n|r|t|[\<|#|\"]<*\>?>] \>
+ | \<:lf\><?newline>
+ | \<:\ \><!\\s*?> [ \#\#<*\r\n?> <!\\s*?> ]
+ | \#\#<*\r\n?>{\r|\n}   ##skip comment in text
+ | \<:@<#?setColumn> [ + <#?minChars>] \>  
+ | \<:\><textExpr?>\<\.\>
+ | <*|\<:|\<+|\<=|\<&|\<\.?plainText>
+ ]
+ }.
+ 
+ 
+ dataText::=<dataAccess>[ \: [<""?formatText>|<*\>?formatText>]] \>.     ##<*expr: format>
+ 
+ textOut::= [<dataPath?assign>] \> <textExpr>[ \<\.+\> 
+   | \<\.n+\><?newline> | \<\.+n\><?newline> 
+   | \<\.+n+flush\><?newline><?flush> | \<\.+flush\><?flush>
+   | \<\.+n+close\><?close> | \<\.+close\><?close>].
+ 
+ 
+ 
+ forCtrl::= ( <$?forVariable> : <dataAccess?forContainer> [ && <condition> ])  \{ <statementBlock> \} .
+ 
+ forInText::= <$?forVariable> : <dataAccess?forContainer> [ && <condition> ] \> <textExpr> \<\.for[ : <$?@name> ]\>. 
+ ##name is the name of the container element data reference
+ 
+ ifCtrl::= <ifBlock> [{ elsif <ifBlock>  }][ else \{ [<statementBlock?elseBlock>] \} ].
+ 
+ ifBlock::= ( <condition> ) \{ <statementBlock> \} .
+ 
+ ifInText::= <ifBlockInText?ifBlock> [{ \<:elsif : <ifBlockInText?ifBlock>  }][ \<:else\> <textExpr?elseBlock> ] \<\.if\>.
+ 
+ ifBlockInText::= <conditionInText?condition> \> <textExpr>.
+ 
+ whileCtrl::= ( <condition> ) \{ [<statementBlock>] \} .
+ 
+ dowhileCtrl::=  \{ [<statementBlock>] \} while ( <condition> ) ; .
+ 
+ 
+ onerror::= [ <#?errorLevel> 
+            | [<?errortype> notfound | cmd | file | internal | exit ]
+            |]
+            \{ [<statementBlock>] \}.
+ 
+ 
+ callSubroutine::= [{ <dataPath?assign> [ = | += <?append>] }] call <textValue?callName> ( [{ <namedArgument?actualArgument> ? , }] ) ; .
+ 
+ callSubtext::=[<""?callName>|<textValue?callNameExpr>] [ : { <namedArgument?actualArgument> ? , }] \>.
+ 
+ namedArgument::= <$?name> = 
+ [ Filepath: <textValue?filepath>
+ | Fileset: <filesetAccess>
+ | <objExpr?>
+ ].
+ 
+ 
+ zmake::= [ : <$-?name> :[?=] ] <output> := <textValue?callName> ( { <namedArgument?actualArgument> | <filesetAccess> ? ,} ).
+ 
+ output::=<*|\ |\r|\n|:=?!prepFilePath>.
+ 
+ 
+ ## An accessPath is a Filepath, see prepFilepath::=, but analyzed on Java level. 
+ filesetAccess::= [ 
+                    <""?accessPath> | \<:\><textExpr>\<\.\> 
+                  | [<?accessPathOrFilesetVariable> [&]<*\ \r\n,)&;?>] 
+                  ] [ & <$?zmakeFilesetVariable>] . 
+ 
+ 
+ cmdLineWait::=[{ <dataPath?assign> += }] cmd\  <cmdLine?>.
+ 
+ cmdLine::= [\!argsCheck!<?argsCheck>] <textValue?> [{[?;[\ |\n|\r]] [ \<\:arg\><textExpr?actualArgument>\<\.arg\> | \<\:args:<dataAccess?argList>\> |<textValue?actualArgument>] }] 
+   [ \<:stdout:[ pipe<?pipe>| [$]<$?stdoutVariable>] \>] ;.
+ 
+ iferrorlevel::= <#?errorLevel> \{ [<statementBlock>] \}.
+ 
+ 
+ 
+ assignExpr::= [{ <dataPath?assign> [ = | += <?append>] }] <objExpr?> ;.
+ 
+ 
+ threadBlock::= Thread <dataPath?defThreadVar> = [thread] \{ <statementBlock> \} 
+              | thread \{ <statementBlock> \}.
+ 
+

@@ -1,0 +1,33 @@
+##Zmake generate control file for Header2Reflection-generation from header files.
+
+
+
+
+main()
+{ <+> output <.n+>
+  for(target: zmake.targets){
+    call *target.translator(target=target);
+  }
+}
+
+
+
+
+##This method is used as an target. The Zmake user script file can contain 'dst := parseHeader2Xml(sources);'
+sub Cheader2Reflection(Obj target, Filepath config)
+{
+
+  //List inputHeader;
+  List inputsExpanded = target.allInputFilesExpanded();
+  Obj header2refl = java new org.vishia.header2Reflection.Header2Reflection(jzcmd.log);
+  
+  for(input:inputsExpanded){
+    header2refl.addInputFilemask(<:><&input.absbasepath()>:<&input.localfile()><.>);
+    //inputHeader += <:>-i:<&input.absbasepath()>:<&input.localfile()><.>
+  }
+  header2refl.setOutDir(target.output.absdir());
+  header2refl.setConfig(config.absfile());
+  header2refl.setSyntax(<:><:scriptdir>/../zbnf/Cheader.zbnf<.>);
+  header2refl.execute();
+
+}

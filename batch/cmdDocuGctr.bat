@@ -13,7 +13,7 @@ if errorlevel 1 goto :error
 REM don't copy the htmlstd.css here, because the destination directory is unknown really.
 REM it should done in the calling script or done manually.
 ::copy %ZBNFJAX_HOME%\XmlDocu_xsl\htmlstd.css ..\html\*.*
-pause
+::pause
 goto :ende
 
 :error

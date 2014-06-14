@@ -1,0 +1,81 @@
+
+## Executes a Java compiling process
+## @param target zmake inputs/output
+## @param cc CompilerConditions
+##
+sub javacjar(Obj target: org.vishia.cmd.ZmakeTarget, Map cc)
+{
+  Class FileSystem = org.vishia.util.FileSystem;
+
+  ##
+  ## check and clean cc.TMP_JAVAC
+  ##
+  FileSystem.mkDirPath(<:><&cc.TMP_JAVAC>/<.>);
+  FileSystem.cleandir(File: &cc.TMP_JAVAC);
+  ##
+  ## remove all existing destinations:
+  ##
+    
+  Classpath cpJavac = D:\Programme\JAVA\jdk1.7.0_51\lib\tools.jar;  
+  Class Javac = :cpJavac:com.sun.tools.javac.api.JavacTool;
+  ##Obj javaCompiler = java javax.tools.ToolProvider.getSystemJavaCompiler();
+  Obj javaCompiler = java new :cpJavac:com.sun.tools.javac.api.JavacTool();
+  
+  out += test.info(javaCompiler);
+  
+  Stringjar out1;
+  Obj outStream = out1.outputStream();
+  Stringjar err1;
+  Obj errStream = err1.outputStream();
+  List args;
+  args += "-d";
+  args += cc.TMP_JAVAC;
+  ##
+  if(cc.SRCPATH_JAVAC){
+    args += "-sourcepath";   ## only necessary if additional depending sources should be translated.
+    args += <:><&currdir>/<&cc.SRCPATH_JAVAC><.>;
+  }
+  ##
+  ## add all source files:
+  ##
+  for(filepath: target.allInputFilesExpanded()){
+    args += filepath.absfile().toString();
+  }
+  //args += "-version";
+  //java org.vishia.util.DataAccess.debugMethod("run");
+  ##
+  ##javac
+  ##
+  <+out>javac <:for:arg:args> 
+    <&arg><.for><.+n>
+  javaCompiler.run(null, outStream, errStream, args);
+  <+out>Out1: <&out1><.+n>
+  if(err1.length()>0){
+    <+out>Error: <&err1><.+n>
+  }
+  
+  ##
+  ## create jar
+  ##
+  <+out>create jar: <&target.output.absfile()> from <&cc.TMP_JAVAC><.+n>
+  java org.vishia.util.DataAccess.debugMethod("createJar");
+  Obj archiver = java new org.vishia.util.Zip();
+  archiver.setManifest(File: &cc.MANIFEST_JAVAC);
+  archiver.addSource(File: &cc.TMP_JAVAC, "**/*");
+
+  archiver.exec(File: &target.output.absfile(), 1, "jar");
+  //archiver.exec(File: <:><&cc.OUTDIR_JAVAC>/<&cc.JAR_JAVAC><.>, 1, "jar");
+  
+  
+  
+  
+  if(0){
+    out1.clear();
+    <+out>Check cmd javac:<.+n>
+    out1 += cmd !argsCheck! D:/Programme/JAVA/jdk1.7.0_51/bin/javac <:args:args>; 
+    <+out><:for:arg:argsCheck><:n>--><&arg><--<.for>
+    <&out1>
+    <.+>
+  }
+  
+}
