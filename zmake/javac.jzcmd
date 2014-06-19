@@ -50,15 +50,25 @@ sub javacjar(Obj target: org.vishia.cmd.ZmakeTarget, Map cc)
     <&arg><.for><.+n>
   javaCompiler.run(null, outStream, errStream, args);
   <+out>Out1: <&out1><.+n>
+  if(out1.length()>0){
+    <+out>==out== 
+      <&out1>
+    <.+>
+    Openfile out2 = <:><&target.output.absname()>.out<.>;
+    <+out2><&out1><.+n+close>
+  }
   if(err1.length()>0){
-    <+out>Error: <&err1><.+n>
+    <+out>==out== 
+      <&err1>
+    <.+>
+    Openfile err2 = <:><&target.output.absname()>.err<.>;
+    <+err2><&err1><.+n+close>
   }
   
   ##
   ## create jar
   ##
   <+out>create jar: <&target.output.absfile()> from <&cc.TMP_JAVAC><.+n>
-  java org.vishia.util.DataAccess.debugMethod("createJar");
   Obj archiver = java new org.vishia.util.Zip();
   archiver.setManifest(File: &cc.MANIFEST_JAVAC);
   archiver.addSource(File: &cc.TMP_JAVAC, "**/*");

@@ -24,3 +24,5 @@ set XML_TOOLS=D:\Programme\XML_Tools
 
 REM This is the invocation of JZcmd, with up to 9 arguments.
 java -cp %ZBNFJAX_HOME%/zbnf.jar   org.vishia.zcmd.JZcmd   %1 %2 %3 %4 %5 %6 %7 %8 %9
+if errorlevel 1 pause
+
