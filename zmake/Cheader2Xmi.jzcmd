@@ -1,28 +1,27 @@
 ##Zmake generate control file for XMI-generation from header or Java files.
 
-
+## This jar files are need additionally for XSL:
 Fileset xslJars = (saxon9-jdom.jar, saxon9.jar, jdom.jar); 
+Classpath cpXsl = <:><&$XML_TOOLS><.>&xslJars, <:><:scriptdir>/../xslt.jar<.>;
 
-Classpath cpXsl = D:/Programme/XML_Tools&xslJars, <:><:scriptdir>/../xslt.jar<.>;
 
-
-##This method is used as an target. The Zmake user script file can contain 'dst := genXMI(sources);'
-sub Cheader2XMI(Obj target: org.vishia.cmd.ZmakeTarget, Filepath tmpxml = <:><&$TMP>/tmpxml<.>)
+##This method is used as a target. The Zmake user script file can contain 'dst := genXMI(sources);'
+sub cheader2XMI(Obj target: org.vishia.cmd.ZmakeTarget, Filepath tmpxml = <:><&$TMP>/tmpxml<.>)
 {
-
+  ## create the instance of the XSL translator. Use from xslJars with the named classes:
   Obj xslt = java new :cpXsl:org.vishia.xml.Xslt(cpXsl, "org.vishia.xml.XmlMReaderJdomSaxon", "net.sf.saxon.TransformerFactoryImpl");
 
   ##gather all inputs maybe given with wild cards:
   List inputsExpanded = target.allInputFilesExpanded();
 
   ##parse:
-  <+out>parse header:<.+n>
+  <+out>Cheader2Xmi.jzcmd - parse header;<.+n>
   for(input:inputsExpanded) {
     ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
     String xml = <:><&tmpxml.absfile()>/<&input.localfile()>.xml<.>;
     test.debugMethod("checkNewless");
     Obj checkNew = %org.vishia.util.FileSystem.checkNewless(File: &input.absfile(),File: &xml, 1);
-    <+out><&xml>: checkNew = <&checkNew><.n+>
+    <+out>Cheader2Xmi.jzcmd - checkNew; <&xml>: checkNew = <&checkNew><.n+>
     if(checkNew >= 1) {
       ## parse header, run Zbnf2Xml:
       String exec = %org.vishia.zbnf.Zbnf2Xml.smain(<:>-i:<&input.absfile()><.>
@@ -42,129 +41,23 @@ sub Cheader2XMI(Obj target: org.vishia.cmd.ZmakeTarget, Filepath tmpxml = <:><&$
 
   ##translate all input files with Java2xmiTypes.xsl to gather all types. build a temporary types-xmi.xml to use for second pass
   xslt.setXsltfile(<:><:scriptdir>/../xsl/CheaderTypes.xsl<.>);
-  String sOutfile = <:><&target.output.absdir()>/types-xmi.xml<.>;
-  <+out>generate <&sOutfile><.+n>
-  FileSystem.mkDirPath(sOutfile);
-  xslt.setOutputfile(sOutfile);
+  String sTypesfile = <:><&target.output.absdir()>/types-xmi.xml<.>;
+  <+out>Cheader2Xmi.jzcmd - generate types; <&sTypesfile><.+n>
+  FileSystem.mkDirPath(sTypesfile);
+  xslt.setOutputfile(sTypesfile);
   String xsltresult = xslt.transform();
-  <+out><&xsltresult><.+n>
+  if(xslresult){ <+err>Cheader2Xmi.jzcmd - Error XSLT; <&xsltresult><.+n> }
   
   ##translate all input files with Java2xmi.xsl and the types in types-xmi.xml to the output.xmi
-  <+out>generate XMI:<.+n>
+  String sOutfile = target.output.absfile();
+  <+out>Cheader2Xmi.jzcmd - generate XMI; <&sOutfile><.+n>
   xslt.addInputfile(<:><&target.output.absdir()>/types-xmi.xml<.>);  //Note: all other inputfiles remain.
   xslt.setXsltfile(<:><:scriptdir>/../xsl/gen/Cheader2xmi.xsl<.>);
-  xslt.setOutputfile(target.output.absfile());
-  String xsltresult = xslt.transform();
-  <+out><&xsltresult><.+n>
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## OLD:
-
-
-##This method is used as an target. The Zmake user script file can contain 'dst := parseHeader2Xml(sources);'
-sub parseCheader2Xml(Obj target)
-{
-
-  List inputsExpanded = target.allInputFilesExpanded();
-  //debug test;
-  String tmpxml = target.output.absdir();
-  
-  ##parse:
-  for(input:inputsExpanded) {
-    ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
-    String xml = <:><&tmpxml>/<&input.localfile()>.xml<.>;
-    Obj checkNew = %org.vishia.util.FileSystem.checkNewless(File:&input.absfile(), File:&xml, 1);
-    <+><&xml>: checkNew = <&checkNew><.n+>
-    if(checkNew >= 1) {
-      String exec = %org.vishia.zbnf.Zbnf2Xml.smain(<:>-i:<&input.absfile()><.>, <:>-s:<&$ZBNFJAX_HOME>/zbnf/Cheader.zbnf<.>
-        , <:>-y:<&tmpxml>/<&input.localfile()>.xml<.>, <:>-a:@filename=<&input.name()><.>
-        , <:>--report:<&tmpxml>/<&input.localfile()>.zbnf.rpt<.>, "--rlevel:335");
-      <+>*parse: <&input.localfile()> : <&exec><.n+>
-    } else {
-      <+>*is parsed: <&input.localfile()><.n+>
-    }
-  } ##for
-  
-
-}
-
-
-
-
-
-##This method is used as an target. The Zmake user script file can contain 'dst := genCheader2XMI(sources);'
-sub genCheaderXml2XMI(Obj target)
-{
-
-  ##The ZmakeUserscript should contain a variable 'tmpxml'
-
-  Obj xslt = java new :cpXsl:org.vishia.xml.Xslt(cpXsl, "org.vishia.xml.XmlMReaderJdomSaxon", "net.sf.saxon.TransformerFactoryImpl");
-  
-  List inputsExpanded = target.allInputFilesExpanded();
-
-  
-  ##gather all inputs as argument for Xslt:
-  for(input:inputsExpanded) {
-    xslt.addInputfile(<:><&input.absfile()>.xml<.>);
-  }
-
-  ##translate all input files with Java2xmiTypes.xsl to gather all types. build a temporary types-xmi.xml to use for second pass
-  xslt.setXsltfile(<:><:scriptdir>/../xsl/CheaderTypes.xsl<.>);
-  String sOutfile = <:><&target.output.absdir()>/types-xmi.xml<.>;
-  FileSystem.mkDirPath(sOutfile);
   xslt.setOutputfile(sOutfile);
   String xsltresult = xslt.transform();
-  <+><&xsltresult><.n+>
-  
-  ##translate all input files with Java2xmi.xsl and the types in types-xmi.xml to the output.xmi
-  xslt.addInputfile(<:><&target.output.absdir()>/types-xmi.xml<.>);  //Note: all other inputfiles remain.
-  xslt.setXsltfile(<:><:scriptdir>/../xsl/gen/Cheader2xmi.xsl<.>);
-  xslt.setOutputfile(target.output.absfile());
-  String xsltresult = xslt.transform();
-  <+><&xsltresult><.n+>
+  if(xslresult){ <+err>Cheader2Xmi.jzcmd - Error XSLT; <&xsltresult><.+n> }
 
-  
 }
-
-
-
 
 
 

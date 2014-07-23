@@ -1,0 +1,19 @@
+
+sub stateMgen(Obj target: org.vishia.cmd.ZmakeTarget, Filepath src, Filepath docu)
+{
+
+  Obj stateTranslator = java new org.vishia.stateMGen.StateMGen(console, null);
+
+  Obj args = java new org.vishia.stateMGen.StateMGen$Args();
+  
+  List inputsExpanded = target.allInputFilesExpanded();
+  for(input:inputsExpanded)
+  { args.setSrc(target.input.absfile());
+  }
+  args.setDst(target.output.absfile());
+  
+  stateTranslator.execute(args);
+
+
+
+}

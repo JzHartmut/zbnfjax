@@ -1,0 +1,173 @@
+
+
+subtext substates()
+<:>
+<.>
+
+main(){
+//test.mapToFile(jzcmdsub.localVariables, out,2);
+<+>
+==States==
+@ident=states
+.
+
+===State-Übersicht===
+@ident=overview
+
+
+<:for:state1:stateData.topStates><:>
+'''[[Topic:.states.State_<&state1.stateName>.|<&state1.stateName>]]''': <&state1.shortdescription>.
+<.><:for:substate:state1.subStates><:>
+* '''[[Topic:.states.State_<&substate.stateName>.|<&substate.stateName>]]''': <&substate.shortdescription>.
+<.>
+    <:for:substate2:substate.subStates><:>
+** '''[[Topic:.states.State_<&substate2.stateName>.|<&substate2.stateName>]]''': <&substate2.shortdescription>.
+<.> <.for:substate2>  
+  <.for:substate>  
+  <:for:parallel:state1.parallelStates><:>
+* parallel: '''<&parallel.stateName>'''  
+<.>
+    <:for:substate2:parallel.subStates><:>
+** '''[[Topic:.states.State_<&substate2.stateName>.|<&substate2.stateName>]]''': <&substate2.shortdescription>.
+<.> <.for:substate2>  
+  <.for:parallel>
+<.for:state1>
+
+
+<:for:state:stateData.state><:>  ##all states
+
+<&-test.dataTree(stateData, out,2)>
+
+===State <.><&state.stateName> <:if:state.enclState><:> in <.><&state.enclState><.if><:if:state.parallelState><:>.<&state.parallelState><.><.if><:> ===
+@ident=State_<&state.stateName>
+<.>
+<:if:state.enclState><:>
+Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<.>
+<:if:state.parallelState><:>, Parallel: [[Topic:.states.State_<&state.parallelState>.|<&state.parallelState>]]<.><.if><:>
+
+<.><.if>
+<:>
+<&state.shortdescription><&state.description>
+
+<.>
+<:if:state.additionaldescription>
+<:>
+'''Zusatzbeschreibung''':
+
+<&state.additionaldescription>
+<.>
+<.if>
+<:if:state.tododescription>
+<:>
+'''TODO''':
+
+<&state.tododescription>
+<.>
+<.if>
+
+
+<:if:state.subStates><:>
+'''Sub-states''':<.>
+  <:for:substate:state.subStates><:>
+* [[Topic:.states.State_<&substate.stateName>.|<&substate.stateName>]] : <&substate.shortdescription><.>
+  <.for>  
+<:>
+<.>
+<.if>
+
+<:if:state.parallelStates><:>
+'''Parallele States''':<.>
+  <:for:pstate:state.parallelStates><:>
+* [[Topic:.states.State_<&pstate.stateName>.|<&pstate.stateName>]] : <&pstate.shortdescription><.>
+  <.for>  
+<:>
+<.>
+<.if>
+
+<:if:state.entry><:>
+'''Entry''':
+
+<&state.entry.description>
+
+  <&state.entry.code>
+<.>
+<.if>
+<:if:state.exit><:>
+
+'''Exit''':
+
+<&state.exit.description>
+
+  <&state.exit.code>
+<.>
+<.if>
+  
+<:for:trans:state.trans><:>
+'''Transition <&state.stateName> ==> <.>
+  <:for:dstState:trans.dstState><:>[[Topic:.states.State_<&dstState>.|<&dstState>]] <.><.for>
+  <:for:subcond:trans.subCondition>[[Topic:.states.State_<&subcond.dstState>.|<&subcond.dstState>]]<:hasNext><:> / <.><.hasNext><.for>
+<:>'''
+
+  <.>
+##Transition fromState --> toState --> toInnerState:
+  <:for:exitState:trans.exitStates><:> <&exitState.stateName>--> <.><.for>
+  <:for:entryState:trans.dstStateTree.entrySubStates> <&entryState.name><:>, <.> 
+  <:if:entryState.entrySubStates>---><.if>
+  <:for:entryState2:entryState.entrySubStates> <&entryState2.name><:>, <.>  
+    <:if:entryState2.entrySubStates>---><.if>
+    <:for:entryState3:entryState2.entrySubStates> <&entryState3.name><:>, <.>
+      <:if:entryState3.entrySubStates>---><.if>
+      <:for:entryState4:entryState3.entrySubStates> <&entryState4.name><:>, <.>
+      <.for>
+    <.for>
+  <.for>
+<.for>
+##Descriptions of this transition:
+
+<:>
+
+<&trans.description>
+<.>
+<:if:trans.additionaldescription>
+<:>
+'''Zusatzbeschreibung''':
+
+<&trans.additionaldescription>
+<.>
+<.if>
+<:if:trans.tododescription>
+<:>
+'''TODO''':
+
+<&trans.tododescription>
+<.>
+<.if>
+
+<:if:trans.cond><:>
+condition-code:
+
+  <&trans.cond>
+<.><.if>  
+
+<:if:trans.time><:>
+time:,,<&trans.time>,,
+<.><.if>
+
+<:if:trans.code><:>
+Transition-action-code:
+
+  <&trans.code>
+
+<.><.if>  
+
+<:for:subcond:trans.subCondition>
+* '''cond: ==> <&subcond.dstState>''': ,,(<&subcond.cond>),,<:>
+
+<.>
+<.for>
+<.for>  
+<.for><:>
+
+<.>
+<.+>
+}

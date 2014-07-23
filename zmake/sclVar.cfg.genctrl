@@ -1,0 +1,19 @@
+==ZGen==
+
+main(){
+  <+>==OamVariables==
+  <.+>
+  for(var:scl.oamVariables){  ##all found scl variable
+    <+><:if:var.block.winCCfolder><&var.block.winCCfolder>/<.if><: >         ## folder/
+    <&var.dataPath>: <&var.variable.type.typeCharJava> @<&var.posByte><.+>   ## name: T @pos
+    if(var.variable.type.typeCharJava ?eq 'Z'){                              ##it is an BOOL:
+      <+>.0x<&var.maskBitInByte:"%X"><.+>                                ## .0x01
+    }
+    <+>;<.+>
+    if(var.variable.type.typeCharJava ?ne 'Z') { <+>  <.+> }       ## 2 spaces
+    ## //DB as comment, newline
+    <+>//DB<&var.block.nrDB>
+    <.+>                                                           ##newline
+  } //for
+
+} //main

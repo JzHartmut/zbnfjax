@@ -1,9 +1,11 @@
 <?ZBNF-www.vishia.org version="1.0" encoding="iso-8859-1" ?>
-$comment= (* ... *) .
+$comment=(*...*).
 $endlineComment=//.
 
+$keywords::=TYPE|END_STRUCT|END_VAR|VAR_INPUT.
+
 SclStruct::=
-[ TYPE [<$?>|UDT<#?>]
+[ TYPE [<$?typeIdent>|UDT<#?>]
   STRUCT  
   { <variable> }
   END_STRUCT
@@ -18,10 +20,12 @@ SclStruct::=
   END_DATA_BLOCK
 |
   FUNCTION_BLOCK [<$?>|FB<#?>]
-  { VAR_INPUT { <variable> } END_VAR
-  | VAR_OUTPUT { <variable> } END_VAR
-  | VAR { <variable> } END_VAR
-  | VAR_TEMP { <variable> } END_VAR
+  [ (* <*|*)?> *) ]   ##FBcomment
+  { VAR_INPUT [{ <variable> }] END_VAR
+  | VAR_OUTPUT [{ <variable> }] END_VAR
+  | VAR_IN_OUT [{ <shortPtr> }] END_VAR
+  | VAR [{ (* <*|*)?comment> *) | <variable> }] END_VAR
+  | VAR_TEMP [{ <variable> }] END_VAR
   }
   BEGIN <*|END_FUNCTION_BLOCK?>
   END_FUNCTION_BLOCK
@@ -29,10 +33,20 @@ SclStruct::=
 \e.
 
 
-variable::=
- <$?name> : [ ARRAY \[ <#?arrayStartIx> \.\. <#?arrayEndIx> \] OF ] <$?type> [\[ <#?stringlen> \]] [ := <*;?assignment>] ; 
-   [//[<*|(@oam|(WinCC|\n?comment>[({WinCC<?winCC>|@oam<?oam> ?, }  [: [+<?additional>] <$?otherRepresentation> : <$?otherType> ] ) ]<*\n?comment2>]]
+shortPtr::=<$?name> : <$?type> ;.
+
+
+variable::= 
+{<$?name> ?,} [ AT <$?atName>] :
+[ STRUCT { <variable?structVariable> } END_STRUCT
+| [ ARRAY \[ <#?arrayStartIx> \.\. <#?arrayEndIx> \] OF ] 
+  <$?type> [\[ <#?stringlen> \]] [ := <*;?assignment>] 
+]
+    ; 
+    [//[<*|(@oam|(WinCC|\n?comment>[({WinCC<?winCC>|@oam<?oam> ?, }  [: [+<?additional>] <$?otherRepresentation> : <$?otherType> ] ) ]<*\n?comment2>]]
 .
+
+
 
 ##it doesn't work, should save string.
 type::=[BOOL|BYTE|INT|WORD|REAL].

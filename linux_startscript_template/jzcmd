@@ -1,6 +1,6 @@
-# This is the start batch for JZcmd execution for MS-Windows.
+# This is the start batch for JZcmd execution for Linux/Unix.
 # It should be copied in a directory which is referenced by the Operation system's PATH
-# and adapt with the paths to Java and the other tools.
+# and adapted with the paths to Java and the other tools.
 # All what is need to run JZcmd is referenced here. 
  
 # adapt the path to the zbnfjax folder of vishia-ZBNF tools.

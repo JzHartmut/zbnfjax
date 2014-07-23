@@ -2,7 +2,9 @@
 $comment= (? ... ?) .
 $endlineComment=#.
 
-VariablenCfg::=<*|\n==VariablenConfiguration==?> ==VariablenConfiguration== { <variablenBlock> } \e.
+VariablenCfg::=<*|\n==VariablenConfiguration==?> ==VariablenConfiguration== 
+[ startOffset = <#?startOffset> ;]
+{ <variablenBlock> } \e.
 
 variablenBlock::=
   [variable |struct <$?structName>] : [<$?winCCfolder>/][<$?prefix>]*[<$?suffix>]  

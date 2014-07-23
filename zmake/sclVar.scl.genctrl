@@ -1,0 +1,44 @@
+
+
+==ZGen==
+
+main(){
+  <+>FUNCTION_BLOCK Oam_Variables
+    VAR
+    telgHead: InspcTelgHead_t;
+    head:  InspcitemHead_t;  
+    
+  <.+>
+  { Openfile testDataOut = "result/testData.txt";
+    test.dataTree(scl, testDataOut);
+    testDataOut.close();
+  }
+  for(var:scl.oamVariables){
+    <+><&var.name24>: <.+>
+    if(var.variable.nrofElements > 1){   ##it is an array:
+      <+>ARRAY[<*var.variable.zbnfVariable.arrayStartIx>..<*var.variable.zbnfVariable.arrayEndIx>] OF <.+>
+    }
+    <+><&var.variable.type.s7Type>;
+  <.+>
+  }
+  <+>
+    END_VAR
+    BEGIN
+    IF(telgHead.nEntrant = 0)THEN //initial value
+      telgHead.nrofBytes := 1200;
+      telgHead.nEntrant := -2;
+      telgHead.answerNr := 1;
+      head.nrofBytesItem := 240;
+      head.cmdItem := 16#7001;
+      head.orderItem := 1;
+    END_IF;
+  <.+>  
+  for(var:scl.oamVariables) {
+    <+><&var.name24> := <: >
+    <:if:var.block.dbName><&var.block.dbName><:else>DB<&var.block.nrDB><.if><: >
+    .<&var.structPath><&var.variable.sName>;
+  <.+>
+  } //for
+  <+>END_FUNCTION_BLOCK
+  <.+>
+}
