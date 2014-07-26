@@ -1,31 +1,31 @@
 
 subtext conditionaction(Obj trans)
 <:>
-<:for:exitState:trans.exitStates>
-  <:> exit_<&exitState.stateName><&stateData.variables.StateMethodSuffix>(thiz); <.>
-<.for><:>
-    <&trans.code>
-   <.>
-    
-<:for:entryState:trans.dstStateTree.entrySubStates>
-  <:> entry_<&entryState.name><&stateData.variables.StateMethodSuffix>(thiz);<.>
-  <:for:entryState2:entryState.entrySubStates>
-    <:> entry_<&entryState2.name><&stateData.variables.StateMethodSuffix>(thiz);<.> 
-    <:for:entryState3:entryState2.entrySubStates>
-    <:> entry_<&entryState3.name><&stateData.variables.StateMethodSuffix>(thiz);<.>
-      <:for:entryState4:entryState3.entrySubStates>
-      <:> entry_<&entryState4.name><&stateData.variables.StateMethodSuffix>(thiz);<.> 
-      <.for>
-    <.for>
+  <:for:exitState:trans.exitStates>
+      exit_<&exitState.stateName><&stateData.variables.StateMethodSuffix>(thiz);
   <.for>
-<.for>
+      <&trans.code>
+   
+    
+  <:for:entryState:trans.dstStateTree.entrySubStates>
+      entry_<&entryState.name><&stateData.variables.StateMethodSuffix>(thiz);
+      <:for:entryState2:entryState.entrySubStates>
+        entry_<&entryState2.name><&stateData.variables.StateMethodSuffix>(thiz); 
+        <:for:entryState3:entryState2.entrySubStates>
+        entry_<&entryState3.name><&stateData.variables.StateMethodSuffix>(thiz);
+          <:for:entryState4:entryState3.entrySubStates>
+          entry_<&entryState4.name><&stateData.variables.StateMethodSuffix>(thiz); 
+          <.for>
+        <.for>
+      <.for>
+  <.for>
 
 <.>
 
 
 subtext setSubStateNull(Obj state)<:>
-  <:if:state.subStates><:>
-  thiz->state<&state.stateName> = kNull_<&state.stateName><&stateData.variables.StateSuffix>;<.>
+  <:if:state.subStates>
+  thiz->state<&state.stateName> = kNull_<&state.stateName><&stateData.variables.StateSuffix>;
   <:for:substate:state.subStates>
     <:subtext:"setSubStateNull":state = substate>
   <.for>  
@@ -36,85 +36,83 @@ subtext setSubStateNull(Obj state)<:>
 
 main(){
 <+>
-
-/*This file is generated from StateMGen.java */
-
-/*All function prototypes: */
-<:for:state:stateData.state>
-INLINE_Fwc void entry_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz); 
-INLINE_Fwc void exit_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz); 
-
-<.for:state>
-
-<:for:state:stateData.state><:if:state.parallelParent>
-/*Parallel state machine: <&state.stateName> */
-
-<:else>
-<:>
-/**State <&state.stateName> *******************************************************************************
- * <&state.description>
- */
-
-  <&state.constDef.code> 
- 
-
-
-/**<&state.entry.description>
- */
-
- 
-INLINE_Fwc void entry_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
-  thiz->state<.>
-    <:if:state.parallelState><&state.parallelState>
-    <:else><&state.enclState>
-    <.if>
-  <:> = k<&state.stateName><&stateData.variables.StateSuffix>;<.>
-  ##recursive for all substates.
-  <:subtext:"setSubStateNull":state=state>
-  <:for:pstate:state.parallelStates>
-    ##recursive for all substates of parallel states. Note: The parallel state has substates.
-    <:subtext:"setSubStateNull":state=pstate>
-  <.for><:>
-  <&state.entry.code><.>
-  <:for:trans:state.trans><:if:trans.time><:>
-  thiz->timer<&state.parallelState> = <&trans.time>;<.>
-  <.if><.for><:>  
-}
-
-
-
-INLINE_Fwc void exit_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
-  <&state.exit.code>
-}
-
-
-<.>  
   
-INLINE_Fwc void trans_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
-  <:for:trans:state.trans><:>
-  if(<.>
-    <:if:trans.cond><&trans.cond><:elsif:trans.time><:>thiz->timer<&state.parallelState> ?le? 0<.><:else>/*??*/ false<.if>
-    <:>) {
-    <.><:subtext:"conditionaction": trans=trans><:>
-    <.>
-  <:for:subtrans:trans.subCondition>
-    <:if:subtrans.cond != "else">if(<&subtrans.cond>)<.if><:> {
-      <.>
-      <:subtext:"conditionaction": trans=subtrans><:>
-    }<.><:hasNext> else <.hasNext>
-  <.for:subtrans><:>  
-  }
-  <.> <:hasNext> else <.hasNext>   
-  <.for><:>
-  else { // action in state
-    <&state.instate.code>
-    //<&-state.test>
-  }  
-}
-<.>  
-<.if><.for>
-/**===That is it===*/
-
+  /*This file is generated from StateMGen.java */
+  
+  /*All function prototypes: */
+  <:for:state:stateData.state>
+  INLINE_Fwc void entry_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz); 
+  INLINE_Fwc void exit_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz); 
+  
+  <.for:state>
+  
+  <:for:state:stateData.state><:if:state.parallelParent>
+  /*Parallel state machine: <&state.stateName> */
+  
+  <:else>
+  /**State <&state.stateName> *******************************************************************************
+   * <&state.shortdescription><&state.description>
+   */
+  
+    <&state.constDef.code> 
+   
+  
+  
+  /**<&state.entry.description>
+   */
+  INLINE_Fwc void entry_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
+    thiz->state<: > = <: >    ##set state enum
+      <:if:state.parallelState><&state.parallelState><: >
+      <:else><&state.enclState><: >
+      <.if><: >
+      k<&state.stateName><&stateData.variables.StateSuffix>;<: >
+    <: >##recursive for all substates.
+    <:subtext:"setSubStateNull":state=state> <: >
+    <:for:pstate:state.parallelStates>  <: >
+      <: >##recursive for all substates of parallel states. Note: The parallel state has substates.
+      <:subtext:"setSubStateNull":state=pstate><: >
+    <.for>
+    <&state.entry.code>
+    <:for:trans:state.trans><:if:trans.time> <: >
+    thiz->timer<&state.parallelState> = <&trans.time>; <: >
+    <.if><.for>  
+  } //.entry
+  
+  
+  
+  INLINE_Fwc void exit_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
+    <&state.exit.code>
+  } //.exit
+  
+  
+    
+    
+  INLINE_Fwc void trans_<&state.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
+    <:for:trans:state.trans> <: >
+    //check all conditions for a state trans:
+    if(<: >
+      <:if:trans.cond><&trans.cond><:elsif:trans.time>thiz->timer<&state.parallelState> ?le? 0<:else>/*??*/ false<.if><: >
+      ) {
+      <:subtext:"conditionaction": trans=trans>
+      <: >
+      <:for:subtrans:trans.subCondition><: >
+        <:if:subtrans.cond != "else">if(<&subtrans.cond>)<.if> {
+          <:subtext:"conditionaction": trans=subtrans>
+        }<:hasNext> else <.hasNext>
+      <.for:subtrans>  
+    }
+    <:hasNext> else <.hasNext> <&- next condition in for>
+    <.for>
+    else { // action in state
+      <&state.instate.code>
+      //<&-state.test>
+    }  
+  }//.trans
+  
+  <.if><.for>
+  
+  /**===That is it===*/
+  
 <.+>;
 } ##main
 

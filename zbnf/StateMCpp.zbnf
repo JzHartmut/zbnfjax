@@ -1,0 +1,52 @@
+<?ZBNF-www.vishia.de version="1.0" encoding="iso-8859-1" ?>
+$xmlns:topics="http://www.vishia.de/2006/Topics".
+$xmlns:xhtml="http://www.w3.org/1999/xhtml".
+$inputEncodingKeyword="encoding".
+$comment=/*...*/.
+$endlineComment=//.
+
+StateMachine::=      
+  { #include <* \n?>
+  }
+{
+  char * <variable>;
+}
+<*|class States?>
+class States \{
+{
+  <state>
+}
+\} ; 
+\e.
+
+variable::= <$?name> = <""?value>.
+
+stateStructure::={ + <CompositeState> }.
+
+
+state::=
+[ /**<* |\.|*/?shortdescription><* |*/?description> */] 
+
+class <$?@stateName>  [ : <$?enclState>[\.<$?parallelState>] ]
+\{
+{ 
+  [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
+  [ void entry ( )\{<action?+entry> \}
+  | void exit ( ) \{<action?+exit> \}
+  | void trans[<#?>]  <trans?+trans> 
+  | void inState ( ) \{<action?+instate> \}
+] }
+\} ; 
+.
+
+
+action::=<* |//\.?code>//\..
+
+trans::= ( bool cond = <*\{?condP>
+\{
+  <* |new?code>
+  new <$?dstState> [ ( )] ;
+\}.
+
+
+cond::=<*\{?cond>.

@@ -1,0 +1,24 @@
+<?ZBNF-www.vishia.de version="1.0" encoding="iso-8859-1" ?>
+$xmlns:topics="http://www.vishia.de/2006/Topics".
+$xmlns:xhtml="http://www.w3.org/1999/xhtml".
+$inputEncodingKeyword="encoding".
+$comment=(?...?).
+$endlineComment=\#\#.
+
+StateMachine::=                 
+  package <$\\.?>
+  public class <$?> extends StateMBase \{
+{
+  String <variable>
+| class <state>
+}
+\}
+\e.
+
+variable::= <$?name> = <""?value>.
+
+stateStructure::={ + <CompositeState> }.
+
+state::=<$?@stateName>  [ extends <$?enclState>[\.<$?parallelState>] ] ===
+.
+
