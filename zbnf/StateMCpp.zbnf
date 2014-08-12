@@ -6,12 +6,19 @@ $comment=/*...*/.
 $endlineComment=//.
 
 StateMachine::=      
-  { #include <* \n?>
-  }
-{
-  char * <variable>;
+{ #include <* \n?includeLine>
 }
-<*|class States?>
+
+[ char *
+{ <variable>; ? char * 
+}]
+
+
+
+{ static <*;?statefnarg>;  ##argument for each state subroutine
+}
+
+
 class States \{
 {
   <state>
@@ -27,10 +34,13 @@ stateStructure::={ + <CompositeState> }.
 state::=
 [ /**<* |\.|*/?shortdescription><* |*/?description> */] 
 
-class <$?@stateName>  [ : <$?enclState>[\.<$?parallelState>] ]
+[public : |] class <$?@stateName>  [| : public <$?parallelParentState> | : protected  <*\{?> ]  ##after : some super states for access in C++
 \{
-{ 
-  [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
+{ int statenr_<* ;?stateNr> ;
+| [class] <$?enclState> [*] parent[State] ;
+| [class] <$?startState> [*] start[State] ;
+| public : class History \{ \} ; <?hasHistory>
+| [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
   [ void entry ( )\{<action?+entry> \}
   | void exit ( ) \{<action?+exit> \}
   | void trans[<#?>]  <trans?+trans> 
@@ -40,12 +50,16 @@ class <$?@stateName>  [ : <$?enclState>[\.<$?parallelState>] ]
 .
 
 
-action::=<* |//\.?code>//\..
+action::=<*\{\}?code>[\{<action>\}].
 
-trans::= ( bool cond = <*\{?condP>
+trans::= ( 
+{ bool cond = <*\{,?condP>
+| bool time = <*\{,?timeP>
+| class <$?joinState> [*] join [)]
+? , }
 \{
   <* |new?code>
-  new <$?dstState> [ ( )] ;
+  { new <$?dstState> [ :: History<?history>] [ ( )] ? , };
 \}.
 
 

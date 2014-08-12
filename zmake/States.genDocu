@@ -16,30 +16,32 @@ main(){
 
 
 <:for:state1:stateData.topStates><:>
-'''[[Topic:.states.State_<&state1.stateName>.|<&state1.stateName>]]''': <&state1.shortdescription>.
-<.><:for:substate:state1.subStates><:>
-* '''[[Topic:.states.State_<&substate.stateName>.|<&substate.stateName>]]''': <&substate.shortdescription>.
+'''[[Topic:.states.State_<&state1.src.stateName>.|<&state1.src.stateName>]]''': <&state1.src.shortdescription>.
+<.><:if:state1.subStates>
+<:for:substate:state1.subStates><:>
+* '''[[Topic:.states.State_<&substate.src.stateName>.|<&substate.src.stateName>]]''': <&substate.src.shortdescription>.
 <.>
     <:for:substate2:substate.subStates><:>
-** '''[[Topic:.states.State_<&substate2.stateName>.|<&substate2.stateName>]]''': <&substate2.shortdescription>.
+** '''[[Topic:.states.State_<&substate2.src.stateName>.|<&substate2.src.stateName>]]''': <&substate2.src.shortdescription>.
 <.> <.for:substate2>  
   <.for:substate>  
   <:for:parallel:state1.parallelStates><:>
-* parallel: '''<&parallel.stateName>'''  
+* parallel: '''<&parallel.src.stateName>'''  
 <.>
     <:for:substate2:parallel.subStates><:>
-** '''[[Topic:.states.State_<&substate2.stateName>.|<&substate2.stateName>]]''': <&substate2.shortdescription>.
+** '''[[Topic:.states.State_<&substate2.src.stateName>.|<&substate2.src.stateName>]]''': <&substate2.src.shortdescription>.
 <.> <.for:substate2>  
   <.for:parallel>
+<.if>
 <.for:state1>
 
 
-<:for:state:stateData.state><:>  ##all states
+<:for:state:stateData.states><:>  ##all states
 
 <&-test.dataTree(stateData, out,2)>
 
-===State <.><&state.stateName> <:if:state.enclState><:> in <.><&state.enclState><.if><:if:state.parallelState><:>.<&state.parallelState><.><.if><:> ===
-@ident=State_<&state.stateName>
+===State <.><&state.src.stateName> <:if:state.enclState><:> in <.><&state.enclState><.if><:if:state.parallelState><:>.<&state.parallelState><.><.if><:> ===
+@ident=State_<&state.src.stateName>
 <.>
 <:if:state.enclState><:>
 Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<.>
@@ -47,7 +49,7 @@ Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<
 
 <.><.if>
 <:>
-<&state.shortdescription><&state.description>
+<&state.src.shortdescription><&state.description>
 
 <.>
 <:if:state.additionaldescription>
@@ -69,7 +71,7 @@ Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<
 <:if:state.subStates><:>
 '''Sub-states''':<.>
   <:for:substate:state.subStates><:>
-* [[Topic:.states.State_<&substate.stateName>.|<&substate.stateName>]] : <&substate.shortdescription><.>
+* [[Topic:.states.State_<&substate.src.stateName>.|<&substate.src.stateName>]] : <&substate.src.shortdescription><.>
   <.for>  
 <:>
 <.>
@@ -78,7 +80,7 @@ Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<
 <:if:state.parallelStates><:>
 '''Parallele States''':<.>
   <:for:pstate:state.parallelStates><:>
-* [[Topic:.states.State_<&pstate.stateName>.|<&pstate.stateName>]] : <&pstate.shortdescription><.>
+* [[Topic:.states.State_<&pstate.src.stateName>.|<&pstate.src.stateName>]] : <&pstate.src.shortdescription><.>
   <.for>  
 <:>
 <.>
@@ -103,14 +105,14 @@ Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<
 <.if>
   
 <:for:trans:state.trans><:>
-'''Transition <&state.stateName> ==> <.>
+'''Transition <&state.src.stateName> ==> <.>
   <:for:dstState:trans.dstState><:>[[Topic:.states.State_<&dstState>.|<&dstState>]] <.><.for>
   <:for:subcond:trans.subCondition>[[Topic:.states.State_<&subcond.dstState>.|<&subcond.dstState>]]<:hasNext><:> / <.><.hasNext><.for>
 <:>'''
 
   <.>
 ##Transition fromState --> toState --> toInnerState:
-  <:for:exitState:trans.exitStates><:> <&exitState.stateName>--> <.><.for>
+  <:for:exitState:trans.exitStates><:> <&exitState.src.stateName>--> <.><.for>
   <:for:entryState:trans.dstStateTree.entrySubStates> <&entryState.name><:>, <.> 
   <:if:entryState.entrySubStates>---><.if>
   <:for:entryState2:entryState.entrySubStates> <&entryState2.name><:>, <.>  
