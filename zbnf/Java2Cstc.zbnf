@@ -17,7 +17,7 @@ ClassData::= [{ extern <?extern>
 [class|interface<?interface>] 
 <*; ?nameJava> ; [nameC = ] <$?nameC> ; 
 [{ argIdent = <$?argIdent> ; | header = <* \t;?header> ; }]
-[ extends <$/?superClass> ] [ implements { <$/?interfaceClass> ? ,} ]  
+[ extends <$\./?superClass> ] [ implements { <$\./?interfaceClass> ? ,} ]  
 \{ [ InnerClass \{ [{ <ClassData?InnerClassData> }] \}]
    [ typeIdents \{ [{ <type> | <ClassData?InnerClassData> }] \}]
    [ fieldIdents \{ [{ <field> }|{ <fieldShort?field> ; }|] \}]  ##deprecated, use fields

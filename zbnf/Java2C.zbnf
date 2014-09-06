@@ -36,7 +36,7 @@ test_description::= <*|@param|@throws|@deprecated|@return|@java2c|@Java4C|@since
  |<?param> @param <$?variableName> <*|@param|@throws|@deprecated|@return|@java2c|@since|\e?!paramDescription>
  | <?staticInstance> @Java2C = staticInstance <*@\e?text>
  | @java2c = [>{ <java2cTag?> ? , } [:|\.]] <*@\e?rest>
- | @Java4C\.<Java4CAnnotation> <*@\e?rest>
+ | @Java4C\.[<Java4CAnnotationVariable?>|<Java4CAnnotationType?>|<Java4CAnnotationMethod?>] <*@\e?rest>
  | @ <*@\e?auxDescription>
  }] \e.
 
@@ -88,49 +88,70 @@ java2cTag::=
 ].
 
 
-Java4CAnnotation::=<?>
-[FixArraySize(<#?simpleArray>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
-|DynamicCall <?dynamic-call>
-| exclude <?exclude>
-| excludeImpl <?excludeImpl>
-|<?simpleVariableRef> simpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
-|<?staticInstance> staticInstance            ##to class
-|<?embeddedYElements> embeddedArrayElements  ##to array def: all elements are embedded
-|<?noObject> noObject             ##to class: no superclass ObjectJc
-|<?noGC> noGC                     ##only simple, not an enhanced refernece
-|<?noGC> simpleRef                ##only simple, not an enhanced refernece
-|<?nonPersistent> nonPersistent   ##attribute to param TODO unused yet. Ask it onnly in paramDesciption.
-|<?stackInstance> stackInstance   ##new creates an instance in stack
-|<?zeroTermString> zeroTermString ##to String name; a const char*
-|<?ByteStringJc> ByteStringJc     ##to a byte[] array, it is generated as ByteStringJc
-|<?return-this> return-this
-|<?return-new> return-new
-|<?dynamic-call> dynamic-call     ##to declare a enhanced Mtbl-reference in stack.
-|<?xxxoverride-able> override-able   ##virtual method
-| stacktrace: [ no-param <?noThCxt>| no <?noStacktrace>| yes]
-| instanceType : <""?instanceType>
-| embedded Type : <$?embeddedType>
-|<?stackSize> stackSize ( { <#?bytes> | <* )+?type> ? + } )  ##only valid at thread.start()
-|<?toStringNonPersist> toStringNonPersist             ##The String is designated as non-persistant, especially located in ThreadContext
-|<?nonPersistent> nonPersistent                       ##The String is used only non-Persist. Written on definition of String variable.
-| StringJc <?StringJc>                                ##A CharSequence should be translated to StringJc.
-|<?declarePersist> declarePersist                     ##a StringJc is declared as persistent, the programmer knows it.
+
+Java4CAnnotationClass::=<?>
+[ 
+  <?staticInstance> StaticInstance            ##to class
+| <?noObject> NoObject             ##to class: no superclass ObjectJc
+| ExtendsOnlyMethods
+].
+
+Java4CAnnotationVariable::=
+[ Exclude <?exclude>
+| DynamicCall <?dynamic-call>                        ##creates a Mtbl-Reference in C
+|<?staticInstance> StaticInstance            ##to class
+|<?nonPersistent> NonPersistent   ##attribute to param TODO unused yet. Ask it onnly in paramDesciption.
+|<?stackInstance> StackInstance   ##new creates an instance in stack
+|<?toStringNonPersist> ToStringNonPersist             ##The String is designated as non-persistant, especially located in ThreadContext
+|<?nonPersistent> NonPersistent                       ##The String is used only non-Persist. Written on definition of String variable.
+|<?declarePersist> DeclarePersist                     ##a StringJc is declared as persistent, the programmer knows it.
 | StringBuilderInStack [:|=] <#?StringBuilderInStack> ##used for String concatenation
 |<?StringBuilderInThreadCxt> StringBuilderInThreadCxt ##used for String concatenation and returned Strings
-|<?returnInThreadCxt> returnInThreadCxt               ##used to copy a returned an instance in stack in the thread context.
-| inline <?inline>                                    ##method should translated to a simple define or inline function
+|<?returnInThreadCxt> ReturnInThreadCxt               ##used to copy a returned an instance in stack in the thread context.
 ].
+
+Java4CAnnotationMethod::=
+[ Exclude <?exclude>
+| ExcludeImpl <?excludeImpl>
+| ExtendsOnlyMethods <?extendsOnlyMethods>
+| Inline <?inline>                                    ##method should translated to a simple define or inline function
+| Retinline <?retinline>      
+|<?return-this> Return-this
+|<?return-new> Return-new
+|<?dynamic-call> Dynamic-call     ##to declare a enhanced Mtbl-reference in stack.
+|<?xxxoverride-able> Override-able   ##virtual method
+| Stacktrace: [ no-param <?noThCxt>| no <?noStacktrace>| yes]
+| InstanceType : <""?instanceType>
+| Embedded Type : <$?embeddedType>
+|<?stackSize> StackSize ( { <#?bytes> | <* )+?type> ? + } )  ##only valid at thread.start()
+].
+
+
+Java4CAnnotationType::=
+  FixArraySize(<#?fixArraySize>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
+|<?simpleArray> SimpleArray       ##simple Array with size in constructor. 
+|<?noGC> noGC                     ##only simple, not an enhanced refernece
+|<?noGC> SimpleRef                ##only simple, not an enhanced refernece
+|<?simpleVariableRef> SimpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
+|<?simpleVariableRef> SimpleArrayRef      ##in java forex a int[] x where x[0] is used. In C a int* x
+|<?PtrVal> PtrVal                            ##in java forex a int[] stored in a PtrVal_TYPE instance.
+|<?embeddedYElements> EmbeddedArrayElements  ##to array def: all elements are embedded
+|<?zeroTermString> ZeroTermString ##to String name; a const char*
+|<?ByteStringJc> ByteStringJc     ##to a byte[] array, it is generated as ByteStringJc
+| StringJc <?StringJc>                                ##A CharSequence should be translated to StringJc.
+.
+
 
 
 
 ?en:java2cTag/nonPersistent::="A reference which is designed as non-persistent, shouldn't be stored and used in another threads.".
 
 interfaceDefinition::=
-  [{ @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <Modifier?> }] 
+  [{ @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <ModifierClass?> }] 
   interface <$?classident> [<generic>] 
   [extends {[<?SuperInterface> {<$?>?\.} |xxx] [<generic>] ? , }]
 \{
-  [ [<Modifier?>]
+  [
    {  <enumDefinition>
     | <variableDefinition> ;
     | <methodDefinition>
@@ -143,12 +164,12 @@ interfaceDefinition::=
 
 ##it is the primitive form yet only. 
 annotationDefinition::= 
-  [{ <annotation> | <rententionpolicy> | /**[><description>*/] | <Modifier?> }]
+  [{ <annotation> | <rententionpolicy> | /**[><description>*/] }]
   \@ interface <$?ident> \{ [{ [<?param> <type> <$?ident> ( ) ; ] ?, }] \}.
 
 
 classDefinition::= 
-  { @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | [<Modifier?>] } 
+  [{ @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <ModifierClass?>}] 
   class <$?classident> [<generic>]
   [extends [<?Superclass> {<$?>?\.} ][<generic>] ]
   [implements { [<?ImplementedInterface> {<$?>?\.}][<generic>] ? , }]     
@@ -160,11 +181,11 @@ classDefinition::=
 classContent::=
 { ##[/**<description?-?>*/]
   [ <enumDefinition>
+  | <classDefinition>
+  | <interfaceDefinition>
   | <variableDefinition> ;
   | <methodDefinition>
   | <constructorDefinition>
-  | <classDefinition>
-  | <interfaceDefinition>
   | <annotationDefinition>
   | static <statementBlock?initializingBlockStatic>
   | <statementBlock?initializingBlock>
@@ -196,18 +217,12 @@ generic::=
 
 
 
-nonArrayType::= <typeIdent?> [<generic?>]  ##nonArrayType produces the same result as typeIdent
+nonArrayType::= ##[{ @Java4C\.<Java4CAnnotationType?> }] 
+<typeIdent?> [<generic?>]  ##nonArrayType produces the same result as typeIdent
 [<?va_arg>\.\.\.]
 .
 
 ##A type has the same content like a nonArrayType, but additionally an array identification may be part of them.
-
-xxxtype::= 
-[ <nonArrayType?>          ##produces type the same result as nonArrayType
-  [{ <?typeArray> \[ \]}]
-| <?va_arg>\.\.\.
-].
-
 type::= <nonArrayType?>   
 [ { <?typeArray> \[ \]}
 | <?va_arg>\.\.\.
@@ -220,9 +235,9 @@ methodDefinition::=
  | @Override<?A_Override>
  | @Deprecated
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
- | @Java4C\.<Java4CAnnotation>
+ | <ModifierMethod>
 }]
-[<Modifier>] [ \< <$?defineGenericLocal_WhatIsThat> \>] <type> <$?name> ( [<argumentList?>] )
+[ \< <$?defineGenericLocal_WhatIsThat> \>] <type> <$?name> ( [<argumentList?>] )
 [ <throwsDeclaration>]
 [ <?abstractMethod> ;
 | <statementBlock?methodbody>
@@ -232,9 +247,9 @@ constructorDefinition::=
 [{ /**[><description>*/]
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
  | @Deprecated
- | @Java4C\.<Java4CAnnotation>
+ | <ModifierMethod>
 }]
-[<Modifier>] <$?constructor>
+<$?constructor>
 ( [<argumentList>] )  ##a
 [ <throwsDeclaration>]
 \{ [<?superCall> [<reference>]super ( [<actualArguments>] ); ]
@@ -259,12 +274,16 @@ importpath::={<$?package>\.}[<$?class>|*<?allClasses>].
 AccessRight::=<?>[ public<?public> | private<?private> | protected<?protected> |].
 
 enumDefinition::= 
-  [/**[><description>*/] ] [{ <annotation> }] [{ <Modifier?> }]
+  [/**[><description>*/] ] 
   enum <$?ident> \{  [{ <$?value> ? , }] \}.
 
 ##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
 ##      it is a Java specification problem!
-Modifier::=<?>{synchronized<?synchronized> | static<?static> | final<?final> | volatile<?volatile> | abstract<?abstract> | @Override<?A_Override> | @<$?Annotation>| <AccessRight> }.
+ModifierClass::=<?>[ static<?static> | final<?final> | abstract<?abstract>  | @Java4C\.<Java4CAnnotationClass> | @<$?Annotation> | <AccessRight> ].
+
+ModifierVariable::=<?>[ static<?static> | final<?final> | volatile<?volatile> | @Java4C\.<Java4CAnnotationVariable?> | @Java4C\.<Java4CAnnotationType?> | @<$?Annotation> | <AccessRight> ].
+
+ModifierMethod::=<?>[ synchronized<?synchronized> | static<?static> | final<?final> | abstract<?abstract>  | @Java4C\.<Java4CAnnotationType?>| @Java4C\.<Java4CAnnotationMethod?> | @Override<?A_Override> | @<$?Annotation> | <AccessRight> ].
 
 
 statement::=
@@ -431,16 +450,15 @@ simpleMethodCall::=<$?methodName> ( [<actualArguments>] ).
 actualArguments::={ <value> ? , }.
 
 ##formal parameter or argument list of methods and constructors:
-argumentList::=<?>{<?argument> [<Modifier?>] <type> <$?variableName>[\[\]<?array>] ?, }.
+argumentList::=<?>{<?argument> [{<ModifierVariable?>}] <type> <$?variableName>[\[\]<?array>] ?, }.
 
 ##A syntactical variableDefinition is such as "int a,b,c". But a semantical variableDefinition is "int a", "int b".
 ##Therefore the type is assigned to the syntactical <variableInstance?...>, this is semantical the <...?+variableDefinition>.
 variableDefinition::=<?> 
 [{ /**[><description?-?>*/]
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
- | @Java4C\.<Java4CAnnotation?-?>
-}]
-[<Modifier?-?>] <type?-?> {<variableInstance?+variableDefinition>  ? , }.
+ | <ModifierVariable?-?>
+}] <type?-?> {<variableInstance?+variableDefinition>  ? , }.
 variableInstance::=<$?variableName> [ \[\]<?array> ] 
 [ = [ new <newArray> 
 		| <newObject>  
