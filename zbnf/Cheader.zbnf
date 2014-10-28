@@ -50,6 +50,7 @@ headerBlock::=<?>
 [ /**<description?-?>*/]
 [ /*<implementDescription?-?>*/]
 [ <invalidBlock?+@>
+| #ifndef refl <*|#endif//refl?> #endif//refl
 | <validBlock?>
 | <conditionBlock?+conditionBlock>
 | <undefDefinition>
@@ -151,7 +152,7 @@ CLASS_CPP::=/*@CLASS_CPP <*|*/?>*/
 
 structDefinition::= [<$?@tagname>]
 [\{ [{ <structContent?> }] \} | <macro> ]    ##NOTE: a macro can substiture a structure definition inclusive {}. Better solution: using a preprecessor.
-[GNU_PACKED] [ *<?referenceStruct>] [<$?@name>[ <arraysize>]] .
+[GNU_PACKED] {[ *<?referenceStruct>] [<$?@name>[ <arraysize>]] ? , } .
 
 ?en:structDefinition.referenceStruct::="A * before the struct-name or struct-typename inside a typedef means, the struct is used as referenced type.".
 
@@ -394,6 +395,7 @@ structContent::=<?>
 | [/**<description?-?>*/] union <unionDefinition?+attribute> ;
 | <enumDefinition> ;
 | <implicitStructAttribute>
+| #ifndef refl <*|#endif//refl?> #endif//refl
 | <attribute>
 | [/**<description?-?>*/] #define <defineDefinition?+?>
 ##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
