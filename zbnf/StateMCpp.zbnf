@@ -45,7 +45,8 @@ state::=
   | void exit ( ) \{<action?+exit> \}
   | void trans[<#?>]  <trans?+trans> 
   | void inState ( ) \{<action?+instate> \}
-] }
+| <state>
+  ] }
 \} ; 
 .
 

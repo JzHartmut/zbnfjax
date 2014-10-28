@@ -16,14 +16,15 @@ $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 ##methodTyp instead @name name because construct {<$?name>?::}
 ##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
 
-$keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|typedef.
+$keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|
+.
 
 Cheader::=
 [{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
 [ [ #ifndef <$?HeaderEntry>
   | #if ! defined ( <$?HeaderEntry> )          ## the test to exclude of double includes is obligate!
   ]
-  #define <$?HeaderEntryDef>
+  # define <$?HeaderEntryDef>
 ]
 [/*@PACKAGE <*\ *?package/@name> <*|*/?>*/]
 [{ <includeDef?+@> }]    ## includes at begin
@@ -55,7 +56,8 @@ headerBlock::=<?>
 | <conditionBlock?+conditionBlock>
 | <undefDefinition>
 ##| extern <variableDecl?+@> ;
-| [<?modifier> extern_C| extern| static] <attribute?+?>
+##| [<?modifier> extern_C| extern| static] <attribute?+?>
+| <attribute?+?>
 | EX <attribute?+?>       ##special case for a special programming style, EX is per define 'extern' or empty.
 | extern_C_BLOCK_
 | _END_extern_C_BLOCK
@@ -72,23 +74,22 @@ headerBlock::=<?>
 	| <methodTypedef?+@>
 	| <?+classDefinition> <classDef> <$?@name> ;
 	|<enumDefinition> ;
-	|<?typedef> <$?type> <$?newType>  [ \[ <#?nrofArrayElements> \]];
-	|<?typedef> <type> <$?newType> [ \[ <#?nrofArrayElements> \]];
+	| <typedef> ;
   ]
 | [inline|INLINE_Fwc] <inlineMethod?+@>
 | inline <operatorDef?operator> [;|<statementBlock>]
 | <includeDef?+@>
-| #define CONST<defineDefinition?+const_initializer>
-| #define NULL<defineDefinition?+null_initializer>
-| #define INLINE_Fwc <*\n?>  ##empty, only in os_types_def.h
-| #define <defineDefinition?+@>
-| #error [<""?compilerError> | <*\n?compilerError>]
-| #pragma <*\n?pragma>
+| # define CONST<defineDefinition?+const_initializer>
+| # define NULL<defineDefinition?+null_initializer>
+| # define INLINE_Fwc <*\n?>  ##empty, only in os_types_def.h
+| # define <defineDefinition?+@>
+| # error [<""?compilerError> | <*\n?compilerError>]
+| # pragma <*\n?pragma>
 | <classDecl?+@>
 | <structDecl?+@>
 | <classDef?+@> ;
 | <attribute>
-| <methodDef?+@> ;
+| <methodDef?+@>
 | <methodWithBody>
 | <operatorDef?operator> [;|<statementBlock>]
 | <defineUse?+@>
@@ -160,7 +161,7 @@ unionDefinition::=[<$?@tagname>]
 \{ { ##[/**<description?-?>*/]
      [ [<?variante> struct <structDefinition>] ;
      | <attribute?variante>
-     | #define <defineDefinition>
+     | # define <defineDefinition>
      | <headerBlock>
      ]
    }
@@ -171,23 +172,24 @@ unionDefinition::=[<$?@tagname>]
 enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
 \{
 { ##note before or behind enumElement there may be several defines, associated to the enum.
-  [{  [/**<description?-?>*/] #define <defineDefinition?+?>}]
+  [{  [/**<description?-?>*/] # define <defineDefinition?+?>}]
   [[/**<description?-?>*/]<enumElement?+?>
-   [{  [/**<description?-?>*/] #define <defineDefinition?+?>}]
+   [{  [/**<description?-?>*/] # define <defineDefinition?+?>}]
   ]
 ? ,
 } 
 \} [<$?@name>] .
 
 
-
+typedef::= <type> <$?name> [ \[ <#?nrofArrayElements> \]].
 
 
 ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
 implicitStructAttribute::=[/**<description>*/] struct <structDefinition?><?@implicitStruct> ;.
 
 ##it is a method head, declaration.
-methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] ).
+methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] )
+[<?@modifier>volatile|const|] [;|<statementBlock>|].
 
 methodPtrTypedef::= [METHOD_C |extern "C"|extern_C |extern |C_TYPE |] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]);.
 
@@ -200,7 +202,7 @@ methodArgumentList::={ \.\.\.<?variableArgs> [<$?>]| <typedParameter> | void | <
 
 ##block inside a header with conditional compilation via ifdef
 conditionBlock::=
-[ #ifdef <$?conditionDef>| #ifndef <$?conditionDefNot>| #if {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| } ]
+[ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| } ]
 [{ <headerBlock> }]
 [{<?elif> #elif {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| }
   [{ <headerBlock> }]
@@ -208,23 +210,23 @@ conditionBlock::=
 [<?elseConditionBlock> #else
   [{ <headerBlock> }]
 ]
-#endif.
+# endif.
 
 
 
 invalidBlock::=
-#if 0
+# if 0
 [{ <headerBlock> }]
-#endif.
+# endif.
 
 
 validBlock::=
-#if 1
+# if 1
 [{ <headerBlock> }]
-#endif.
+# endif.
 
 
-includeDef::= #include [<""?!prepFilePath>|\<<*\>?!prepFilePath><?@sysInclude>\>].
+includeDef::= # include [<""?!prepFilePath>|\<<*\>?!prepFilePath><?@sysInclude>\>].
 
 
 prepFilePath::=<$NoWhiteSpaces><! *?>
@@ -265,22 +267,30 @@ structDecl::=[C_TYPE] struct <$?name> ;.
 
 type::= [<?@modifier>volatile|const|] 
   [<?@forward>struct|class|union|] 
-  [ [unsigned<?unsigend>|signed<?signed>] [  ##signed and unsigned only with int types! 
-                                            int <?@name=int32>
-                                          | short int <?@name=int16>
-                                          | short <?@name=int16>
-                                          | long long <?@name=int64>
-                                          | long int <?@name=int32>
-                                          | long     <?@name=int32>
-                                          | char     <?@name=int8>
-                                          | <?@name=int>]
-  | [{ <$?environmentClass> ::}] [ short int<?@name=short> 
-                                 | long int<?@name=long> 
-                                 | long long<?@name=int64> 
-                                 | int short<?@name=int16> 
-                                 | long double<?@long_double>
-                                 | <$?@name> 
-                                 ] [ \< <type?templateType> \> ] 
+  [ [unsigned<?unsigend>|signed<?signed>] 
+    [  ##signed and unsigned only with int types! 
+      int<!\\s?> <?@name=int32>
+    | short<!\\s?> int <?@name=int16>
+    | short<!\\s?> <?@name=int16>
+    | long long<!\\s?> <?@name=int64>
+    | long int<!\\s?> <?@name=int32>
+    | long<!\\s?>     <?@name=int32>
+    | char<!\\s?>     <?@name=int8>
+    | <?@name=int>                  ##unsigned or signed allone
+    ]
+  | [{ <$?environmentClass> ::}] 
+    [
+      int<!\\s?> <?@name=int32>
+    | short int<?@name=int16> 
+    | short<!\\s?> <?@name=int16> 
+    | long long<!\\s?><?@name=int64> 
+    | long int<!\\s?><?@name=int32> 
+    | long<!\\s?><?@name=int32> 
+    | char<!\\s?>     <?@name=int8>
+    | long double<?@long_double>
+    | <$?@name>                     ##any type name, also float, double, or a user type 
+    ] 
+    [ \< <type?templateType> \> ] 
   ]
   [<typeRefModifier?>]
   [<?@modifier2>volatile|const|].
@@ -298,10 +308,10 @@ typeRefModifier::=
   }. 
 
 
-inlineMethod::=<methodDef?+@> [const] [;|<statementBlock>].
+inlineMethod::=<methodDef?>.
 
 ##It is a method definition.
-methodWithBody::=<methodDef?+@> [const <?constThis>] <statementBlock>.
+methodWithBody::=<methodDef?+@>.
 
 
 ##typedParameter::= <type> [ <$?@name>[ \[ <value?sizeof> \]] [ = <value?defaultValue>] ].
@@ -326,7 +336,7 @@ superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
 ##     But it doesn't consider a asterix here like int *name,*other. The first asterix is parsed associated to the type, the second cause an parse error here.
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
 ##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,};.
-attribute::=<?> [/**<description?-?>*/] [extern "C"|extern_C\ |extern\ |] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
+attribute::=<?> [/**<description?-?>*/] [<?-modifier> extern "C" | extern_C<!\\s?>| extern<!\\s?>| static<!\\s?>|] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
 attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |] ; [//:<*\n?description/text>].
 attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |].
 
@@ -347,6 +357,7 @@ implementDescription::= <*{ * }|*/?!test_description>.
 ##The test_desciption syntax is used to parse the inner structure of a description.
 test_description::= <*|\e|\@?text>
 [{ @return <*@\e?returnDescription/text>
+ | @simulink <*@\e?simulinkTag>
  | @param <paramDescription>
  | @sizeof = <sizeofDescription>
  | @super <?superClass>
@@ -357,7 +368,7 @@ test_description::= <*|\e|\@?text>
  | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
  | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
  | @refl:{ <*,\.\e?refl>? ,}[ \.]
- |<?auxDescription> @<$?@name> <*@\e?@value>
+ | <auxDescription>
  | <*|\e|\@?text>
  }] \e.
 
@@ -372,6 +383,8 @@ test_description::= <*|\e|\@?text>
 paramDescription::=<$?@name> <*@\e?text>.
 
 xxparamDescription::=<$?@name> <*|\. |\.\r\n|\.\n|\e|\@?brief> [\.] [<*|\e|\@?rest/xhtml:body+> ].
+
+auxDescription::=<$?@name> <*@\e?text>.
 
 sizeofDescription::=<?sizeof><#?@sizeof> <*@\e?text>.
 ?description.sizeof ::= "The size of a element may be given as immediate numeric value. 
@@ -390,14 +403,14 @@ structContent::=<?>
   | union <unionDefinition?+?> ;
   |<?+classDefinition> <classDef?> <$?@name> ;
   | <enumDefinition?+?> ;
-  |<?typedef> <$?type> <$?newType> ;
+  | <typedef> ;
   ]
 | [/**<description?-?>*/] union <unionDefinition?+attribute> ;
 | <enumDefinition> ;
 | <implicitStructAttribute>
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | <attribute>
-| [/**<description?-?>*/] #define <defineDefinition?+?>
+| [/**<description?-?>*/] # define <defineDefinition?+?>
 ##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
 | <structContentInsideCondition>
 | <methodPtrTypedef?+@>
@@ -405,11 +418,11 @@ structContent::=<?>
 
 
 classContent::=<?>
-[ [inline] virtual <methodDef?abstractMethod> [<?@modifier>volatile|const|] = 0 ;
-| [inline] virtual <methodDef?virtualMethod> [<?@modifier>volatile|const|] [;|<statementBlock>]
-| [inline] virtual <operatorDef?abstractOperator> [<?@modifier>volatile|const|] = 0 ;
-| [inline] virtual <operatorDef?virtualOperator> [<?@modifier>volatile|const|] [;|<statementBlock>];
-| static <methodDef?staticMethod>  [<?@modifier>volatile|const|] [;|<statementBlock>]
+[ [inline] virtual <methodDef?abstractMethod> = 0 ;
+| [inline] virtual <methodDef?virtualMethod> 
+| [inline] virtual <operatorDef?abstractOperator> = 0 ;
+| [inline] virtual <operatorDef?virtualOperator>
+| static <methodDef?staticMethod>  
 | static <attribute?+staticAttribute>
 |<?friendClass> friend [class] <outerClassName> ;
 | <enumDefinition> ;
@@ -420,7 +433,7 @@ classContent::=<?>
 ##| <structDef?+@>
 | <Destructor>
 | [inline] <operatorDef?operator> [<?@modifier>volatile|const|] [;|<statementBlock>]
-| [inline] <methodDef> [<?@modifier>volatile|const|] [;|<statementBlock>]
+| [inline] <methodDef> 
 |<?constructor> <$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>]
 | <attribute?+?>
 ##| <variableDecl>;
@@ -461,25 +474,26 @@ statement::=
 
 
 ##variabledefinition::=<$?type> <$?attribute> [ = [<objectAccess>|<value>] ];.
-variabledefinition::=<type> { [<typeRefModifier>] <$?attribute> [ = [<objectAccess>|<value>] ] ? , };.
+variabledefinition::=<type> { [<typeRefModifier>] <$?name> [ = [<objectAccess>|<value>] ] ? , };.
 
 
 
 returnAssignment::= [<objectAccess> ;|<value> ;|<assignment> ;].
 
-assignment::= [* <variable?Refvariable>|<variable>]  <assignOperator> [<objectAccess>| <value>|<assignment>].
+assignment::= [* <variable?Refvariable>|<variable>]  <assignOperator?> [<objectAccess>| <value>|<assignment>].
 
 value::= <assignment> |
-{ [|<unaryOperator>]
+{ [|<unaryOperator?>]
   [ <""?simpleStringLiteral>
   | <''?simpleCharLiteral>
   | & <value?referenceAddress>
-  | <refCasting> <value>  ##must be arranged before ( <value> ) because confusion with, example (type)value and (variable)
+  | <refCastingValue>  ##must be arranged before ( <value> ) because confusion with, example (type)value and (variable)
   | ( <value> )
   | 0x<#x?number>[<?@longModifier>L]
-  |<?floatNumber> <#f?>[<?@floatModifier>[F|f]|<?@longModifier>L|]  ##it doesn't work. TODO search why!
+##  | <floatNumber>
 ##  | <#f?floatNumber>[<?@floatModifier>F|<?@longModifier>L|]
-  | <#-?number>[<?@longModifier>L]
+  | <#f?floatNumber>[<?@floatModifier>F|f|][<?@longModifier>L|l|]
+  | <#-?number>[<?@longModifier>L|l|]
   | 0 <?number0>
 ##  | <simpleMethodCall>
   | <methodCall>
@@ -491,16 +505,17 @@ value::= <assignment> |
 <binaryOperator>
 }
 
-[ \? <value?value-true> : <value?value-false>]
+[ \? <value?value_true> : <value?value_false>]
 .
 
 
-assignOperator::= = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>=.
+
+assignOperator::= [<?assignOperator> = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>= ].
 
 ##NOTE: It is possible in C to have more as one unary operator one before another. But that is usefull only for special situations.
 ##      The sequence of unary operators is checked here.  
 
-unaryOperator::= - | + | ~ | !<?unaryNot> | ! !<?unaryCastToBool> | * | & .
+unaryOperator::= [<?unaryOperator> - | + | ~ | ! | ! !<?unaryCastToBool> | * | & ].
 
 ##TRICKY-ZBNF: use [<?semantic> ...] to store the string value. use <?> to circumvent double storing.
 binaryOperator::=<?>[<?binaryOperator> + | - | * | / | % | && | \|\| | & | \| | \>\> | \<\< | == | \>= | \<= | \> | \< | != | ^ ].
@@ -509,7 +524,7 @@ binaryOperator::=<?>[<?binaryOperator> + | - | * | / | % | && | \|\| | & | \| | 
 
 simpleMethodCall::= [{<$?environmentClass> ::}] <$?methodname> [( )| <actualParameter>].
 
-actualParameter::= ({ <objectAccess>| <value>? ,} ).
+actualParameter::= ({ <objectAccess>| <value?> ? ,} ).
 
 
 classVisibilityBlock::=[<?visibility> public | protected | private ] : [{ <classContent> | <structContent> }].
@@ -529,8 +544,8 @@ AccessRight::=[<?accessRight/@value> public | private | protected |].
 
 ##arraysize can be simple, or a complex value. NOTE: Only the simpe variants are regarded in Header2Reflection. 
 arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }| <?unknown>] \] [<arraysize>].
-##arraysize::=\[ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> | <*\ \]?value>] \] [<arraysize>].
-##arraysize::=\[ [ <*\ \]?value> ] \] [<arraysize>].
+##arraysize::=\[ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> | <*<!\\s?>\]?value>] \] [<arraysize>].
+##arraysize::=\[ [ <*<!\\s?>\]?value> ] \] [<arraysize>].
 
 ?en:arraysize.unknown::="An unknown arraysize is possible on extern declarations of arrays writing 'extern type name[];' ".
 
@@ -581,9 +596,10 @@ objectAccess::=xxx.
 nullPointer::=null.
 
 
-refCasting::=
-  static_cast \< <type> \>   ##C++-safety casting
+refCastingValue::=
+[  static_cast \< <type> \>   ##C++-safety casting
 | ( <type> )                 ##C-like-casting
+] <value?>
 .
 
 
