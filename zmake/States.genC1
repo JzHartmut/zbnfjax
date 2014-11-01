@@ -2,7 +2,7 @@
 ==JZcmd==
 
 ##!checkJZcmd = "result/check_States.genC.txt";
-!checkXml = <:><:scriptdir>/check_States.genC.xml<.>;
+!checkXml = <:><:currdir>/check_States.genC.xml<.>;
 
 subtext conditionaction(Obj trans)
 <:>
