@@ -2,24 +2,24 @@
 ==JZcmd==
 
 ##!checkJZcmd = "result/check_States.genC.txt";
-!checkXml = <:><:currdir>/check_States.genC.xml<.>;
+!checkXml = <:><&currdir>/check_States.genC.xml<.>;
 
 subtext conditionaction(Obj trans)
 <:>
   <:for:exitState:trans.exitStates>
-      exit_<&exitState.src.stateName><&stateData.variables.StateMethodSuffix>(thiz);
+      exit_<&exitState.src.stateName><&stm.variables.StateMethodSuffix>(thiz);
   <.for>
       <&trans.code>
    
     
   <:for:entryState:trans.dstStateTree.entrySubStates>
-      entry_<&entryState.name><&stateData.variables.StateMethodSuffix>(thiz);
+      entry_<&entryState.name><&stm.variables.StateMethodSuffix>(thiz);
       <:for:entryState2:entryState.entrySubStates>
-        entry_<&entryState2.name><&stateData.variables.StateMethodSuffix>(thiz); 
+        entry_<&entryState2.name><&stm.variables.StateMethodSuffix>(thiz); 
         <:for:entryState3:entryState2.entrySubStates>
-        entry_<&entryState3.name><&stateData.variables.StateMethodSuffix>(thiz);
+        entry_<&entryState3.name><&stm.variables.StateMethodSuffix>(thiz);
           <:for:entryState4:entryState3.entrySubStates>
-          entry_<&entryState4.name><&stateData.variables.StateMethodSuffix>(thiz); 
+          entry_<&entryState4.name><&stm.variables.StateMethodSuffix>(thiz); 
           <.for>
         <.for>
       <.for>
@@ -34,7 +34,7 @@ sub setSubStateNull(Obj state)
 { ##if(state.src.stateName == "RemainOn"){ debug test; }
   if(state.subStates && (state.hasHistory || state.parallelParentState)){
     <:>
-        thiz->state.state<&state.src.stateName> = kNull_<&state.src.stateName>_<&stateData.variables.StateSubStruct>; <.>
+        thiz->state.state<&state.src.stateName> = kNull_<&state.src.stateName>_<&stm.variables.StateSubStruct>; <.>
     for(substate:state.subStates) {
       call setSubStateNull (state = substate);
     }
@@ -47,7 +47,7 @@ sub setSubStateNull(Obj state)
 
 sub stateMethodArguments()
 { 
-  for(arg:stateData.statefnargs) { <:><&arg><:hasNext>, <.hasNext><.>; }
+  for(arg:stm.statefnargs) { <:><&arg><:hasNext>, <.hasNext><.>; }
 }
 
 
@@ -59,21 +59,21 @@ main(){
   
   /*This file is generated from StateMGen.java */
 
-  <:for:includeline:stateData.includeLines>
+  <:for:includeline:stm.includeLines>
     #include <&includeline>
   <.for:includeline>  
-  #include "<&stateData.variables.StateFile>.h"
+  #include "<&stm.variables.StateFile>.h"
   //
   
   
   /**All function prototypes: */
-  <:for:state:stateData.states>
-  INLINE_Fwc void entry_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz); 
-  INLINE_Fwc void exit_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz); 
+  <:for:state:stm.states>
+  INLINE_Fwc void entry_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz); 
+  INLINE_Fwc void exit_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz); 
   
   <.for:state>
   
-  <:for:state:stateData.states><:if:state.parallelParent>
+  <:for:state:stm.states><:if:state.parallelParent>
   /*Parallel state machine: <&state.src.stateName> */
   
   <:else>
@@ -88,7 +88,7 @@ main(){
   <:if:state.entry.description>/**<&state.entry.description>
    */
   <.if><: >
-  INLINE_Fwc void entry_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(<:subtext:stateMethodArguments>) {<: >
+  INLINE_Fwc void entry_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<:subtext:stateMethodArguments>) {<: >
 
     ##<:if:state.src.stateName=="Active1"><:debug><.if>
     <: >
@@ -96,7 +96,7 @@ main(){
       //parallelState
       ##if a parallelParentState exists this is a parallel State. don't set its ident inside the parent then.
     <:else>
-      thiz->state.<&state.stateVariableName> = k<&state.src.stateName>_<&stateData.variables.StateSubStruct>;
+      thiz->state.<&state.stateVariableName> = k<&state.src.stateName>_<&stm.variables.StateSubStruct>;
     <.if><: >
     <: >##recursive for all substates.
     <:subtext:"setSubStateNull":state=state> <: >
@@ -117,7 +117,7 @@ main(){
   
   
   
-  INLINE_Fwc void exit_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
+  INLINE_Fwc void exit_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz){ 
     <&state.exit.code>
   } //.exit
   
@@ -126,7 +126,7 @@ main(){
 
   
     
-  INLINE_Fwc void trans_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(<&stateData.variables.StateClass>* thiz){ 
+  INLINE_Fwc void trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz){ 
     <:for:trans:state.trans> <: >
     //check all conditions for a state trans:
     if(<: >
@@ -134,7 +134,7 @@ main(){
       <:elsif:trans.time>thiz->timer<&state.parallelParentState> <:<> 0<: >
       <:elsif:trans.joinStates>
         <:for:joinState:trans.joinStates> <: >
-          thiz->state.<&joinState.stateVariableName> == k<&joinState.src.stateName>_<&stateData.variables.StateSubStruct> 
+          thiz->state.<&joinState.stateVariableName> == k<&joinState.src.stateName>_<&stm.variables.StateSubStruct> 
         <.for:joinState><: >
       <:else>/*??*/ false<.if><: >
       ) {
@@ -161,17 +161,17 @@ main(){
   
   ##main routine with switch-case:  
 <+>
-  void stepStates_<&stateData.variables.StateSubStruct>( <:subtext:stateMethodArguments> ) {
+  void stepStates_<&stm.variables.StateSubStruct>( <:subtext:stateMethodArguments> ) {
     switch(thiz->state.state) { <.+>
-    for(state:stateData.topStates){
+    for(state:stm.topStates){
 <+>
-      case k<&state.src.stateName>_<&stateData.variables.StateSubStruct> : <.+>
+      case k<&state.src.stateName>_<&stm.variables.StateSubStruct> : <.+>
         if(state.hasHistory) {
 <+>
           switch(thiz->state.state<&state.src.stateName> {
           } <.+>
         }
-      <+>  trans_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(thiz); break;<.+>
+      <+>  trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(thiz); break;<.+>
     }
 <+>
       default: error();
@@ -192,15 +192,15 @@ sub switchcaseState(Obj state)
                                                                 switch(thiz->state.state<&state.StateName>) { <.+>
     for(substate:stat.subStates){
                                                             <+>
-                                                                  case k<&substate.src.stateName>_<&stateData.variables.StateSubStruct> : <.+>
+                                                                  case k<&substate.src.stateName>_<&stm.variables.StateSubStruct> : <.+>
         if(state.hasHistory) {
           call switchcaseState(state = substate);
         }                                                   <+>
-                                                                    trans_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(thiz); 
+                                                                    trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(thiz); 
                                                                     break;
                                                                   default: error();
                                                                 } //switch
-                                                                trans_<&state.src.stateName><&stateData.variables.StateMethodSuffix>(thiz); break;<.+>
+                                                                trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(thiz); break;<.+>
     }
 
 

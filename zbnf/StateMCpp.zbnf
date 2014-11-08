@@ -34,11 +34,12 @@ stateStructure::={ + <CompositeState> }.
 state::=
 [ /**<* |\.|*/?shortdescription><* |*/?description> */] 
 
-[public : |] class <$?@stateName>  [| : public <$?parallelParentState> | : protected  <*\{?> ]  ##after : some super states for access in C++
+[public : |] class <$?@stateName>  [| : public | : protected  <*\{?> ]  ##after : some super states for access in C++
 \{
 { int statenr_<* ;?stateNr> ;
-| [class] <$?enclState> [*] parent[State] ;
-| [class] <$?startState> [*] start[State] ;
+##| [class] <$?enclState> [*] parent[State] ;
+##| [class] <$?startState> [*] start[State] ;
+| <$?parallelParentState> * parallelParent[State];
 | public : class History \{ \} ; <?hasHistory>
 | [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
   [ void entry ( )\{<action?+entry> \}
@@ -60,7 +61,7 @@ trans::= (
 ? , }
 \{
   <* |new?code>
-  { new <$?dstState> [ :: History<?history>] [ ( )] ? , };
+  { new  { History<?history> | <$?dstState> ? :: } [ ( )] ? , <?fork>};  ##Note: last of State::State is dstState
 \}.
 
 

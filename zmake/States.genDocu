@@ -15,7 +15,7 @@ main(){
 @ident=overview
 
 
-<:for:state1:stateData.topStates><:>
+<:for:state1:stm.topStates><:>
 '''[[Topic:.states.State_<&state1.src.stateName>.|<&state1.src.stateName>]]''': <&state1.src.shortdescription>.
 <.><:if:state1.subStates>
 <:for:substate:state1.subStates><:>
@@ -36,9 +36,9 @@ main(){
 <.for:state1>
 
 
-<:for:state:stateData.states><:>  ##all states
+<:for:state:stm.states><:>  ##all states
 
-<&-test.dataTree(stateData, out,2)>
+<&-test.dataTree(stm, out,2)>
 
 ===State <.><&state.src.stateName> <:if:state.enclState><:> in <.><&state.enclState><.if><:if:state.parallelState><:>.<&state.parallelState><.><.if><:> ===
 @ident=State_<&state.src.stateName>
