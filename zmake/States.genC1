@@ -4,22 +4,30 @@
 ##!checkJZcmd = "result/check_States.genC.txt";
 !checkXml = <:><&currdir>/check_States.genC.xml<.>;
 
+Filepath outfile = &sOutfile; ##sOutfile is defined in the java calling environment: path to the out file which is written by <+>...<.+>
+
+String stateMethodSuffix = stm.zsrcFile.variables.StateMethodSuffix;
+
+Class classStateComposite = org.vishia.states.StateComposite;   ##used for instanceof check
+Class classStateParallel = org.vishia.states.StateAddParallel;  ##used for instanceof check
+
+
 subtext conditionaction(Obj trans)
 <:>
   <:for:exitState:trans.exitStates>
-      exit_<&exitState.src.stateName><&stm.variables.StateMethodSuffix>(thiz);
+      exit_<&exitState.src.stateName><&stateMethodSuffix>(thiz);
   <.for>
       <&trans.code>
    
     
   <:for:entryState:trans.dstStateTree.entrySubStates>
-      entry_<&entryState.name><&stm.variables.StateMethodSuffix>(thiz);
+      entry_<&entryState.name><&stateMethodSuffix>(thiz);
       <:for:entryState2:entryState.entrySubStates>
-        entry_<&entryState2.name><&stm.variables.StateMethodSuffix>(thiz); 
+        entry_<&entryState2.name><&stateMethodSuffix>(thiz); 
         <:for:entryState3:entryState2.entrySubStates>
-        entry_<&entryState3.name><&stm.variables.StateMethodSuffix>(thiz);
+        entry_<&entryState3.name><&stateMethodSuffix>(thiz);
           <:for:entryState4:entryState3.entrySubStates>
-          entry_<&entryState4.name><&stm.variables.StateMethodSuffix>(thiz); 
+          entry_<&entryState4.name><&stateMethodSuffix>(thiz); 
           <.for>
         <.for>
       <.for>
@@ -34,7 +42,7 @@ sub setSubStateNull(Obj state)
 { ##if(state.src.stateName == "RemainOn"){ debug test; }
   if(state.subStates && (state.hasHistory || state.parallelParentState)){
     <:>
-        thiz->state.state<&state.src.stateName> = kNull_<&state.src.stateName>_<&stm.variables.StateSubStruct>; <.>
+        thiz->state.state<&state.src.stateName> = kNull_<&state.src.stateName>_<&stm.zsrcFile.variables.StateSubStruct>; <.>
     for(substate:state.subStates) {
       call setSubStateNull (state = substate);
     }
@@ -47,7 +55,7 @@ sub setSubStateNull(Obj state)
 
 sub stateMethodArguments()
 { 
-  for(arg:stm.statefnargs) { <:><&arg><:hasNext>, <.hasNext><.>; }
+  for(arg:stm.zsrcFile.statefnargs) { <:><&arg><:hasNext>, <.hasNext><.>; }
 }
 
 
@@ -55,130 +63,110 @@ sub stateMethodArguments()
 main(){
 
 
-<+>
-  
-  /*This file is generated from StateMGen.java */
-
-  <:for:includeline:stm.includeLines>
-    #include <&includeline>
-  <.for:includeline>  
-  #include "<&stm.variables.StateFile>.h"
-  //
-  
-  
-  /**All function prototypes: */
-  <:for:state:stm.states>
-  INLINE_Fwc void entry_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz); 
-  INLINE_Fwc void exit_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz); 
-  
-  <.for:state>
-  
-  <:for:state:stm.states><:if:state.parallelParent>
-  /*Parallel state machine: <&state.src.stateName> */
-  
-  <:else>
-  /**State <&state.src.stateName> *******************************************************************************
-   * <&state.shortdescription><&state.description>
-   */
-  
-    <&state.constDef.code> 
-   
-  
-  
-  <:if:state.entry.description>/**<&state.entry.description>
-   */
-  <.if><: >
-  INLINE_Fwc void entry_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<:subtext:stateMethodArguments>) {<: >
-
-    ##<:if:state.src.stateName=="Active1"><:debug><.if>
-    <: >
-    <:if:state.parallelParentState>  ##<&state.parallelParentState><: >
-      //parallelState
-      ##if a parallelParentState exists this is a parallel State. don't set its ident inside the parent then.
-    <:else>
-      thiz->state.<&state.stateVariableName> = k<&state.src.stateName>_<&stm.variables.StateSubStruct>;
-    <.if><: >
-    <: >##recursive for all substates.
-    <:subtext:"setSubStateNull":state=state> <: >
-    
-    <:for:pstate:state.parallelStates>  <: >
-      <: >##recursive for all substates of parallel states. Note: The parallel state has substates.
-      <:subtext:"setSubStateNull":state=pstate><: >
-    <.for>
-    //entry code:
-    <&state.entry.code>
-    //timer:
-    <:for:trans:state.trans><:if:trans.time>
-      thiz->timer<&state.parallelParentState> = <&trans.time>; <: >
-    <.if><.for>  
-  } //.entry
-  
-  
-  
-  
-  
-  INLINE_Fwc void exit_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz){ 
-    <&state.exit.code>
-  } //.exit
-  
-  
-  
-
-  
-    
-  INLINE_Fwc void trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(<&stm.variables.StateClass>* thiz){ 
-    <:for:trans:state.trans> <: >
-    //check all conditions for a state trans:
-    if(<: >
-      <:if:trans.cond><&trans.cond><: >
-      <:elsif:trans.time>thiz->timer<&state.parallelParentState> <:<> 0<: >
-      <:elsif:trans.joinStates>
-        <:for:joinState:trans.joinStates> <: >
-          thiz->state.<&joinState.stateVariableName> == k<&joinState.src.stateName>_<&stm.variables.StateSubStruct> 
-        <.for:joinState><: >
-      <:else>/*??*/ false<.if><: >
-      ) {
-      <:subtext:"conditionaction": trans=trans>
-      <: >
-      <:for:subtrans:trans.subCondition><: >
-        <:if:subtrans.cond != "else">if(<&subtrans.cond>)<.if> {
-          <:subtext:"conditionaction": trans=subtrans>
-        }<:hasNext> else <.hasNext>
-      <.for:subtrans>  
-    }
-    else 
-    ##<:hasNext> else <.hasNext> <&- next condition in for>
-    <.for>
-    { // action in state
-      <&state.instate.code>
-      //<&-state.test>
-    }  
-  }//.trans
-  
-  <.if><.for>
+<+><: >
+   //first line
+::/*This file is generated from StateMGen.java */
 <.+>
-  
-  
-  ##main routine with switch-case:  
-<+>
-  void stepStates_<&stm.variables.StateSubStruct>( <:subtext:stateMethodArguments> ) {
-    switch(thiz->state.state) { <.+>
-    for(state:stm.topStates){
-<+>
-      case k<&state.src.stateName>_<&stm.variables.StateSubStruct> : <.+>
-        if(state.hasHistory) {
-<+>
-          switch(thiz->state.state<&state.src.stateName> {
-          } <.+>
-        }
-      <+>  trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(thiz); break;<.+>
-    }
-<+>
-      default: error();
-    } //switch  
+  for(includeline:stm.zsrcFile.includeLines) 
+  { <+>
+::::::#include <&includeline><.+>
   }
-<.+>
+  <+>  
+::::#include "<&outfile.name()>.h"
+::::
+:::://all entry-prototypes:<.+>
+  for(state: stm.listStates)
+  {
+    <+>
+::::::void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz);<.+>
+  }
+  <+>
+::::<.+>  
+  for(state: stm.listStates)
+  {
+    <+>
+::::::void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz);<.+>
+  }
+  <+>
+::::
+::::<.+>
+  for(state: stm.listStates)
+  {
+    if(state ?instanceof classStateParallel) {
+
+    <+>
+::::::static void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz)
+::::::{
+::::::}
+::::::
+::::::INLINE_Fwc void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz)
+::::::{
+::::::}
+::::::<.+>
+
+    } else {  //normal, non parallel, composite or simple:
+
+    <+>
+::::::static void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz)
+::::::{
+::::::  <&stm.zsrcFile.variables.StateInstance>.state<&state.auxInfo().rootState.stateId> = k<&state.stateId>_<&stm.zsrcFile.variables.StateSubStruct>;<.+>
+    if(state.auxInfo().timeCondition) { <+>
+::::::  <&stm.zsrcFile.variables.StateInstance>.timer<&state.auxInfo().rootState.stateId> = <&state.auxInfo().timeCondition>;<.+>  
+    } <+>
+::::::  <&state.auxInfo().zsrcState.entry.code>
+::::::}
+::::::
+::::::INLINE_Fwc void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz)
+::::::{
+::::::  <&state.auxInfo().zsrcState.exit.code>
+::::::}
+::::::
+::::::INLINE_Fwc bool trans_<&state.stateId><&stateMethodSuffix>(<&stm.zsrcFile.variables.StateClass>* thiz)
+::::::{ //check all conditions of transitions, return on transition with != 0<.+>    
+      if(state.transitions) {
+        for(trans: state.transitions) {
+          if(trans.zsrcTrans.cond) {                <+>  
+                                              ::::::::  if(<&trans.zsrcTrans.cond>) {<.+>
+          } elsif(trans.zsrcTrans.time) {           <+>
+                                              ::::::::  if(<&stm.zsrcFile.variables.StateInstance>.timer<&state.auxInfo().rootState.stateId> <0) {<.+>
+          } else {                                  <+>
+                                              ::::::::  if(true) { <.+>
+          }                                   
+          for(exitState:trans.exitStates) {         <+>
+                                                ::::::    exit_<&exitState.stateId><&stateMethodSuffix>(thiz);<.+>  
+          }                                         <+>  
+                                                ::::::    <&trans.zsrcTrans.code><.+>
+          for(entryState:trans.entryStates) {       <+>
+                                                ::::::    entry_<&entryState.stateId><&stateMethodSuffix>(thiz);<.+>  
+          }                                         <+>    
+                                                ::::::    return true; 
+                                                ::::::  }
+                                                ::::::  else <.+>
+         } ##for(state.transitions)           
+                                                ::::::         <+> { //action in state
+                                                ::::::    return false; //no transition switched.
+                                                ::::::  }<.+>
+      } else { //no transition found:               <+>
+                                                ::::::  return false; <.+>
+      } <+>                                         
+::::::}
+::::::
+::::::
+::::::<.+>
+    }##NOT stateParallel
+  }
   
+  <+>
+::::void stepStates_<&stm.zsrcFile.variables.StateSubStruct>( <:subtext:stateMethodArguments> )
+::::{ bool bTrans;                //set to true if transition has fired.
+::::  int ctSwitchState = 10;     //prevent too many transitions - a endless loop
+::::  do { 
+::::    bTrans = false;<.+>
+        call switchStates(stateComposite = stm.topState, recurs =1);
+  <+>
+::::  } while(bTrans && --ctSwitchState >0);
+::::}
+::::<.+>    
   
   
   
@@ -186,24 +174,51 @@ main(){
 
 
 
-sub switchcaseState(Obj state) 
+sub switchStates(Obj stateComposite, Num recurs)
 {
-                                                            <+>
-                                                                switch(thiz->state.state<&state.StateName>) { <.+>
-    for(substate:stat.subStates){
-                                                            <+>
-                                                                  case k<&substate.src.stateName>_<&stm.variables.StateSubStruct> : <.+>
-        if(state.hasHistory) {
-          call switchcaseState(state = substate);
-        }                                                   <+>
-                                                                    trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(thiz); 
-                                                                    break;
-                                                                  default: error();
-                                                                } //switch
-                                                                trans_<&state.src.stateName><&stm.variables.StateMethodSuffix>(thiz); break;<.+>
-    }
-
+  <+>
+::::<:@2*recurs>  switch(<&stm.zsrcFile.variables.StateInstance>.state<&stateComposite.stateId>) {
+::::<:@2*recurs>    case 0: entry_<&stateComposite.stateDefault><&stateMethodSuffix>(thiz); //without break, do trans:
+::::<.+>
+                    call switchCaseState(stateComposite = stateComposite, recurs = recurs+1);
+  <+>
+::::<:@2*recurs>  } //switch <&stateComposite.stateId> <.+>
 
 }
+
+
+
+
+
+
+
+
+##recursively call of case for switch-state:
+sub switchCaseState(Obj stateComposite, Num recurs = 0)
+{
+  for(state : stateComposite.aSubstates) {
+    Obj zsrcState = state.auxInfo().zsrcState; 
+    if(zsrcState.hasHistory || zsrcState.parallelParentState) {  
+      //an innner switch-case:                                         <+>
+                                                    ::::::::::<:@2*recurs>  case k<&state.stateId>_State<&stateMethodSuffix>: { <.+>
+      call switchStates(stateComposite = state, recurs = recurs+1);    <+>
+                                                    ::::::::::<:@2*recurs>  } break; //composite state<.+>
+    } elsif(state ?instanceof classStateComposite) {                   <+>
+                                                    ::::::::::<:@2*recurs>  case k<&state.stateId>_State<&stateMethodSuffix>: {<.+>      
+      call switchCaseState(stateComposite = state
+        , recurs = recurs+1);   //all case of composite:               <+>
+                                                    ::::::::::<:@2*recurs>    bTrans |= trans_<&state.stateId><&stateMethodSuffix>(thiz); 
+                                                    ::::::::::<:@2*recurs>  } break; <.+>      
+    } else { //StateSimple                                        <+>
+                                                    ::::::::::<:@2*recurs>  case k<&state.stateId>_State<&stateMethodSuffix>: bTrans |= trans_<&state.stateId><&stateMethodSuffix>(thiz); break;<.+>      
+    }
+  }
+  for(state : stateComposite.aParallelstates) {
+                                                                       <+>
+                                                    ::::::::::<:@2*recurs>    //parallelState state<&state.stateId><.+>
+    call switchStates(stateComposite = state, recurs = recurs+1);
+  }
+}
+
 
 

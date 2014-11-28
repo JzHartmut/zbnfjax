@@ -9,9 +9,8 @@ StateMachine::=
 { #include <* \n?includeLine>
 }
 
-[ char *
-{ <variable>; ? char * 
-}]
+##some string value definition used for code generation.
+##{ <variable> }
 
 
 
@@ -20,13 +19,13 @@ StateMachine::=
 
 
 class States \{
-{
-  <state>
-}
+  inline void variables ( ) \{ { <variable> } \}  ##some string value definition used for code generation.
+##  void args ( { <* ,)?statefnarg> } );
+  { <state> }
 \} ; 
 \e.
 
-variable::= <$?name> = <""?value>.
+variable::= char * <$?name>  = <""?value> ;.
 
 stateStructure::={ + <CompositeState> }.
 
@@ -52,7 +51,7 @@ state::=
 .
 
 
-action::=<*\{\}?code>[\{<action>\}].
+action::= <*\{\}?code>[\{<action>\}].
 
 trans::= ( 
 { bool cond = <*\{,?condP>

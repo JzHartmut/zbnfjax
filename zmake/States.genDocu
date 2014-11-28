@@ -15,7 +15,7 @@ main(){
 @ident=overview
 
 
-<:for:state1:stm.topStates><:>
+<:for:state1:stm.zsrcFile.topStates><:>
 '''[[Topic:.states.State_<&state1.src.stateName>.|<&state1.src.stateName>]]''': <&state1.src.shortdescription>.
 <.><:if:state1.subStates>
 <:for:substate:state1.subStates><:>
@@ -36,7 +36,7 @@ main(){
 <.for:state1>
 
 
-<:for:state:stm.states><:>  ##all states
+<:for:state:stm.zsrcFile.states><:>  ##all states
 
 <&-test.dataTree(stm, out,2)>
 
