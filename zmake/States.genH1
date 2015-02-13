@@ -30,7 +30,7 @@ main(){
 ::::  #define k<&state.stateId>_<&stm.zsrcFile.variables.StateSubStruct> <&state.auxInfo().zsrcState.stateNr>   
 ::::  <:if:state.aSubstates><: >
       #define kNull_<&state.stateId>_<&stm.zsrcFile.variables.StateSubStruct> 0x000<: >
-::::  <.if><: >
+      <.if><: >
     <.for:state><: >
   <.+>
   <+>

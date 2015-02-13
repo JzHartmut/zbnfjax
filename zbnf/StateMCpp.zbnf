@@ -36,9 +36,8 @@ state::=
 [public : |] class <$?@stateName>  [| : public | : protected  <*\{?> ]  ##after : some super states for access in C++
 \{
 { int statenr_<* ;?stateNr> ;
-##| [class] <$?enclState> [*] parent[State] ;
-##| [class] <$?startState> [*] start[State] ;
-| <$?parallelParentState> * parallelParent[State];
+| int parallel<?stateParallel> ;
+##| <$?parallelParentState> * parallelParent[State];
 | public : class History \{ \} ; <?hasHistory>
 | [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
   [ void entry ( )\{<action?+entry> \}
@@ -55,7 +54,7 @@ action::= <*\{\}?code>[\{<action>\}].
 
 trans::= ( 
 { bool cond = <*\{,?condP>
-| bool time = <*\{,?timeP>
+| int time = <*\{,?timeP>
 | class <$?joinState> [*] join [)]
 ? , }
 \{
