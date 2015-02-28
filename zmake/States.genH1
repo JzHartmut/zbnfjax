@@ -24,6 +24,7 @@ main(){
   <+> 
 ::::} <&stm.zsrcFile.variables.StateSubStruct>;
 ::::
+::::int stepStates_<&stm.zsrcFile.variables.StateSubStruct>(<:subtext:stateMethodArguments>);
 ::::
 ::::/**All state konstant identifier: */
 ::::<:for:state:stm.stateMap>
@@ -42,3 +43,12 @@ main(){
 
 
 }
+
+
+##same as in genC1:
+
+sub stateMethodArguments()
+{ 
+  for(arg:stm.zsrcFile.statefnargs) { <:><&arg><:hasNext>, <.hasNext><.>; }
+}
+

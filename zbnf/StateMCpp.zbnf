@@ -18,6 +18,12 @@ StateMachine::=
 }
 
 
+##This method should be contained in the users cpp file or in an header included:
+[
+void switchTo(void* <*)?>);
+]
+
+
 class States \{
   inline void variables ( ) \{ { <variable> } \}  ##some string value definition used for code generation.
 ##  void args ( { <* ,)?statefnarg> } );
@@ -40,9 +46,10 @@ state::=
 ##| <$?parallelParentState> * parallelParent[State];
 | public : class History \{ \} ; <?hasHistory>
 | [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
-  [ void entry ( )\{<action?+entry> \}
+  [ void entry ( ) \{<action?+entry> \}
   | void exit ( ) \{<action?+exit> \}
-  | void trans[<#?>]  <trans?+trans> 
+  | void trans  <trans?+trans> 
+  | void join  <join?+trans> 
   | void inState ( ) \{<action?+instate> \}
 | <state>
   ] }
@@ -50,17 +57,31 @@ state::=
 .
 
 
-action::= <*\{\}?code>[\{<action>\}].
+##action::= <*\{\}?code>[\{<action>\}].
+action::= <*|\}//\.?code>.
 
-trans::= ( 
-{ bool cond = <*\{,?condP>
-| int time = <*\{,?timeP>
-| class <$?joinState> [*] join [)]
-? , }
-\{
-  <* |new?code>
-  { new  { History<?history> | <$?dstState> ? :: } [ ( )] ? , <?fork>};  ##Note: last of State::State is dstState
+trans::= [<#?nrTrans>]( 
+[ bool cond = <*\{?condP>
+| int time = <*\{?timeP>
+]
+<transbody?>.
+
+
+##Body of a transition method in the primary C++ source.
+##
+transbody::= \{
+  <* |switchTo?code>  ##any C-code till first new for the transition code.
+  switchTo (
+  {  new  { History<?history> | <$?dstState> ? :: } [ ( )]   ##Note: last of State::State is dstState
+  ? , <?fork>    ##Note: if more as one state then it is a fork. Mark it.
+  } ) ;
 \}.
 
-
 cond::=<*\{?cond>.
+
+
+##A join transition.
+##
+join::= ( {<?joinState> class {<$?name>?::} * ? , } )<transbody?>.
+
+
