@@ -178,7 +178,7 @@ classDefinition::=
   [implements { <typeIdent?ImplementedInterface> ? , }]     
 \{ [<classContent?>]
 \} [;].
-
+##Note: Java2c-Translator does not regard an <envIdent> on the type yet, 2015-03-29.
 
 
 classContent::=
@@ -304,9 +304,10 @@ statement::=
 | <dowhile_statement>
 | <forElement_statement>
 | <for_statement>
-##|<?throwNew> throw new <$?exceptionClass> ( <value?text> [, <value?value2>] ) ;
-|<?throwNew> throw new <type?exceptionClass> ( [<value?text>] [ , <value?value2> ] ) ;  ##Note: not all exception parameters are accepted for Java2C, only the usual.
-|<?throwExc> throw <value> ; ##value is an exception instance tested at Java comiling level.   old:<$?ExcVariable> ;
+##|<?throwNew> throw\  new <$?exceptionClass> ( <value?text> [, <value?value2>] ) ;
+|<?throwNew> throw\  new <type?exceptionClass> ( [<value?text>] [ , <value?value2> ] ) ;  ##Note: not all exception parameters are accepted for Java2C, only the usual.
+|<?throwExc> throw\  <value> ; ##value is an exception instance tested at Java comiling level.   old:<$?ExcVariable> ;
+                   ##NOTE: not regarded yet in Java2C-translator 2015-03-29
 | <try_statement>
 |<?return> return[!<!\\W?>] [ <value> |] ;  ##no word char expected after return, but not processed
 |<?break_statement> break ;
