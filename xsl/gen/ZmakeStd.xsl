@@ -39,7 +39,7 @@
 <xsl:template match= "/root/Zmake | /Zmake">
 <project name="ZmakeAnt" default="ZmakeAnt" basedir=".">
   <xsl:comment>Generated with ZmakeStd.xslp </xsl:comment>
-  <taskdef name="Zcopy" classname="org.vishia.ant.Zcopy" />
+  <!-- taskdef name="Zcopy" classname="org.vishia.ant.Zcopy" / -->
   <property environment="env" />
   
   <property name="tmp" value="{$tmp}" />
@@ -726,7 +726,7 @@
   </xsl:variable>
   <xsl:variable name="copyCmd">
     <xsl:choose><xsl:when test="string-length($testContent) gt 0">
-      <xsl:text>Zcopy</xsl:text>
+      <!-- xsl:text>Zcopy</xsl:text -->
     </xsl:when><xsl:otherwise>
       <xsl:text>copy</xsl:text>
     </xsl:otherwise></xsl:choose>

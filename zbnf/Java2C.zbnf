@@ -132,6 +132,7 @@ Java4CAnnotationType::=
 |<?simpleArray> SimpleArray       ##simple Array with size in constructor. 
 |<?noGC> noGC                     ##only simple, not an enhanced refernece
 |<?noGC> SimpleRef                ##only simple, not an enhanced refernece
+|<?noGC> ConstRef                 ##a reference which is generated with type const* in C language, the referenced object is not modified in Java.
 |<?simpleVariableRef> SimpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
 |<?simpleVariableRef> SimpleArrayRef      ##in java forex a int[] x where x[0] is used. In C a int* x
 |<?PtrVal> PtrVal                            ##in java forex a int[] stored in a PtrVal_TYPE instance.
@@ -171,8 +172,10 @@ annotationDefinition::=
 classDefinition::= 
   [{ @SuppressWarnings ( <""?SuppressWarnings> ) | /**[><description>*/] | <ModifierClass?>}] 
   class <$?classident> [<generic>]
-  [extends [<?Superclass> {<$?>?\.} ][<generic>] ]
-  [implements { [<?ImplementedInterface> {<$?>?\.}][<generic>] ? , }]     
+  ##[extends [<?Superclass> {<$?>?\.} ][<generic>] ]
+  [extends <typeIdent?Superclass>  ]
+  ##[implements { [<?ImplementedInterface> {<$?>?\.}][<generic>] ? , }]     
+  [implements { <typeIdent?ImplementedInterface> ? , }]     
 \{ [<classContent?>]
 \} [;].
 
@@ -198,27 +201,27 @@ classContent::=
 ##An envIdent is a ident in a possible environment class.
 ## <?@name> is the outest environment class, inside a <?subIdent> is the next inner <?name> etc.
 ##In XML it's: <envIdent name="outestClass"><subIdent name="nextClass"><subIdent name="nextClass"></subIdent></subIdent></envIdent>
-envIdent::=  <$?@name> \. [?\.\.] [<envIdent?subIdent>] .
+envIdent::=  <$?@name> [<generic?>] \. [?\.\.] [<envIdent?subIdent>] .
 ##old: environment::= [{<?environment> <$?@name> \.}] .
 
 
 ##A typeIdent is a identifier of a type which maybe defined in a class context or pure.
 ## A pure type ident is either a global visible type, or it may an own class type (local visible, than writing pure).
 ## A type in a context uses the envIdent.
-typeIdent::= [<envIdent>] <$?@name>.
+typeIdent::= [<envIdent>] <$?@name> [<generic?>].
 
 
 
 ##A nonArrayType has the same content like a typeIdent, but additionally an element type (generic type) of a container 
 
 generic::=
-\< { [ \?<?undefGenericType>| <nonArrayType?GenericType>]    ##The generic type or ? for any derived type. 
-      [ extends {<nonArrayType?baseGenericKey> ? & } ]   ? , } \>.  ##a generic type may be derived from one or more sub types.
+\< { [ \?<?undefGenericType>| <type?GenericType>]    ##The generic type or ? for any derived type. 
+      [ extends {<type?baseGenericKey> ? & } ]   ? , } \>.  ##a generic type may be derived from one or more sub types.
 
 
 
 nonArrayType::= ##[{ @Java4C\.<Java4CAnnotationType?> }] 
-<typeIdent?> [<generic?>]  ##nonArrayType produces the same result as typeIdent
+<typeIdent?>  ##nonArrayType produces the same result as typeIdent
 [<?va_arg>\.\.\.]
 .
 
@@ -274,8 +277,11 @@ importpath::={<$?package>\.}[<$?class>|*<?allClasses>].
 AccessRight::=<?>[ public<?public> | private<?private> | protected<?protected> |].
 
 enumDefinition::= 
-  [/**[><description>*/] ] 
-  enum <$?ident> \{  [{ <$?value> ? , }] \}.
+[{ /**[><description?-?>*/]
+ | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
+ | <ModifierClass?-?>
+}] 
+enum <$?ident> \{  [{ <$?value> ? , }] \}.
 
 ##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
 ##      it is a Java specification problem!
@@ -300,7 +306,7 @@ statement::=
 | <for_statement>
 ##|<?throwNew> throw new <$?exceptionClass> ( <value?text> [, <value?value2>] ) ;
 |<?throwNew> throw new <type?exceptionClass> ( [<value?text>] [ , <value?value2> ] ) ;  ##Note: not all exception parameters are accepted for Java2C, only the usual.
-|<?throwExc> throw <$?ExcVariable> ;
+|<?throwExc> throw <value> ; ##value is an exception instance tested at Java comiling level.   old:<$?ExcVariable> ;
 | <try_statement>
 |<?return> return[!<!\\W?>] [ <value> |] ;  ##no word char expected after return, but not processed
 |<?break_statement> break ;
@@ -407,14 +413,15 @@ simpleValue::=<?>
 ##|<?newInstanceAccess> ( <newObject> ) \. [<simpleMethodCall> | <variable> ]
 | 0x<#x?hexNumber>[L]
 | - 0x<#x?hexNumberNegative>[L]
-| <#-?intNumber>[?\.][L|F|]
-| <#f?floatNumber>[F|f]
+| <#-?intNumber>[?\.][<?valueFormat> L | l| F| f|]
+| <#f?floatNumber>[<?valueFormat> F| f]
 | <#f?doubleNumber>
 | new <newArray> 
 | <newObject> 
 |<?methodCall> [<reference>] <simpleMethodCall?>
 |<?reflectionType> <$?Type>  \. class [?<!\\w>]
 |<?variable> [ -- <?preDecrement>| ++ <?preIncrement>|] [ <reference>] <simpleVariable?>[ -- <?postDecrement>| ++ <?postIncrement>|]
+|<?classObject> [ <reference>] class                   ##either class of a type, or class of an instance like myData.class 
 | ( <value?parenthesisExpression> )
 |<?nullRef> null
 | <assignment>
@@ -425,7 +432,7 @@ simpleValue::=<?>
 
 condition::=<value?>.  ##The compiler tests that it is a boolean value expression.
 
-
+ 
 unaryOperator::=<?> [<?unaryOperator> - | ~ | ! ].
 
 ##superAccess::=super\..

@@ -452,7 +452,12 @@ operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>
 
 statementBlock::=
 \{ [ STACKTRC_ENTRY ( <""?STACKTRC_ENTRY> ) ; ]
-[{ <statement> }]
+[{ 
+  [ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [defined(<$?conditionDef>) | ! defined(<$?conditionDefNot>) ] ? && } ? \|\| } ]
+  { <statement> }  ##statement in conditional compiling TODO semantic
+  # endif
+| <statement> 
+}]
 \}.
 
 statement::=

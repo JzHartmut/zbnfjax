@@ -27,12 +27,16 @@ sub genXMI(Obj target, Filepath tmpxml = <:><&$TMP>/tmpxml<.>)
     ##checkNewless: deletes the destination file if it is older than the source. call schema: checkNewless(source, destination, deleteit);
     String xml = <:><&tmpxml.absfile()>/<&input.localfile()>.xml<.>;
     String inputfile = input.absfile();
-    Obj checkNew = %org.vishia.util.FileSystem.checkNewless(File: inputfile, File: xml, 1);
+    Obj checkNew = %org.vishia.util.FileSystem.checkNewless(File: &inputfile, File: &xml, 1);
     <+out><&xml>: checkNew = <&checkNew><.n+>
     if(checkNew >= 1) {
-      String exec = %org.vishia.zbnf.Zbnf2Xml.smain(<:>-i:<&input.absfile()><.>, <:>-s:<&$ZBNFJAX_HOME>/zbnf/Java2C.zbnf<.>
-        , <:>-y:<&tmpxml.absfile()>/<&input.localfile()>.xml<.>, <:>-a:@filename=<&input.name()><.>
-        , <:>--report:<&tmpxml.absfile()>/<&input.localfile()>.zbnf.rpt<.>, "--rlevel:333");
+      String exec = %org.vishia.zbnf.Zbnf2Xml.smain(
+          <:>-i:<&input.absfile()><.>
+        , <:>-s:<&$ZBNFJAX_HOME>/zbnf/Java2C.zbnf<.>
+        , <:>-y:<&tmpxml.absfile()>/<&input.localfile()>.xml<.>
+        , <:>-a:@filename=<&input.name()><.>
+        , <:>--report:<&tmpxml.absfile()>/<&input.localfile()>.zbnf.rpt<.>
+        , "--rlevel:333");
       <+>*parse: <&input.localfile()> : <&exec><.n+>
     } else {
       <+>*is parsed: <&input.localfile()><.n+>

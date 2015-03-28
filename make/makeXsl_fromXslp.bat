@@ -38,7 +38,7 @@ ZMAKE_RULES:
 
 ../xsl/gen/*.xsl := Xsltpre
 ( srcpath="../xsl"
-, CHeader2ByteDataAccess_Java.xslp
+//, CHeader2ByteDataAccess_Java.xslp
 , Cheader2Xmi.xslp
 , Java2xmi.xslp
 , ZmakeStd.xslp

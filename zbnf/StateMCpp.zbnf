@@ -63,6 +63,8 @@ action::= <*|\}//\.?code>.
 trans::= [<#?nrTrans>]( 
 [ bool cond = <*\{?condP>
 | int time = <*\{?timeP>
+| { class <$?joinState> [*] join  ? , } [)]
+ 
 ]
 <transbody?>.
 
