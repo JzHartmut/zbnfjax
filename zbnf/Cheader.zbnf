@@ -181,7 +181,7 @@ enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
 \} [<$?@name>] .
 
 
-typedef::= <type> <$?name> [ \[ <#?nrofArrayElements> \]].
+typedef::= <type> <$?name> [ \[ [ 0x<#x?nrofArrayElements> | <#?nrofArrayElements>] \]].
 
 
 ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
@@ -197,8 +197,20 @@ methodTypedef::= [METHOD_C|extern "C" |extern_C |extern |C_TYPE |] <type> [<$?cl
 
 
 ##a defineArgument is a define which replaces a type name - argument specification with a simple identifier. It's used for special cases.
-methodArgumentList::={ \.\.\.<?variableArgs> [<$?>]| <typedParameter> | void | <$?defineArgument> ? ,}.
-##TRICKY: an identifier <$?> after ... of a <?variableArgs> was necessary in a UML tool, it is an empty-defined identifier for compiling, but it should be accepted here also. 
+methodArgumentList::=
+{ <conditionalArgument>
+| \.\.\.<?variableArgs> [<$?>]  ##an identifier <$?> after ... of a <?variableArgs> was necessary in a UML tool, it is an empty-defined identifier for compiling, but it should be accepted here also. 
+| <typedParameter> 
+| void 
+| <$?defineArgument>  ##any macro instead an argument, maybe necessary in special cases. 
+? , }
+[<conditionalArgument>]
+.
+
+##Argument in conditional block, either with , before or , after:
+conditionalArgument::= # ifdef <$?conditionDef>  [,] <typedParameter> # endif.
+
+
 
 ##block inside a header with conditional compilation via ifdef
 conditionBlock::=

@@ -5,65 +5,80 @@ $inputEncodingKeyword="encoding".
 $comment=/*...*/.
 $endlineComment=//.
 
+##Top level Syntax for the C++ statemachine source:
+##
 StateMachine::=      
 { #include <* \n?includeLine>
 }
 
-##some string value definition used for code generation.
-##{ <variable> }
 
-
-
-{ static <*;?statefnarg>;  ##argument for each state subroutine
+##argument for each state subroutine are written as static variable declaration.
+##Therewith they are seen if they are used as arguments in bodies of the state methods.
+{ static <*;?statefnarg>;  
 }
 
 
-##This method should be contained in the users cpp file or in an header included:
+##This method should be defined here or alternatively contained in a special included header. It is the key method
+##in the C++ state machine's syntax to define the destination state. See pattern.
 [
 void switchTo(void* <*)?>);
 ]
 
 
+##All state should contain in a C++ environment class:
 class States \{
-  inline void variables ( ) \{ { <variable> } \}  ##some string value definition used for code generation.
-##  void args ( { <* ,)?statefnarg> } );
+  
+  ##this special method should define values used for code generation for:
+  inline void variables ( ) \{ { <variable> } \}
+
+  ##All states defined after them, a zbnf component
   { <state> }
 \} ; 
 \e.
 
+##end top level syntax.
+
+
+
+
+
+##Syntax definition for the code generation values:
 variable::= char * <$?name>  = <""?value> ;.
 
-stateStructure::={ + <CompositeState> }.
 
 
+
+##Syntax definition for a state class in the C++ statemachine's source:
 state::=
 [ /**<* |\.|*/?shortdescription><* |*/?description> */] 
 
 [public : |] class <$?@stateName>  [| : public | : protected  <*\{?> ]  ##after : some super states for access in C++
 \{
-{ int statenr_<* ;?stateNr> ;
-| int parallel<?stateParallel> ;
-##| <$?parallelParentState> * parallelParent[State];
+{ int statenr_<* ;?stateNr> ;                ##variable defines the state number as part of that int variable. Mandatory.
+| int parallel<?stateParallel> ;             ##if this variable exists it is a parallel state.
 | public : class History \{ \} ; <?hasHistory>
 | [/**<* |\.|*/?-shortdescription><* |*/?-description> */]
-  [ void entry ( ) \{<action?+entry> \}
-  | void exit ( ) \{<action?+exit> \}
-  | void trans  <trans?+trans> 
-  | void join  <join?+trans> 
-  | void inState ( ) \{<action?+instate> \}
-| <state>
+  [ void entry ( ) \{<action?+entry> \}      ##method for entry the state, obligatory, but only one time per state.
+  | void exit ( ) \{<action?+exit> \}        ##method for entry the state, obligatory, but only one time per state.
+  | void trans  <trans?+trans>               ##method describes a transition, more as one possible.
+  | void join  <join?+trans>                 ##method describes 
+  | void inState ( ) \{<action?+instate> \}  ##method for action in state, obligatory, but only one time per state.
+| <state>                                    ##sub state in a composite state.
   ] }
 \} ; 
 .
 
-
-##action::= <*\{\}?code>[\{<action>\}].
+##Syntax for the code of actions. The code is all till }//. 
+##This special designation is necessary to detect the end of the action method and distinguish from inner {...} parts.
+##The action can contain any C code or C++ code for C++ state machine code generation.
 action::= <*|\}//\.?code>.
 
-trans::= [<#?nrTrans>]( 
-[ bool cond = <*\{?condP>
-| int time = <*\{?timeP>
-| { class <$?joinState> [*] join  ? , } [)]
+
+##A transition method:
+trans::= [<#?nrTrans>](                    ##can start with a number only for correct C++ syntax, different names for transition 
+[ bool cond = <*\{?condP>                  ##The default value for a 'cond' argument is the condition really
+| int time = <*\{?timeP>                   ##The default value for a optional 'time' argument is the timer value really. 
+| { class <$?joinState> [*] join<*\ ?>  ? , } [)] ##The type name of a 'joinxyz' argument is a join state really.
  
 ]
 <transbody?>.
