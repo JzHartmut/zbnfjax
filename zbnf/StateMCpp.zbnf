@@ -78,8 +78,7 @@ action::= <*|\}//\.?code>.
 trans::= [<#?nrTrans>](                    ##can start with a number only for correct C++ syntax, different names for transition 
 [ bool cond = <*\{?condP>                  ##The default value for a 'cond' argument is the condition really
 | int time = <*\{?timeP>                   ##The default value for a optional 'time' argument is the timer value really. 
-| { class <$?joinState> [*] join<*\ ?>  ? , } [)] ##The type name of a 'joinxyz' argument is a join state really.
- 
+| { class <$?joinState> [*] join[<$?>]  ? , } ) ##The type name of a 'joinxyz' argument is a join state really.
 ]
 <transbody?>.
 

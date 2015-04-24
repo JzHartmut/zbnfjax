@@ -1,16 +1,16 @@
 
-sub stateMgen(Obj target: org.vishia.cmd.ZmakeTarget, Filepath src, Filepath docu)
+sub stateMgen(Obj target, Filepath src)
 {
 
-  Obj stateTranslator = java new org.vishia.stateMGen.StateMGen(console, null);
+  Obj stateTranslator = java new org.vishia.stateMGen.StateMGen(console);
 
   Obj args = java new org.vishia.stateMGen.StateMGen$Args();
   
-  List inputsExpanded = target.allInputFilesExpanded();
-  for(input:inputsExpanded)
-  { args.setSrc(target.input.absfile());
-  }
-  args.setDst(target.output.absfile());
+  args.sFileIn = src.absfile();
+  args.sFileZbnf = <:><&scriptdir>/../zbnf/StateMCpp.zbnf<.>;
+  args.addGenOut(<:><&scriptdir>/States.genC1.zgen<.>, <:><&target.output.absname()>.c<.>);
+  args.addGenOut(<:><&scriptdir>/States.genH1.zgen<.>, <:><&target.output.absname()>.h<.>);
+  
   
   stateTranslator.execute(args);
 

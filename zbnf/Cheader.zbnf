@@ -52,6 +52,7 @@ headerBlock::=<?>
 [ /*<implementDescription?-?>*/]
 [ <invalidBlock?+@>
 | #ifndef refl <*|#endif//refl?> #endif//refl
+| #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | <validBlock?>
 | <conditionBlock?+conditionBlock>
 | <undefDefinition>
@@ -82,7 +83,7 @@ headerBlock::=<?>
 | # define CONST<defineDefinition?+const_initializer>
 | # define NULL<defineDefinition?+null_initializer>
 | # define INLINE_Fwc <*\n?>  ##empty, only in os_types_def.h
-| # define <defineDefinition?+@>
+| # define <defineDefinition?+?>
 | # error [<""?compilerError> | <*\n?compilerError>]
 | # pragma <*\n?pragma>
 | <classDecl?+@>
@@ -208,7 +209,7 @@ methodArgumentList::=
 .
 
 ##Argument in conditional block, either with , before or , after:
-conditionalArgument::= # ifdef <$?conditionDef>  [,] <typedParameter> # endif.
+conditionalArgument::= # ifdef <$?conditionDef>  [,] { <typedParameter> ? , } # endif.
 
 
 
@@ -421,6 +422,7 @@ structContent::=<?>
 | <enumDefinition> ;
 | <implicitStructAttribute>
 | #ifndef refl <*|#endif//refl?> #endif//refl
+| #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | <attribute>
 | [/**<description?-?>*/] # define <defineDefinition?+?>
 ##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
@@ -436,6 +438,7 @@ classContent::=<?>
 | [inline] virtual <operatorDef?virtualOperator>
 | static <methodDef?staticMethod>  
 | static <attribute?+staticAttribute>
+| #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 |<?friendClass> friend [class] <outerClassName> ;
 | <enumDefinition> ;
 |<?classForward> class <$?@name> ;
