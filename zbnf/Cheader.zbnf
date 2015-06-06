@@ -215,15 +215,19 @@ conditionalArgument::= # ifdef <$?conditionDef>  [,] { <typedParameter> ? , } # 
 
 ##block inside a header with conditional compilation via ifdef
 conditionBlock::=
-[ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| } ]
+[ # ifdef <$?conditionDef> | # ifndef <$?conditionDefNot> | # if <*|\r|\n?!compilerCondition> ] ##in one line
 [{ <headerBlock> }]
-[{<?elif> #elif {<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| }
+[{<?elif> #elif <*|\r|\n?!compilerCondition>
   [{ <headerBlock> }]
 }]  
 [<?elseConditionBlock> #else
   [{ <headerBlock> }]
 ]
 # endif.
+
+
+
+compilerCondition::={<?OrCondition> {<?AndCondition> [ defined ( <$?conditionDef> ) | ! defined ( <$?conditionDefNot> ) | <value?condition> ] ? && } ? \|\| }.
 
 
 
