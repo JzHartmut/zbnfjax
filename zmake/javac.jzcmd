@@ -16,7 +16,7 @@ sub javacjar(Obj target: org.vishia.cmd.ZmakeTarget, Map cc)
   ## remove all existing destinations:
   ##
     
-  Classpath cpJavac = D:\Programme\JAVA\jdk1.7.0_51\lib\tools.jar;  
+  Classpath cpJavac = "D:\Programs\JAVA\jdk1.7.0_65\lib\tools.jar";  
   Class Javac = :cpJavac:com.sun.tools.javac.api.JavacTool;
   ##Obj javaCompiler = java javax.tools.ToolProvider.getSystemJavaCompiler();
   Obj javaCompiler = java new :cpJavac:com.sun.tools.javac.api.JavacTool();

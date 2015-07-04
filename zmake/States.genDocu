@@ -36,63 +36,57 @@ main(){
 <.for:state1>
 
 
-<:for:state:stm.zsrcFile.states><:>  ##all states
+<:for:state:stm.zsrcFile.states>   ##all states
 
-<&-test.dataTree(stm, out,2)>
+##<&test.dataTree(stm, out,2)>
 
-===State <.><&state.src.stateName> <:if:state.enclState><:> in <.><&state.enclState><.if><:if:state.parallelState><:>.<&state.parallelState><.><.if><:> ===
+===State <&state.src.stateName> <:if:state.enclState><:> in <.><&state.enclState><.if><:if:state.parallelState><:>.<&state.parallelState><.><.if><:> ===
 @ident=State_<&state.src.stateName>
-<.>
-<:if:state.enclState><:>
-Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]<.>
-<:if:state.parallelState><:>, Parallel: [[Topic:.states.State_<&state.parallelState>.|<&state.parallelState>]]<.><.if><:>
 
-<.><.if>
-<:>
+<:if:state.enclState>
+Enclosing state: [[Topic:.states.State_<&state.enclState>.|<&state.enclState>]]
+<:if:state.parallelState>, Parallel: [[Topic:.states.State_<&state.parallelState>.|<&state.parallelState>]]<.if>
+
+<.if>
+
 <&state.src.shortdescription><&state.description>
 
-<.>
+
 <:if:state.additionaldescription>
-<:>
+
 '''Zusatzbeschreibung''':
 
 <&state.additionaldescription>
-<.>
+
 <.if>
 <:if:state.tododescription>
-<:>
+
 '''TODO''':
 
 <&state.tododescription>
-<.>
 <.if>
 
 
-<:if:state.subStates><:>
-'''Sub-states''':<.>
+<:if:state.subStates>
+'''Sub-states''':
   <:for:substate:state.subStates><:>
 * [[Topic:.states.State_<&substate.src.stateName>.|<&substate.src.stateName>]] : <&substate.src.shortdescription><.>
   <.for>  
-<:>
-<.>
 <.if>
 
-<:if:state.parallelStates><:>
-'''Parallele States''':<.>
+<:if:state.parallelStates>
+'''Parallele States''':
   <:for:pstate:state.parallelStates><:>
 * [[Topic:.states.State_<&pstate.src.stateName>.|<&pstate.src.stateName>]] : <&pstate.src.shortdescription><.>
   <.for>  
-<:>
-<.>
 <.if>
 
-<:if:state.entry><:>
+<:if:state.entry>
 '''Entry''':
 
 <&state.entry.description>
 
   <&state.entry.code>
-<.>
 <.if>
 <:if:state.exit><:>
 
@@ -163,12 +157,11 @@ Transition-action-code:
 <.><.if>  
 
 <:for:subcond:trans.subCondition>
-* '''cond: ==> <&subcond.dstState>''': ,,(<&subcond.cond>),,<:>
+* '''cond: ==> <&subcond.dstState>''': ,,(<&subcond.cond>),,
 
-<.>
 <.for>
 <.for>  
-<.for><:>
+<.><.for><:>
 
 <.>
 <.+>
