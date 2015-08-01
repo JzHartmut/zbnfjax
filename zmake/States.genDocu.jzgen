@@ -15,27 +15,6 @@ main(){
 @ident=overview
 
 
-<:for:state1:stm.zsrcFile.topStates><:>
-'''[[Topic:.states.State_<&state1.src.stateName>.|<&state1.src.stateName>]]''': <&state1.src.shortdescription>.
-<.><:if:state1.subStates>
-<:for:substate:state1.subStates><:>
-* '''[[Topic:.states.State_<&substate.src.stateName>.|<&substate.src.stateName>]]''': <&substate.src.shortdescription>.
-<.>
-    <:for:substate2:substate.subStates><:>
-** '''[[Topic:.states.State_<&substate2.src.stateName>.|<&substate2.src.stateName>]]''': <&substate2.src.shortdescription>.
-<.> <.for:substate2>  
-  <.for:substate>  
-  <:for:parallel:state1.parallelStates><:>
-* parallel: '''<&parallel.src.stateName>'''  
-<.>
-    <:for:substate2:parallel.subStates><:>
-** '''[[Topic:.states.State_<&substate2.src.stateName>.|<&substate2.src.stateName>]]''': <&substate2.src.shortdescription>.
-<.> <.for:substate2>  
-  <.for:parallel>
-<.if>
-<.for:state1>
-
-
 <:for:state:stm.zsrcFile.states>   ##all states
 
 ##<&test.dataTree(stm, out,2)>

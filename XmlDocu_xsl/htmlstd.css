@@ -42,9 +42,11 @@ dd.umlDescription{background-color:#f0f0f0; margin-left:0pt}
 dt{background-color:#e0f0ff;}
 pre.errordump{background-color:#ffe0e0;}
 pre.example{background-color:#d0ffd0;}
-pre.ccode{background-color:#e0e0ff;}
+pre.srccode{background-color:#ffffc0;}
+pre.ccode{background-color:#c0e0ff;}
 pre.bytes{background-color:#e0f0f0; margin-top:0pt; margin-bottom:0pt;}
 pre.javacode{background-color:#d0ffd0;}
+pre.Jzcode{background-color:#ffd0ff;}
 pre.input{background-color:#e0e0ff;}
 pre.output{background-color:#d0ffd0;}
 pre{background-color:#f0f0f0;}

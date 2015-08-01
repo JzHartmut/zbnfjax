@@ -204,8 +204,8 @@ methodArgumentList::=
 | <typedParameter> 
 | void 
 | <$?defineArgument>  ##any macro instead an argument, maybe necessary in special cases. 
-? , }
-[<conditionalArgument>]
+? [?)] [,] }  ##test: Not a ")", skip a colon.
+##[<conditionalArgument>]
 .
 
 ##Argument in conditional block, either with , before or , after:

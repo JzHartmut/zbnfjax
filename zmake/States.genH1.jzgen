@@ -27,7 +27,7 @@ main(){
 ::::int stepStates_<&stm.zsrcFile.variables.StateSubStruct>(<:subtext:stateMethodArguments>);
 ::::
 ::::/**All state konstant identifier: */
-::::<:for:state:stm.stateMap>
+::::<:for:state:stm.stateList>
 ::::  #define k<&state.stateId>_<&stm.zsrcFile.variables.StateSubStruct> <&state.auxInfo().zsrcState.stateNr>   
 ::::  <:if:state.aSubstates><: >
       #define kNull_<&state.stateId>_<&stm.zsrcFile.variables.StateSubStruct> 0x000<: >
