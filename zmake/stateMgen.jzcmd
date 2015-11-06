@@ -1,19 +1,54 @@
 
-sub stateMgen(Obj target, Filepath src)
+
+/**Zmake routine to generate statemachine code from a sourcefile.
+ * @param target The target should given in the form "path/file.*". A .c and a .h-File will be produced. 
+ * @param src Path to a C++ file with proper syntax.
+ * @since 2015-09-06 tested
+ */
+sub stateMgen(Obj target:org.vishia.cmd.ZmakeTarget, Filepath src)
 {
 
   Obj stateTranslator = java new org.vishia.stateMGen.StateMGen(console);
 
-  Obj args = java new org.vishia.stateMGen.StateMGen$Args();
+  Obj args = java new org.vishia.zcmd.Zbnf2Text$Args();
   
   args.sFileIn = src.absfile();
-  args.sFileZbnf = <:><&scriptdir>/../zbnf/StateMCpp.zbnf<.>;
-  args.addGenOut(<:><&scriptdir>/States.genC1.zgen<.>, <:><&target.output.absname()>.c<.>);
-  args.addGenOut(<:><&scriptdir>/States.genH1.zgen<.>, <:><&target.output.absname()>.h<.>);
+  args.sFileSyntax = <:><&scriptdir>/../zbnf/StateMCpp.zbnf<.>;
+  args.sFileSrcData = <:><&target.output.absdir()>/<&src.name()>.dataCheck.html<.>;
+  args.addGenOut(<:><&scriptdir>/States.genC1.jzgen<.>, <:><&target.output.absname()>.c<.>);
+  args.addGenOut(<:><&scriptdir>/States.genH1.jzgen<.>, <:><&target.output.absname()>.h<.>);
   
   
   stateTranslator.execute(args);
 
 
+
+}
+
+
+
+sub zmakeStateM(Obj target : org.vishia.cmd.ZmakeTarget) {
+
+List inputs = target.allInputFilesExpanded();
+for(input:inputs) {
+  Obj src = File:<:><&input.absfile()><.>;
+  Obj dst = File:<:><&target.output.absdir()>/<&input.name()>Gen.c<.>;
+  <+out>Check: <&input.absfile()><.+n>
+  if(FileSystem.checkNewless(src,dst,0)){
+    <+out>should translate: <&input.absfile()><.+n>
+    Obj stateTranslator = java new org.vishia.stateMGen.StateMGen(console);
+
+    Obj args = java new org.vishia.zcmd.Zbnf2Text$Args();
+    
+    args.sFileIn = input.absfile();
+    args.sFileSyntax = <:><&scriptdir>/../zbnf/StateMCpp.zbnf<.>;
+    args.addGenOut(<:><&scriptdir>/States.genC1.jzgen<.>, <:><&target.output.absdir()>/<&input.name()>Gen.c<.>);
+    args.addGenOut(<:><&scriptdir>/States.genH1.jzgen<.>, <:><&target.output.absdir()>/<&input.name()>Gen.h<.>);
+    
+    
+    stateTranslator.execute(args);
+    <+out><.+n>
+  }
+} //for
 
 }

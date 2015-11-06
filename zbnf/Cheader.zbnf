@@ -3,6 +3,7 @@ $xmlns:topics="http://www.vishia.de/2006/Topics".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 
 ##yyyy-mm-dd who      what
+##2015-09-30 Hartmut some spaces before ; bug: syntax error if the source had contain a space before ;
 ##2012-06-08 Hartmut switch-statement. Some corrections while parsing normal C-files.
 ##2010-10-11 Hartmut for::=, using INLINE_Fwc in headerfiles whith some expressions
 ##2009       Hartmut some details
@@ -192,9 +193,9 @@ implicitStructAttribute::=[/**<description>*/] struct <structDefinition?><?@impl
 methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] )
 [<?@modifier>volatile|const|] [;|<statementBlock>|].
 
-methodPtrTypedef::= [METHOD_C |extern "C"|extern_C |extern |C_TYPE |] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]);.
+methodPtrTypedef::= [METHOD_C |extern "C"|extern_C |extern |C_TYPE |] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]) ;.
 
-methodTypedef::= [METHOD_C|extern "C" |extern_C |extern |C_TYPE |] <type> [<$?class> :: ] <$?name> ( [|<methodArgumentList?>] );.
+methodTypedef::= [METHOD_C|extern "C" |extern_C |extern |C_TYPE |] <type> [<$?class> :: ] <$?name> ( [|<methodArgumentList?>] ) ;.
 
 
 ##a defineArgument is a define which replaces a type name - argument specification with a simple identifier. It's used for special cases.
@@ -352,14 +353,14 @@ superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
 ##NOTE: attributes may be written in form: type name,name[xx],name.
 ##     But it doesn't consider a asterix here like int *name,*other. The first asterix is parsed associated to the type, the second cause an parse error here.
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
-##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,};.
+##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,} ;.
 attribute::=<?> [/**<description?-?>*/] [<?-modifier> extern "C" | extern_C<!\\s?>| extern<!\\s?>| static<!\\s?>|] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
 attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |] ; [//:<*\n?description/text>].
 attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |].
 
 ?attributedefDescr::="Possibility to write //: as endline comment description. It is applicable if only one attribute is defined, not more as one separated with colon ".
 
-##The short form doesn't work yet:# attribute::=<?*> [/**<description?-?>*/] <type?-?> {<?+attribute> <$?@name> [<arraysize>| = <value> |] ?,};.
+##The short form doesn't work yet:# attribute::=<?*> [/**<description?-?>*/] <type?-?> {<?+attribute> <$?@name> [<arraysize>| = <value> |] ?,} ;.
 
 
 ##NOTE: \{ ... \} are defined outside to faster parse.
@@ -448,10 +449,10 @@ classContent::=<?>
 |<?classForward> class <$?@name> ;
 |<?structForward> struct <$?@name> ;
 |<?implicitAttribute> <classDef> <$?name> ;
-| <classDef>;
+| <classDef> ;
 ##| <structDef?+@>
 | <Destructor>
-| [inline] <operatorDef?operator> [<?@modifier>volatile|const|] [;|<statementBlock>]
+| [inline] <operatorDef?operator> [<?@modifier>volatile|const|] [ ;|<statementBlock>]
 | [inline] <methodDef> 
 |<?constructor> <$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>]
 | <attribute?+?>
@@ -498,7 +499,7 @@ statement::=
 
 
 ##variabledefinition::=<$?type> <$?attribute> [ = [<objectAccess>|<value>] ];.
-variabledefinition::=<type> { [<typeRefModifier>] <$?name> [ = [<objectAccess>|<value>] ] ? , };.
+variabledefinition::=<type> { [<typeRefModifier>] <$?name> [ = [<objectAccess>|<value>] ] ? , } ;.
 
 
 

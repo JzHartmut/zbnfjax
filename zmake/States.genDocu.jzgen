@@ -1,3 +1,6 @@
+##Note: stm is a script variable which is filled by the stateMgen conversion control routine which calls this script.
+##stm is type of org.vishia.stateMGen.StateMGen$GenStateMachine. See the maybe written report file of data structure
+##given by command line arg checkdata:result/data_StatemSrc.html (data_StatemSrc.dst.html).
 
 
 subtext substates()
@@ -15,7 +18,8 @@ main(){
 @ident=overview
 
 
-<:for:state:stm.zsrcFile.states>   ##all states
+##<:for:state:stm.zsrcFile.states>   ##all states
+<:for:state:stm.stateList>   ##all states
 
 ##<&test.dataTree(stm, out,2)>
 
