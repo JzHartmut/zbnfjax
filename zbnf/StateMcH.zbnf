@@ -1,0 +1,45 @@
+<?ZBNF-www.vishia.de version="1.0" encoding="iso-8859-1" ?>
+$xmlns:topics="http://www.vishia.de/2006/Topics".
+$xmlns:xhtml="http://www.w3.org/1999/xhtml".
+$inputEncodingKeyword="encoding".
+$comment=/*...*/.
+$endlineComment=//.
+
+##Top level Syntax for the C++ statemachine source:
+##
+StateMachine::=      
+{ #include <* \n?includeLine>
+}
+
+typedef int TransFn(<*)?transFnArgs>);
+
+{
+  typedef struct <stateStruct?topStateStruct> ;
+|<?entryState> void entry_<$?state> ( <*)?args> );
+|<?exitState>  void exit_<$?state> ( <*)?args> );
+|<?checkState> int checkTrans_<$?state> ( <*)?args> );
+}
+ 
+
+extern const <$?topStateType> <$?topStateName> ;
+
+\e.
+
+##end top level syntax.
+
+
+
+stateStruct::=
+[<$?tagname>] \{
+
+{ int stateId_<* ;?stateId> ;
+  
+| int history ; <?hasHistory>
+
+| int parallel ; <?stateParallel>
+
+| TransFn * <$?Dst_Dst> ;
+
+| struct <stateStruct> ;
+
+} \} <$?stateName> .

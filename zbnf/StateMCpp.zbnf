@@ -80,13 +80,16 @@ trans::= [<#?nrTrans>](                    ##can start with a number only for co
 | int time = <*\{?timeP>                   ##The default value for a optional 'time' argument is the timer value really. 
 | { class <$?joinState> [*] join[<$?>]  ? , } ) ##The type name of a 'joinxyz' argument is a join state really.
 ]
-<transbody?>.
-
+[ \{ if ( { <*\{?condP> <transbody?> ? else if ( } 
+     [ else  <transbody?> ]
+  \}   
+| <transbody?>.
+]
 
 ##Body of a transition method in the primary C++ source.
 ##
 transbody::= \{
-  <* |switchTo?code>  ##any C-code till first new for the transition code.
+  <* |switchTo?code>  ##any C-code till switchTo for the transition code.
   switchTo (
   {  new  { History<?history> | <$?dstState> ? :: } [ ( )]   ##Note: last of State::State is dstState
   ? , <?fork>    ##Note: if more as one state then it is a fork. Mark it.
