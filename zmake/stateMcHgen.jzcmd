@@ -15,8 +15,8 @@ sub stateMcHgen(Obj target:org.vishia.cmd.ZmakeTarget, Filepath src)
   args.sFileIn = src.absfile();
   args.sFileSyntax = <:><&scriptdir>/../zbnf/StateMcH.zbnf<.>;
   args.sFileSrcData = <:><&target.output.absdir()>/<&src.name()>.dataCheck.html<.>;
-  args.addGenOut(<:><&scriptdir>/States.genC1.jzgen<.>, <:><&target.output.absname()>.c<.>);
-  args.addGenOut(<:><&scriptdir>/States.genH1.jzgen<.>, <:><&target.output.absname()>.h<.>);
+  args.addGenOut(<:><&scriptdir>/stateMcHgenH.jzgen<.>, <:><&target.output.absname()>.h<.>);
+  args.addGenOut(<:><&scriptdir>/stateMcHgenC.jzgen<.>, <:><&target.output.absname()>.c<.>);
   
   
   stateTranslator.execute(args);

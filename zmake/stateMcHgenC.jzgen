@@ -1,0 +1,139 @@
+
+==JZcmd==
+##Note: stm is a script variable which is filled by the stateMgen conversion control routine which calls this script.
+##stm is type of org.vishia.stateMGen.StateMGen$GenStateMachine. See the maybe written report file of data structure
+##given by command line arg checkdata:result/data_StatemSrc.html (data_StatemSrc.dst.html).
+
+
+##!checkJZcmd = "result/check_States.genC.txt";
+##!checkXml = <:><&currdir>/check_States.genC.xml<.>;
+
+Filepath outfile = &sOutfile; ##sOutfile is defined in the java calling environment: path to the out file which is written by <+>...<.+>
+
+String stateMethodSuffix = stm.zbnfSrc.topStateType;
+
+Class classStateComposite = org.vishia.states.StateComposite;   ##used for instanceof check
+Class classStateCompositeFlat = org.vishia.states.StateCompositeFlat;   ##used for instanceof check
+Class classStateParallel = org.vishia.states.StateParallel;  ##used for instanceof check
+
+
+
+
+main(){
+    <+><:s>
+:::://This file is generated from StateMGen.java 
+::::<.+>
+  for(includeline:stm.zbnfSrc.includeLines) 
+  { <+>
+::::#include <&includeline><.+>
+  }
+    <+>  
+::::    
+::::#include "<&outfile.name()>.h"  //include the generated header file.
+::::
+:::://all entry-prototypes:<.+>
+  for(state: stm.listStates)
+  {
+    <+>
+::::void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
+  }
+    <+>
+::::<.+>  
+  for(state: stm.listStates)
+  { <+>
+::::void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
+  }
+    <+>
+::::
+::::<.+>
+  Obj idxEntry = stm.zbnfSrc.idxEntry;
+  Obj idxExit = stm.zbnfSrc.idxExit;
+  Obj idxCheck = stm.zbnfSrc.idxCheck;
+
+  
+  for(state: stm.listStates)
+  { Obj zsrcState = state.auxInfo(); 
+  
+    for(trans: state.aTransitions) 
+    {
+      <+>
+::::::      
+::::::      
+:::::://Transition of <&state.stateId>
+::::::static int doTrans_<&trans.transId>(<&stm.zbnfSrc.transFnArgs>) {
+::::::<.+>
+      for(exitState:trans.exitStates) {           
+        <+>
+  ::::::  #ifdef __DEBUG_entryprintf_States_Fwc__
+  ::::::    printf("   exit <&exitState.stateId>;\n");
+  ::::::  #endif<.+>
+        if(zsrcState.hasHistory) {
+          <+>
+  ::::::::  //It is a composite state with a history state. Mark the state number with the inactive bit:
+  ::::::::  <todo&stm.zbnfSrc.variables.stateInstance>.state<&exitState.stateId> |= 0x80000000; <.+>
+        } elsif(exitState.aParallelStates) {                       
+          <+>
+  ::::::::  //It is a composite state without a history state. Set the state number to zero.
+  ::::::::  <todo&stm.zbnfSrc.variables.stateInstance>.state<&stateComposite.stateId> = 0; <.+>
+        }
+        Obj exit1 = idxExit.get(exitState.stateId);
+        if(exit1) {
+          <+>
+  ::::::::  exit_<&exitState.stateId>(<:for:argVariable:exit1.argVariables><&argVariable>, <.for>);
+          <.+>
+        }
+      }//exitState                                           
+      <+>  
+::::::  <:if:trans.zsrcTrans><&trans.zsrcTrans.code><.if><.+>
+      
+
+      for(entryState:trans.entryStates) {         
+        //genStateM: entry StateComposite or StateSimple. <.+>
+        if(entryState.rootState) { ##check whether it is not null. It is null on a parallel state or the stateTop.                                                   
+          <+>
+  ::::::::  <&stm.zbnfSrc.stateInstance>.state<&entryState.rootState.stateId> = k<&entryState.stateId>_<&stateMethodSuffix>;<.+>
+        }
+        if(entryState.auxInfo().timeCondition) { 
+          <+>
+  ::::::::  <todo&stm.zbnfSrc.variables.stateInstance>.timer<&entryState.rootState.stateId> = <&entryState.auxInfo().timeCondition>;<.+>  
+        } //timeCondition
+        //Obj entry = stm.zbnfSrc.idxEntry.&(entryState.stateId);  //search the state in the idxEntry, search whether a entry method was defined.
+        Obj entry = idxEntry.get(entryState.stateId);
+        if(entry) {
+          <+> 
+  ::::::::  //invoke the user defined entry-method. ##with arguments
+  ::::::::  entry_<&entryState.stateId>(<:for:argVariable:entry.argVariables><&argVariable><:hasNext>, <.hasNext><.for>);
+          <.+>
+        }
+        
+        
+        <+>
+  ::::::  #ifdef __DEBUG_entryprintf_States_Fwc__
+  ::::::    printf(" entry <&entryState.stateId>;\n");
+  ::::::  #endif
+::::::::<.+>
+      }//entryState 
+      <+>    
+::::::    trans = mTransit_States_Fwc; <.+>
+::::::<+>
+::::::  return 0;
+::::::}
+::::::<.+>
+    }//trans
+  
+  }//state
+  
+  
+  
+  
+  
+  
+} ##main
+
+
+
+
+
+
+
+
