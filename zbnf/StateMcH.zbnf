@@ -16,17 +16,16 @@ StateMachine::=
 typedef int TransFn(<*)?transFnArgs>);
 
 {
-  typedef struct [<$?tagName>] \{
-  { struct <stateStruct> ;  } 
-  \} <$?stateName> ;
+  typedef struct <stateDef> ;
 
 | int entry_<stateMethod?entryState> ;
 | void exit_<stateMethod?exitState> ;
 | int checkTrans_<stateMethod?checkState>;
 }
- 
 
-extern const <$?topStateType> <$?topStateName> ;
+
+typedef struct <stateStruct> ;
+
 
 \e.
 
@@ -40,18 +39,43 @@ stateMethod::=<$?state> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg without
 
 
 
-stateStruct::=
+stateDef::=
 [<$?tagname>] \{
+  State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
+[{ TransFn * <$?Dst_Dst> ;
+
+}] 
+\} <$?stateType> .
+
+
+
+
+stateStruct::= [<$?tagname>] \{
+[ StateParallel_Fwc <$?stateParallel> ; ]
+{ 
+  <stateDefInStateStruct> ; 
+| struct <stateStruct> ;
+
+} 
+\} <$?stateName> .
+
+
+
+stateDefInStateStruct::=<$?stateType> <$?stateName>.
+
+
+
+old::=
+  <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
 [ State_Fwc
 | StateComposite_Fwc <?stateComposite>
 | StateHistory_Fwc <?hasHistory>
 | StateParallel_Fwc <?stateParallel>
 ]
-  <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
-[{ TransFn * <$?Dst_Dst> ;
 
-| struct <stateStruct> ;
 
-}] 
-\} <$?stateName> .
+
+
+
+extern const <$?topStateType> <$?topStateName> ;
 
