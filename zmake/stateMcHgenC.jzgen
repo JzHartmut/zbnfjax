@@ -31,27 +31,64 @@ main(){
 ::::    
 ::::#include "<&outfile.name()>.h"  //include the generated header file.
 ::::
+::::#ifdef __DEBUG_entryprintf_States_Fwc__
+::::  #include <stdio.h>
+::::#endif
 :::://all entry-prototypes:<.+>
-  for(state: stm.listStates)
+  for(state: stm.stateList())
   {
     <+>
 ::::void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
   }
     <+>
 ::::<.+>  
-  for(state: stm.listStates)
+  for(state: stm.stateList())
   { <+>
 ::::void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
   }
     <+>
 ::::
 ::::<.+>
+  
+  call generateDoTrans();
+  
+  
+  <+>
+::
+:://all const state declaration:<.+>
+  for(state: stm.stateList())
+  { Obj auxInfo = state.auxInfo();
+    if(auxInfo && auxInfo.stateType){
+      <+>
+::::::extern <&auxInfo.stateType> const <&auxInfo.stateName>;<.+>
+    }
+  }
+  <+>
+::
+::
+::<&stm.zbnfSrc.topState.stateName> const stateConst =<.+>
+  
+  call generateSubStateRef(state= stm.stateTop);
+  
+  for(state: stm.stateList())
+  { call generateStateConst(state=state);
+  }
+
+  
+} ##main
+
+
+
+
+sub generateDoTrans()
+{
+
   Obj idxEntry = stm.zbnfSrc.idxEntry;
   Obj idxExit = stm.zbnfSrc.idxExit;
   Obj idxCheck = stm.zbnfSrc.idxCheck;
 
   
-  for(state: stm.listStates)
+  for(state: stm.stateList())
   { Obj zsrcState = state.auxInfo(); 
   
     for(trans: state.aTransitions) 
@@ -60,7 +97,8 @@ main(){
 ::::::      
 ::::::      
 :::::://Transition of <&state.stateId>
-::::::static int doTrans_<&trans.transId>(<&stm.zbnfSrc.transFnArgs>) {
+::::::static int doTrans_<&trans.transId>(<&stm.zbnfSrc.transFnArgs>)
+::::::{ int trans = 0;
 ::::::<.+>
       for(exitState:trans.exitStates) {           
         <+>
@@ -114,9 +152,9 @@ main(){
 ::::::::<.+>
       }//entryState 
       <+>    
-::::::    trans = mTransit_States_Fwc; <.+>
+::::::  trans |= mTransit_States_Fwc; <.+>
 ::::::<+>
-::::::  return 0;
+::::::  return trans;
 ::::::}
 ::::::<.+>
     }//trans
@@ -124,16 +162,52 @@ main(){
   }//state
   
   
-  
-  
-  
-  
-} ##main
+
+}
+
+
+
+sub generateSubStateRef(Obj state:StateCompositeFlat)
+{
+  String sep = "{";
+  if(state.aSubstates) { 
+  for(substate: state.aSubstates) 
+  {
+    if(0 && substate ?instanceof classStateCompositeFlat) {
+      <+>
+::::::{ { 0, null } <.+>
+:::::://<&substate.auxInfo().stateType> const <&substate.auxInfo().stateName> = <.+>
+      
+      call generateSubStateRef(state = substate);
+    } else {
+      <+>
+::::::<&sep> &<&substate.auxInfo().stateName><.+>
+    }
+    sep = ",";
+  }}
+  <+>
+::};
+::
+::
+::<.+>
+
+
+}
 
 
 
 
-
-
-
+sub generateStateConst(Obj state:StateSimple)
+{
+  Obj auxInfo = state.auxInfo();
+  if(auxInfo && auxInfo.stateType){
+        
+    <+>
+::::
+::::
+::::<&state.auxInfo().stateType> const <&state.auxInfo().stateName>_Const =
+::::{ <.+>  
+    call generateSubStateRef(state=state);
+  }
+}
 

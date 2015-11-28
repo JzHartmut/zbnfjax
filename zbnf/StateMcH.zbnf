@@ -24,7 +24,7 @@ typedef int TransFn(<*)?transFnArgs>);
 }
 
 
-typedef struct <stateStruct> ;
+typedef struct <stateStruct?topState> ;
 
 
 \e.
@@ -38,30 +38,38 @@ typedef struct <stateStruct> ;
 stateMethod::=<$?state> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg without left and right white spaces, space after asterisk
 
 
-
+##A stateDef is the definition of a simple state whith ists transitions.
+##
 stateDef::=
 [<$?tagname>] \{
-  State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
+[ State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
+| StateParallel_Fwc <$?stateParallel> ; ## it it starts with this, it is a parallel state. 
+]
 [{ TransFn * <$?Dst_Dst> ;
-
-}] 
+ | StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
+ | <stateDefInStateStruct> ;             ## a state typedef written before
+ | struct <stateStruct> ;                ## a definition of a composite state.
+} <?isComposite> ] 
 \} <$?stateType> .
 
 
 
-
+##A stateStruct defines a composite or parallel state.
+##
 stateStruct::= [<$?tagname>] \{
-[ StateParallel_Fwc <$?stateParallel> ; ]
+[ StateParallel_Fwc <$?stateParallel> ; ## it it starts with this, it is a parallel state. 
+| StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
+|]
 { 
-  <stateDefInStateStruct> ; 
-| struct <stateStruct> ;
+  <stateDefInStateStruct> ;             ## a state typedef written before
+| struct <stateStruct> ;                ## a definition of a composite state.
 
 } 
 \} <$?stateName> .
 
 
 
-stateDefInStateStruct::=<$?stateType> <$?stateName>.
+stateDefInStateStruct::=[ struct <$?stateTag> | <$?stateType> ] [const * <?ref>] <$?stateName>.
 
 
 

@@ -12,7 +12,7 @@ main(){
 ::::#define __<&outfile.name()>_h__
 ::::
 ::::/**This struct contains all data which are necessary in the generated code for the state processing. */
-::::typedef struct Data_<&stm.zbnfSrc.topStateType>_t 
+::::typedef struct Data_<&stm.zbnfSrc.topState.stateName>_t 
 ::::{<.+>  
   for(state:stm.rootStates) {
     <+> 
@@ -25,7 +25,7 @@ main(){
       } 
   } //for  
     <+>
-::::} Data_<&stm.zbnfSrc.topStateType>;
+::::} Data_<&stm.zbnfSrc.topState.stateName>;
 ::::
 ::::int stepStates_<&stm.zbnfSrc.topStateType>(<&stm.zbnfSrc.transFnArgs>);
 ::::
