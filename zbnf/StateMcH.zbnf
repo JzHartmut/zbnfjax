@@ -8,6 +8,8 @@ $endlineComment=//.
 ##Top level Syntax for the C++ statemachine source:
 ##
 StateMachine::=      
+#ifndef <*\n?>
+#define <*\n?>
 { #include <* \n?includeLine>
 }
 
@@ -23,9 +25,10 @@ typedef int TransFn(<*)?transFnArgs>);
 | int checkTrans_<stateMethod?checkState>;
 }
 
-
+##Note: difference between typedef struct <stateDef> is: The topState does not start with 'State_Fwc' etc.
 typedef struct <stateStruct?topState> ;
 
+#endif
 
 \e.
 
@@ -43,9 +46,9 @@ stateMethod::=<$?state> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg without
 stateDef::=
 [<$?tagname>] \{
 [ State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
-| StateParallel_Fwc <$?stateParallel> ; ## it it starts with this, it is a parallel state. 
+| StateParallel_Fwc <*_;\ ?stateParallel>[_<*\ ;?stateId>] ; ## it it starts with this, it is a parallel state. 
 ]
-[{ TransFn * <$?Dst_Dst> ;
+[{ TransFn * <$?dotransDst> ;
  | StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
  | <stateDefInStateStruct> ;             ## a state typedef written before
  | struct <stateStruct> ;                ## a definition of a composite state.
@@ -58,10 +61,10 @@ stateDef::=
 ##
 stateStruct::= [<$?tagname>] \{
 [ StateParallel_Fwc <$?stateParallel> ; ## it it starts with this, it is a parallel state. 
-| StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
-|]
+]
 { 
   <stateDefInStateStruct> ;             ## a state typedef written before
+| StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
 | struct <stateStruct> ;                ## a definition of a composite state.
 
 } 
@@ -69,7 +72,7 @@ stateStruct::= [<$?tagname>] \{
 
 
 
-stateDefInStateStruct::=[ struct <$?stateTag> | <$?stateType> ] [const * <?ref>] <$?stateName>.
+stateDefInStateStruct::=[ struct <$?stateTag> | <$?stateType> ] [ [const] * <?ref>] <$?stateName>.
 
 
 

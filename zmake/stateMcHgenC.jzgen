@@ -12,9 +12,11 @@ Filepath outfile = &sOutfile; ##sOutfile is defined in the java calling environm
 
 String stateMethodSuffix = stm.zbnfSrc.topStateType;
 
-Class classStateComposite = org.vishia.states.StateComposite;   ##used for instanceof check
-Class classStateCompositeFlat = org.vishia.states.StateCompositeFlat;   ##used for instanceof check
-Class classStateParallel = org.vishia.states.StateParallel;  ##used for instanceof check
+##used for instanceof check:
+Class classStateComposite = org.vishia.states.StateComposite;   
+Class classStateCompositeFlat = org.vishia.states.StateCompositeFlat; 
+Class classStateParallel = org.vishia.states.StateParallel;        
+Class classStateDeepHistory = org.vishia.states.StateDeepHistory;  
 
 
 
@@ -22,6 +24,7 @@ Class classStateParallel = org.vishia.states.StateParallel;  ##used for instance
 main(){
     <+><:s>
 :::://This file is generated from StateMGen.java 
+::::#include <Fwc/fw_StateMachine.h>
 ::::<.+>
   for(includeline:stm.zbnfSrc.includeLines) 
   { <+>
@@ -35,7 +38,7 @@ main(){
 ::::  #include <stdio.h>
 ::::#endif
 :::://all entry-prototypes:<.+>
-  for(state: stm.stateList())
+  for(state: stm.stateList())                                  
   {
     <+>
 ::::void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
@@ -47,33 +50,71 @@ main(){
 ::::void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
   }
     <+>
-::::
+::::    
+::::    
+:::://All transition execution routines: (stateMcHgenC.jzgen)
 ::::<.+>
-  
   call generateDoTrans();
   
   
   <+>
 ::
-:://all const state declaration:<.+>
+
+:://All const state declaration: (stateMcHgenC.jzgen)<.+>
   for(state: stm.stateList())
   { Obj auxInfo = state.auxInfo();
     if(auxInfo && auxInfo.stateType){
       <+>
-::::::extern <&auxInfo.stateType> const <&auxInfo.stateName>;<.+>
+::::::extern <&auxInfo.stateType> const <&auxInfo.stateName>_StateConst;<.+>
     }
   }
   <+>
 ::
-::
-::<&stm.zbnfSrc.topState.stateName> const stateConst =<.+>
+:://Definition of the top state: (stateMcHgenC.jzgen)
+:://
+::<&stm.zbnfSrc.topState.stateName> const stateConst =
+::{<.+>
   
   call generateSubStateRef(state= stm.stateTop);
+  <+>
+::};
+::
+::
+::<.+>
   
+  for(state: stm.stateList())
+  { call generateStatePathConst(state=state);
+  }
+  <+>
+::
+:://All const statePath definition: (stateMcHgenC.jzgen)
+::static State_Fwc const* const statePath_Off_State_TESTxx [] = 
+::{
+::  &off_StateConst.id_0x0001
+::};
+::
+:://TESTxx
+::Off_State const off_StateConst_TESTxx =
+::{ { 0x0001, &statePath_Off_State_TESTxx[0]}
+::, doTrans_workHistory 
+::, doTrans_ready
+::};
+::
+::
+::<.+>
+  <+>
+::
+:://All const state definition: (stateMcHgenC.jzgen)
+::
+::<.+>
   for(state: stm.stateList())
   { call generateStateConst(state=state);
   }
-
+    
+  call gen_stepStates();
+  
+  call gen_stepTimer();
+  
   
 } ##main
 
@@ -155,7 +196,7 @@ sub generateDoTrans()
 ::::::  trans |= mTransit_States_Fwc; <.+>
 ::::::<+>
 ::::::  return trans;
-::::::}
+::::::}                                                               
 ::::::<.+>
     }//trans
   
@@ -169,45 +210,114 @@ sub generateDoTrans()
 
 sub generateSubStateRef(Obj state:StateCompositeFlat)
 {
-  String sep = "{";
+  String sep = "";
   if(state.aSubstates) { 
+  <+>
+::  //The nested states, it is part of the struct definition: (stateMcHgenC.jzgen)
+::,<.+>  
   for(substate: state.aSubstates) 
   {
     if(0 && substate ?instanceof classStateCompositeFlat) {
       <+>
-::::::{ { 0, null } <.+>
-:::::://<&substate.auxInfo().stateType> const <&substate.auxInfo().stateName> = <.+>
+::::::{ { 0, null }
+:::::://<&substate.auxInfo().stateType> const <&substate.auxInfo().stateName> = 
+::::::, <.+>
       
       call generateSubStateRef(state = substate);
+      <+>
+::::::};
+::::::
+::::::
+::::::<.+>
+    } elsif(substate ?instanceof classStateDeepHistory) {
+      <+>
+::::::<&sep> { 0 }  //deepHistory<.+>      
     } else {
       <+>
-::::::<&sep> &<&substate.auxInfo().stateName><.+>
+::::::<&sep> &<&substate.auxInfo().stateName>_StateConst<.+>
     }
     sep = ",";
   }}
-  <+>
-::};
-::
-::
-::<.+>
 
 
 }
 
 
+sub generateStatePathConst(Obj state:StateSimple)
+{
+  Obj auxInfo = state.auxInfo();
+  if(auxInfo && auxInfo.stateType){
+        
+    <+>
+:::://generateStatePathConst: (stateMcHgenC.jzgen)
+:::://It is the path to the nested state inside the top state, used for a history transition, used as info for documentation.
+:::://
+::::static State_Fwc const* const statePath_<&state.auxInfo().stateType> [] = //const statePath_<&state.auxInfo().stateName>
+::::{ 
+::::  0
+::::};
+::::
+::::<.+>  
+  }
+}
 
 
 sub generateStateConst(Obj state:StateSimple)
 {
   Obj auxInfo = state.auxInfo();
   if(auxInfo && auxInfo.stateType){
-        
+    <+>   
+:::://generateStateConst: (stateMcHgenC.jzgen)
+:::://It is the const description data for a state, containing the reference to the doTransition... routines.
+:::://
+::::<&auxInfo.stateType> const <&auxInfo.stateName>_StateConst =<.+>
+    if(state ?instanceof classStateParallel) {
+      <+>
+::::::{ //StateParallel head data: (stateMcHgenC.jzgen) 
+::::::  { { <&auxInfo.stateId>, &statePath_<&auxInfo.stateType>[0] } }  //stateId and reference to statePath array<.+>
+    } else { //StateSimple or StateComposite
+::::::<+>
+::::::{ //The state const head data:
+::::::  { <&auxInfo.stateId>, &statePath_<&auxInfo.stateType>[0] } //stateId and reference to statePath array<.+>
+    }
     <+>
+::::  //The dotrans routines used in the manual written transition routines: (stateMcHgenC.jzgen)<.+>  
+    for(dotransDst: auxInfo.dotransDst) {
+      <+>
+::::::, doTrans_<&dotransDst><.+>      
+    }
+    if(state ?instanceof classStateCompositeFlat) {
+      call generateSubStateRef(state=state);
+    } elsif(state ?instanceof classStateParallel) {
+      <+>
+::::::  //parallel states, it is a part of struct definition: (stateMcHgenC.jzgen)<.+>  
+    }
+    <+>
+::::};
 ::::
-::::
-::::<&state.auxInfo().stateType> const <&state.auxInfo().stateName>_Const =
-::::{ <.+>  
-    call generateSubStateRef(state=state);
+::::<.+>
   }
 }
+
+
+sub gen_stepStates() 
+{
+  <+>
+::int stepStates_State_ExampleSimpleData(struct ExampleSimpleData_t* thiz,int){ return 0; }
+::<.+>
+}
+
+
+
+
+sub gen_stepTimer() 
+{
+  <+>
+::void stepStateTimer_State_ExampleSimpleData(struct ExampleSimpleData_t* thiz,int)
+::{
+::}
+::<.+>
+}
+
+
 

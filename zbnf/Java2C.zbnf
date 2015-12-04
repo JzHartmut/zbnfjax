@@ -90,11 +90,12 @@ java2cTag::=
 
 
 Java4CAnnotationClass::=<?>
-[ 
+[{ 
   <?staticInstance> StaticInstance            ##to class
 | <?noObject> NoObject             ##to class: no superclass ObjectJc
 | ExtendsOnlyMethods
-].
+| ExcludeInterface(<""?ExcludeInterface>)
+}].
 
 Java4CAnnotationVariable::=
 [ Exclude <?exclude>
@@ -129,6 +130,7 @@ Java4CAnnotationMethod::=
 
 Java4CAnnotationType::=
   FixArraySize(<#?fixArraySize>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
+##| SimpleArraySize(<#?fixArraySize>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
 |<?simpleArray> SimpleArray       ##simple Array with size in constructor. 
 |<?noGC> noGC                     ##only simple, not an enhanced refernece
 |<?noGC> SimpleRef                ##only simple, not an enhanced refernece
@@ -255,7 +257,7 @@ constructorDefinition::=
 <$?constructor>
 ( [<argumentList>] )  ##a
 [ <throwsDeclaration>]
-\{ [<?superCall> [<reference>]super ( [<actualArguments>] ); ]
+\{ [<?superCall> [|<reference>]super ( [<actualArguments>] ); ]
    [<statementsOrDefinition> ]
 \}.
 
