@@ -34,6 +34,7 @@ main(){
     <+>
 ::::#define k<&state.stateId>_<&stm.zbnfSrc.topStateType> <&state.auxInfo().stateId><.+>   
  } //for
+ for(state:stm.stateList) { call stateConstStruct(state = state); }
     <+>
 ::::
 ::::#endif  // __<&outfile.name()>_h__
@@ -42,3 +43,16 @@ main(){
 }
 
 
+
+
+sub stateConstStruct(Obj state: StateSimple)
+{
+  <+>
+::
+:://definition of the structure of constant data for any state: (stateMcHgenH.jzgen)
+::typedef struct ConstState_<&state.stateId>_t 
+::{ TransFn* checkTrans;
+::} ConstState_<&state.stateId>;
+::<.+>   
+
+}

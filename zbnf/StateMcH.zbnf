@@ -26,7 +26,7 @@ typedef int TransFn(<*)?transFnArgs>);
 }
 
 ##Note: difference between typedef struct <stateDef> is: The topState does not start with 'State_Fwc' etc.
-typedef struct <stateStruct?topState> ;
+##typedef struct <stateStruct?topState> ;
 
 #endif
 
@@ -45,21 +45,24 @@ stateMethod::=<$?state> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg without
 ##
 stateDef::=
 [<$?tagname>] \{
-[ State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
-| StateParallel_Fwc <*_;\ ?stateParallel>[_<*\ ;?stateId>] ; ## it it starts with this, it is a parallel state. 
+[  <$?parallelParentState> parallelParent ;
+| [<$?parentState> parent ; ]
+  [ State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
+  | StateParallel_Fwc <*_;\ ?stateParallel>[_<*\ ;?stateId>] ; ## it it starts with this, it is a parallel state. 
+  ]
+  [{ TransFn * <$?dotransDst> ; }]
+  [ StateHistory_Fwc <$?stateHistory> ; ]   ## or if it starts with this, it has a history state for history entry.
+  ## | <stateDefInStateStruct> ;             ## a state typedef written before
+  ## | struct <stateStruct> ;                ## a definition of a composite state.
+  ##} <?isComposite> ] 
 ]
-[{ TransFn * <$?dotransDst> ;
- | StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
- | <stateDefInStateStruct> ;             ## a state typedef written before
- | struct <stateStruct> ;                ## a definition of a composite state.
-} <?isComposite> ] 
 \} <$?stateType> .
 
 
 
 ##A stateStruct defines a composite or parallel state.
 ##
-stateStruct::= [<$?tagname>] \{
+XXXstateStruct::= [<$?tagname>] \{
 [ StateParallel_Fwc <$?stateParallel> ; ## it it starts with this, it is a parallel state. 
 ]
 { 
@@ -72,21 +75,5 @@ stateStruct::= [<$?tagname>] \{
 
 
 
-stateDefInStateStruct::=[ struct <$?stateTag> | <$?stateType> ] [ [const] * <?ref>] <$?stateName>.
-
-
-
-old::=
-  <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
-[ State_Fwc
-| StateComposite_Fwc <?stateComposite>
-| StateHistory_Fwc <?hasHistory>
-| StateParallel_Fwc <?stateParallel>
-]
-
-
-
-
-
-extern const <$?topStateType> <$?topStateName> ;
+XXXstateDefInStateStruct::=[ struct <$?stateTag> | <$?stateType> ] [ [const] * <?ref>] <$?stateName>.
 

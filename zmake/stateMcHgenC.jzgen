@@ -37,29 +37,16 @@ main(){
 ::::#ifdef __DEBUG_entryprintf_States_Fwc__
 ::::  #include <stdio.h>
 ::::#endif
-:::://all entry-prototypes:<.+>
+:::://all entry- and exit-prototypes: (stateMcHgenC.jzgen)<.+>
   for(state: stm.stateList())                                  
   {
     <+>
-::::void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
-  }
-    <+>
-::::<.+>  
-  for(state: stm.stateList())
-  { <+>
+::::void entry_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);
 ::::void exit_<&state.stateId><&stateMethodSuffix>(<&stm.zbnfSrc.transFnArgs>);<.+>
   }
-    <+>
-::::    
-::::    
-:::://All transition execution routines: (stateMcHgenC.jzgen)
-::::<.+>
   call generateDoTrans();
-  
-  
   <+>
 ::
-
 :://All const state declaration: (stateMcHgenC.jzgen)<.+>
   for(state: stm.stateList())
   { Obj auxInfo = state.auxInfo();
@@ -82,37 +69,14 @@ main(){
 ::
 ::<.+>
   
-  for(state: stm.stateList())
-  { call generateStatePathConst(state=state);
-  }
-  <+>
-::
-:://All const statePath definition: (stateMcHgenC.jzgen)
-::static State_Fwc const* const statePath_Off_State_TESTxx [] = 
-::{
-::  &off_StateConst.id_0x0001
-::};
-::
-:://TESTxx
-::Off_State const off_StateConst_TESTxx =
-::{ { 0x0001, &statePath_Off_State_TESTxx[0]}
-::, doTrans_workHistory 
-::, doTrans_ready
-::};
-::
-::
-::<.+>
+  for(state: stm.stateList()) { call generateStatePathConst(state=state); }
   <+>
 ::
 :://All const state definition: (stateMcHgenC.jzgen)
 ::
 ::<.+>
-  for(state: stm.stateList())
-  { call generateStateConst(state=state);
-  }
-    
+  for(state: stm.stateList()) { call generateStateConst(state=state); }
   call gen_stepStates();
-  
   call gen_stepTimer();
   
   
@@ -128,6 +92,11 @@ sub generateDoTrans()
   Obj idxExit = stm.zbnfSrc.idxExit;
   Obj idxCheck = stm.zbnfSrc.idxCheck;
 
+  <+>
+::    
+::    
+:://All transition execution routines: (stateMcHgenC.jzgen)
+::<.+>
   
   for(state: stm.stateList())
   { Obj zsrcState = state.auxInfo(); 
@@ -200,6 +169,13 @@ sub generateDoTrans()
 ::::::<.+>
     }//trans
   
+    <+>
+:::://Transition check routine which regards all environment states too: (stateMcHgenC.jzgen)
+:::://
+::::int 
+::::<.>
+    
+    
   }//state
   
   
