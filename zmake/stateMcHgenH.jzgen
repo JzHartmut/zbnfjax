@@ -12,9 +12,9 @@ main(){
 ::::#define __<&outfile.name()>_h__
 ::::
 ::::/**This struct contains all data which are necessary in the generated code for the state processing. */
-::::typedef struct Data_<&stm.zbnfSrc.topState.stateName>_t 
+::::typedef struct <&zsrc.topStateType>_t 
 ::::{<.+>  
-  for(state:stm.rootStates) {
+  for(state:zsrc.stateM.rootStates) {
     <+> 
 ::::  /**Contains the state identifier for nested level with history or parallel states. */
 ::::  int state<&state.stateId>;<.+>
@@ -25,16 +25,16 @@ main(){
       } 
   } //for  
     <+>
-::::} Data_<&stm.zbnfSrc.topState.stateName>;
+::::} <&zsrc.topStateType>;
 ::::
-::::int stepStates_<&stm.zbnfSrc.topStateType>(<&stm.zbnfSrc.transFnArgs>);
+::::int stepStates_<&zsrc.topStateType>(<&zsrc.transFnArgs>);
 ::::
 ::::/**All state konstant identifier: */<.+>
- for(state:stm.stateList) {
+ for(state:zsrc.stateM.stateList) {
     <+>
-::::#define k<&state.stateId>_<&stm.zbnfSrc.topStateType> <&state.auxInfo().stateId><.+>   
+::::#define k<&state.stateId>_<&zsrc.topStateType> <&state.auxInfo().stateId><.+>   
  } //for
- for(state:stm.stateList) { call stateConstStruct(state = state); }
+## for(state:zsrc.stateM.stateList) { call stateConstStruct(state = state); }
     <+>
 ::::
 ::::#endif  // __<&outfile.name()>_h__
@@ -45,7 +45,7 @@ main(){
 
 
 
-sub stateConstStruct(Obj state: StateSimple)
+sub XXXstateConstStruct(Obj state: StateSimple)
 {
   <+>
 ::

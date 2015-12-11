@@ -549,7 +549,8 @@ binaryOperator::=<?>[<?binaryOperator> + | - | * | / | % | && | \|\| | & | \| | 
 
 simpleMethodCall::= [{<$?environmentClass> ::}] <$?methodname> [( )| <actualParameter>].
 
-actualParameter::= ({ <objectAccess>| <value?> ? ,} ).
+conditionalActualArgument::= # ifdef <$?conditionDef>  [,] { <objectAccess>| <value?> ? , } # endif.
+actualParameter::= ({ <conditionalActualArgument?> | <objectAccess> | <value?> ? [?)] [,] } ).
 
 
 classVisibilityBlock::=[<?visibility> public | protected | private ] : [{ <classContent> | <structContent> }].

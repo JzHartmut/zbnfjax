@@ -13,10 +13,11 @@ StateMachine::=
 { #include <* \n?includeLine>
 }
 
-#define StateInstance_StateMgen <* \n\r?StateInstance>
-
-typedef int TransFn(<*)?transFnArgs>);
-
+{ #define StateInstance_StateMgen <* \n\r?StateInstance>
+| #define StateType_StateMgen <*\n\r\t ?topStateType>
+| #define UserDataType_StateMgen <*\n\r\t ?userDataType>
+| typedef int TransFn(<*)?transFnArgs>);
+}
 {
   typedef struct <stateDef> ;
 
@@ -38,7 +39,7 @@ typedef int TransFn(<*)?transFnArgs>);
 ##Note: The [<?args> produces a String with the whole formal argument list till ),
 ##The <...?arg> produces one entry per argument till , or ). The right identifier is used as argVariables in the add_arg(String) method.
 ##
-stateMethod::=<$?state> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg without left and right white spaces, space after asterisk
+stateMethod::=<$?restName> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg without left and right white spaces, space after asterisk
 
 
 ##A stateDef is the definition of a simple state whith ists transitions.
@@ -52,28 +53,9 @@ stateDef::=
   ]
   [{ TransFn * <$?dotransDst> ; }]
   [ StateHistory_Fwc <$?stateHistory> ; ]   ## or if it starts with this, it has a history state for history entry.
-  ## | <stateDefInStateStruct> ;             ## a state typedef written before
-  ## | struct <stateStruct> ;                ## a definition of a composite state.
-  ##} <?isComposite> ] 
 ]
-\} <$?stateType> .
-
-
-
-##A stateStruct defines a composite or parallel state.
-##
-XXXstateStruct::= [<$?tagname>] \{
-[ StateParallel_Fwc <$?stateParallel> ; ## it it starts with this, it is a parallel state. 
-]
-{ 
-  <stateDefInStateStruct> ;             ## a state typedef written before
-| StateHistory_Fwc <$?stateHistory> ;   ## or if it starts with this, it has a history state for history entry.
-| struct <stateStruct> ;                ## a definition of a composite state.
-
-} 
 \} <$?stateName> .
 
 
 
-XXXstateDefInStateStruct::=[ struct <$?stateTag> | <$?stateType> ] [ [const] * <?ref>] <$?stateName>.
 
