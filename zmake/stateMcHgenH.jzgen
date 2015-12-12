@@ -17,7 +17,7 @@ main(){
   for(state:zsrc.stateM.rootStates) {
     <+> 
 ::::  /**Contains the state identifier for nested level with history or parallel states. */
-::::  int state<&state.stateId>;<.+>
+::::  State_Fwc const* state<&state.stateId>;<.+>
     if(state.auxInfo.hasTimer) {
       <+>
 ::::::  /**Variable to count down a time transition. */

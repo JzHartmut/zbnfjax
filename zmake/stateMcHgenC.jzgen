@@ -38,24 +38,19 @@ main(){
 ::::  #include <stdio.h>
 ::::#endif
 :::://all entry- and exit-prototypes: (stateMcHgenC.jzgen)<.+>
-  for(state: zsrc.stateM.stateList())                                  
-  { if(not( state ?instanceof classStateDeepHistory) ) { 
-      <+>
-::::::extern <&state.stateId> const <&state.stateId>_StateConst;<.+>
-  ##::::void entry_<&state.stateId><&stateMethodSuffix>(<&zsrc.transFnArgs>);
-  ##::::void exit_<&state.stateId><&stateMethodSuffix>(<&zsrc.transFnArgs>);<.+>
-    } //not history state
+  for(state: zsrc.listStates)                                  
+  { <+>
+::::extern <&state.stateId> const <&state.stateId>_StateConst;<.+>
   }
+  call exitGen();
   call generateTrans();
   <+>
 ::
 :://All const state declaration: (stateMcHgenC.jzgen)<.+>
-  for(state: zsrc.stateM.stateList())
+  for(state: zsrc.listStates)
   { Obj auxInfo = state.auxInfo();
-    if(auxInfo && auxInfo.stateName){
-      <+>
-::::::extern <&auxInfo.stateName> const <&auxInfo.stateName>_StateConst;<.+>
-    }
+    <+>
+::::extern <&auxInfo.stateName> const <&auxInfo.stateName>_StateConst;<.+>
   }
 ##  <+>
 ##::
@@ -71,18 +66,49 @@ main(){
 ##::
 ##::<.+>
   
-  for(state: zsrc.stateM.stateList()) { call generateStatePathConst(state=state); }
+  for(state: zsrc.listStates) { call generateStatePathConst(state=state); }
   <+>
 ::
 :://All const state definition: (stateMcHgenC.jzgen)
 ::
 ::<.+>
-  for(state: zsrc.stateM.stateList()) { call generateStateConst(state=state); }
+  for(state: zsrc.listStates) { call generateStateConst(state=state); }
   call gen_stepStates();
   call gen_stepTimer();
   
   
 } ##main
+
+
+
+
+sub exitGen()
+{
+  <+>
+::
+::  
+::void exitWorkGen(struct ExampleSimpleData_t* thiz, int ev)
+::{
+::  State_Fwc* workState = null; //thiz->state.stateWork;
+::  int ix = workState->zStatePath -1;  //last element
+::  State_Fwc const* exitState;
+::  State_Fwc const* exitStateLast;
+::  while( (exitState = workState->statePath[ix]) != &Work_StateConst.Work_0x100){
+::    if(exitState->parallelStates !=null){
+::      for(int ixp = 0; ixp < exitState->zParallelStates; ++ixp) {
+::        State_Fwc const* exitParallelState = exitState->parallelStates[ixp];
+::        if(exitParallelState != exitStateLast) { //exitStateLast is exited already.
+::          exitParallelState->exit(thiz, ev);  //exit the parallel composite state
+::        }
+::      }
+::    }
+::    exitStateLast = exitState;
+::  }
+::
+::}
+::<.+>
+}
+
 
 
 
@@ -98,53 +124,62 @@ sub generateTrans()
 :://All transition execution routines: (stateMcHgenC.jzgen)
 ::<.+>
   
-  for(state: zsrc.stateM.stateList())
+  for(state: zsrc.listStates)
   { Obj zsrcState = state.auxInfo(); 
   
-    if(not (state ?instanceof classStateDeepHistory)){
-      for(trans: state.aTransitions)     
-      { call generateDoTrans(state = state, trans = trans);
-      }//trans
-    
-      ##get all transition methods for outer states.
-      List transList;
-      for(envState: state.statePath) { 
-        Obj trans1 = zsrc.idxCheck.get(envState.stateId);
-        if(trans1){ transList.add(0, trans1); }  ##add the transition routine.
-      }
-      if(transList.size() == 0){
+    for(trans: state.aTransitions)     
+    { call generateDoTrans(state = state, trans = trans);
+    }//trans
+ 
+    ##get all transition methods for outer states.
+    List transList;
+    Obj parentState = state;
+    Stringjar accParent = "";
+    while(parentState) {
+      ##check whether there is a transition routine in user space:
+      Obj trans1 = zsrc.idxCheck.get(parentState.stateId);
+      if(trans1){ 
+        Map trans2;
+        Obj trans2.trans = trans1;
+        String trans2.parentPath = accParent;
+        transList.add(trans2); 
+      }  ##add the transition routine.
+      parentState = parentState.enclState;
+      if(parentState ?instanceof classStateParallel) { accParent += ".parallelParent"; }
+      else { accParent += ".parent"; }
+    }
+    if(transList.size() == 0){
+      <+>
+:::::://not any transition  (stateMcHgenC.jzgen)
+::::::int checkTransGen_<&state.stateId>(void* userData, int event) { return 0; }
+::::::<.+>
+    } elsif(transList.size()==1){
+      Obj trans2 = transList.get(0);
+      <+>
+:::::://Only one transition from <&trans2.trans.stateSrc.stateId>: (stateMcHgenC.jzgen: simpleDefTrans)
+::::::int checkTransGen_<&state.stateId>(void* userData, int event) { 
+::::::  return checkTrans_<&trans2.trans.restName>((ExampleSimpleData*) userData, event, &<&state.stateId>_StateConst<&trans2.parentPath>); //(stateMcHgenC.jzgen: OneEnclTransParent)
+::::::}
+::::::<.+>
+    } else {
+      <+>
+:::::://Transition check routine which regards all enclosing states too: (stateMcHgenC.jzgen: enclTrans)
+:::::://
+::::::int checkTransGen_<&state.stateId>(void* userData, int event) { 
+::::::  int transRet; //<.+>
+      for(trans1: transList) {
         <+>
-  :::::://not any transition  (stateMcHgenC.jzgen)
-  ::::::int checkTransGen_<&state.stateId>(void* userData, int event) { return 0; }
-  ::::::<.+>
-      } elsif(transList.size()==1){
-        Obj trans1 = transList.get(0);
-        <+>
-  :::::://Only one transition from <&trans1.stateSrc.stateId>: (stateMcHgenC.jzgen: simpleDefTrans)
-  ::::::int checkTransGen_<&state.stateId>(void* userData, int event) { return checkTrans_<&trans1.restName>((ExampleSimpleData*) userData, event, &<&trans1.stateSrc.stateId>_StateConst); }
-  :::::://#define checkTransGen_<&state.stateId> checkTrans_<&trans1.restName>
-  ::::::<.+>
-      } else {
-        <+>
-  :::::://Transition check routine which regards all environment states too: (stateMcHgenC.jzgen)
-  :::::://
-  ::::::int checkTransGen_<&state.stateId>(void* userData, int event) { 
-  ::::::  int transRet; //<.+>
-        for(trans1: transList) {
-          <+>
-  ::::::::  //<&trans1.stateSrc.stateId>        
-  ::::::::  transRet = checkTrans_<&trans1.restName>((<&zsrc.userDataType>*)userData, event, &<&trans1.stateSrc.stateId>_StateConst);
-  ::::::::  if(transRet !=0) { return transRet; }
-  ::::::::<.+>
-        } //for
-        <+>
-  ::::::  return 0; //no transition fired. (stateMcHgen.jzgen)
-  ::::::}<.+>
-      }//if(transList.size()
-  ::::<+>
-  ::::<.+>
-    }    
-                                     
+::::::::  //<&trans1.trans.stateSrc.stateId>        
+::::::::  transRet = checkTrans_<&trans1.trans.restName>((<&zsrc.userDataType>*)userData, event, &<&state.stateId>_StateConst<&trans1.parentPath>); //(stateMcHgenC.jzgen: enclTransParent)
+::::::::  if(transRet !=0) { return transRet; }
+::::::::<.+>
+      } //for
+      <+>
+::::::  return 0; //no transition fired. (stateMcHgen.jzgen)
+::::::}<.+>
+    }//if(transList.size()
+::::<+>
+::::<.+>
   }//state
   
   
@@ -166,7 +201,8 @@ sub generateDoTrans(Obj state, Obj trans)
 ::::::      
 ::::::      
 :::::://Transition of <&state.stateId>
-::::::static int doTrans<&state.stateId>_<&trans.transId>(<&zsrc.transFnArgs>)
+##::::::static int doTrans<&state.stateId>_<&trans.enclStateName>_TO_<&trans.transId>(<&zsrc.transFnArgs>) //(stateMcHgenC.jzgen dotrans)
+::::::static int doTrans<&state.stateId>_<&trans.transId>(<&zsrc.transFnArgs>) //(stateMcHgenC.jzgen dotrans)
 ::::::{ int trans = 0;
 ::::::<.+>
       for(exitState:trans.exitStates) {           
@@ -198,8 +234,10 @@ sub generateDoTrans(Obj state, Obj trans)
       for(entryState:trans.entryStates) {         
         //genStateM: entry StateComposite or StateSimple. <.+>
         if(entryState.rootState) { ##check whether it is not null. It is null on a parallel state or the stateTop.                                                   
+          Obj zState = entryState.auxInfo();
           <+>
-  ::::::::  <&zsrc.stateInstance>.state<&entryState.rootState.stateId> = k<&entryState.stateId>_<&stateMethodSuffix>; //(stateMcHgenC.jzgen: set state)<.+>
+##::::::::  <&zsrc.stateInstance>.state<&entryState.rootState.stateId> = k<&entryState.stateId>_<&stateMethodSuffix>; //(stateMcHgenC.jzgen: set state)<.+>
+::::::::::  <&zsrc.stateInstance>.state<&entryState.rootState.stateId> = &<&entryState.stateId>_StateConst.<&zState.stateIdName>_<&zState.stateId><:if:zState.bStateParallel>.state<.if>; //(stateMcHgenC.jzgen: set state)<.+>
         }
         if(entryState.auxInfo().timeCondition) { 
           <+>
@@ -268,27 +306,35 @@ sub generateSubStateRef(Obj state:StateCompositeFlat)
 
 sub generateStatePathConst(Obj state:StateSimple)
 {
-  Obj auxInfo = state.auxInfo();
-  if(auxInfo && auxInfo.stateName){
-        
+  Obj auxInfo = state.auxInfo();                                                
+  String sep = "";      
     <+>
-:::://generateStatePathConst: (stateMcHgenC.jzgen)
-:::://It is the path to the nested state inside the top state, used for a history transition, used as info for documentation.
-:::://
-::::static State_Fwc const* const statePath_<&state.auxInfo().stateName> [] = //const statePath_<&state.auxInfo().stateName>
-::::{ 
-::::  0
-::::};
-::::
-::::<.+>  
-  }
+:://generateStatePathConst: (stateMcHgenC.jzgen)
+:://It is the path to the nested state inside the top state, used for a history transition, used as info for documentation.
+:://
+::static State_Fwc const* const statePath_<&state.auxInfo().stateName> [] = //const statePath_<&state.auxInfo().stateName>
+::{<.+>
+  Num nState = 0;
+  for(stateParent: state.statePath) { 
+    if(nState > 0) {
+      Obj zState = stateParent.auxInfo();
+      <+>
+::::::<&sep> &<&stateParent.stateId>_StateConst.<&zState.stateIdName>_<&zState.stateId><:if:zState.bStateParallel>.state<.if><.+>    
+      sep = ",";
+    }
+    nState = nState + 1;
+  }//for
+  <+> 
+::};
+::
+::<.+>  
 }
 
 
 sub generateStateConst(Obj state: StateSimple)
 {
   Obj auxInfo = state.auxInfo();
-  if(auxInfo && auxInfo.stateName){
+  //if(auxInfo && auxInfo.stateName){
     <+>   
 :::://generateStateConst: (stateMcHgenC.jzgen)
 :::://It is the const description data for a state, containing the reference to the doTransition... routines.
@@ -300,7 +346,7 @@ sub generateStateConst(Obj state: StateSimple)
 ::::;
 ::::
 ::::<.+>
-  }
+  //}
 }
 
 
@@ -364,7 +410,9 @@ sub generateStateConstDef(Obj state: StateSimple, Obj auxInfo)
 sub gen_stepStates() 
 {
   <+>
-::int stepStates_State_ExampleSimpleData(struct ExampleSimpleData_t* thiz,int){ return 0; }
+::int stepStates_State_ExampleSimpleData(struct ExampleSimpleData_t* thiz,int)
+::{ return 0; 
+::}
 ::<.+>
 }
 

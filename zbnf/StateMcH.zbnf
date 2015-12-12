@@ -46,8 +46,10 @@ stateMethod::=<$?restName> ( [<?args> { <* |,|)?arg> ? , } ] ). ##Note: arg with
 ##
 stateDef::=
 [<$?tagname>] \{
-[  <$?parallelParentState> parallelParent ;
-| [<$?parentState> parent ; ]
+[ <$?parallelParentState> parallelParent ;
+  State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
+| 
+  [<$?parentState> parent ; ]
   [ State_Fwc <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
   | StateParallel_Fwc <*_;\ ?stateParallel>[_<*\ ;?stateId>] ; ## it it starts with this, it is a parallel state. 
   ]
