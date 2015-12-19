@@ -11,13 +11,26 @@ main(){
 ::::#ifndef __<&outfile.name()>_h__
 ::::#define __<&outfile.name()>_h__
 ::::
+::::
+::::typedef int TransRnGen(<&zsrc.stateRnFormalArgs>);
+::::typedef void ExitRnGen(<&zsrc.stateRnFormalArgs>);
+::::
+::::
+::::typedef struct StateBaseGen_t {
+::::  void const* signature;
+::::  int id;
+::::  TransRnGen* checkTrans;  //Function pointer, routine pointer
+::::  ExitRnGen* exit;         //Function pointer, routine pointer
+::::} StateBaseGen;
+::::
+::::
 ::::/**This struct contains all data which are necessary in the generated code for the state processing. */
 ::::typedef struct <&zsrc.topStateType>_t 
 ::::{<.+>  
   for(state:zsrc.stateM.rootStates) {
     <+> 
 ::::  /**Contains the state identifier for nested level with history or parallel states. */
-::::  State_Fwc const* state<&state.stateId>;<.+>
+::::  StateBaseGen const* state<&state.stateId>;<.+>
     if(state.auxInfo.hasTimer) {
       <+>
 ::::::  /**Variable to count down a time transition. */
@@ -36,6 +49,7 @@ main(){
  } //for
 ## for(state:zsrc.stateM.stateList) { call stateConstStruct(state = state); }
     <+>
+::::
 ::::
 ::::#endif  // __<&outfile.name()>_h__
 ::::<.+>  
