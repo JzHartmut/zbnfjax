@@ -35,16 +35,16 @@ StateMachine::=
 ##
 stateDef::=
 typedef struct [<$?tagname>] \{
-[ <$?parallelParentState> parallelParent ;
-  StateBaseGen <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
-| 
-  [<$?parentState> parent ; ]
-  [ StateBaseGen [parallel<?stateParallel>|<*_;\ ?StateIdName>][_<*\ ;?stateId>] ;
+##[ <$?parallelParentState> parallelParent ;
+##  StateBaseGen <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
+##| 
+##  [<$?parentState> parent ; ]
+  StateBaseGen [ parallelBase_<?stateParallel>| parallel_<?parallelComposite>|] <*;\ ?parentState> ; ##[_<*\ ;?stateId>] ;
 ##  | StateParallel_Fwc <*_;\ ?stateParallel>[_<*\ ;?stateId>] ; ## it it starts with this, it is a parallel state. 
-  ]
+##  ]
   [{ TransFn * <$?dotransDst> ; }]
   [ StateHistory_Fwc <$?stateHistory> ; ]   ## or if it starts with this, it has a history state for history entry.
-]
+##]
 \} <$?stateName> ;
 
 

@@ -44,26 +44,28 @@ main(){
 ::::char const signature_State_Fwc[] = "<&zsrc.headerSrc>";
 :::://all entry- and exit-prototypes: (stateMcHgenC.jzgen)<.+>
 
-for(state: zsrc.listStates)                                  
+  for(state: zsrc.listStates)                                  
   { <+>
 ::::extern <&state.stateId> const <&state.stateId>_StateConst;<.+>
   }
 
+  call genExitRoutine();
+  
   for(state: zsrc.listStates) {
     call gen_exit(state=state);
     call gen_Trans(state = state);
   }
     
   for(state: zsrc.listStates) {
-    if(not (state ?instanceof classStateCompositeFlat)) { //a StateCompositeFlat is never a real entered state.
+    ###if(not (state ?instanceof classStateCompositeFlat)) { //a StateCompositeFlat is never a real entered state.
       ##<+out>doTrans from: <&state.stateId><.+>
       Obj stateEncl = state; //The state which is checked.
-      do {
+      ###do {
         ##<+out> <&stateEncl.stateId><.+>
         for(trans: stateEncl.aTransitions) { call gen_DoTrans(state = state, stateEncl = stateEncl, trans = trans); }    
         stateEncl = stateEncl.enclState;
-      } while(stateEncl && not (stateEncl ?instanceof classStateComposite)); //Transitions of all StateCompositeFlat.  
-    }
+      ###} while(stateEncl && not (stateEncl ?instanceof classStateComposite)); //Transitions of all StateCompositeFlat.  
+    ###}
     ##<+out><.+n>
   }
     
@@ -93,6 +95,35 @@ for(state: zsrc.listStates)
   
   
 } ##main
+
+
+
+
+sub genExitRoutine()
+{
+  <+>
+::
+:://The generated exit routine calls the exit of the current state of composite and exits all states in the hierarchie till exclusive the parent composite state.
+:://It is used when the parent composite state is exited. //(stateMcHgenC.jzgen: exitComposite)
+::static void exitGenState(<&zsrc.stateRnFormalArgs>, StateBaseGen const* stateCurr, int level) {
+::  if(stateCurr != null) {
+::    int levelComposite = stateCurr->ixCompositeState;
+::    if(levelComposite < level) {
+::      levelComposite = level;  //no more 
+::    }
+::    StateBaseGen const* stateExit = stateCurr;
+::    int ixStatePath = stateCurr->statePath.length -1;
+::    do {
+::      stateExit->exit(<&zsrc.stateRnActArgs>);
+::      stateExit = stateExit->statePath.ptr[--ixStatePath];  //the enclosing state.
+::    } while(ixStatePath >= levelComposite);
+::    if(level < levelComposite) {
+::      exitGenState(<&zsrc.stateRnActArgs>, stateExit, level);  //exit the composite 
+::    }
+::  }
+::}
+::<.+>
+}
 
 
 
@@ -127,9 +158,16 @@ sub XXXXXXXXXXXexitGen()
 }
 
 
-
-
 sub gen_exit(Obj state: StateSimple)
+{ Obj zstate = state.auxInfo();
+  <+>
+::  
+::void exitGen_<&state.stateId>(<&zsrc.stateRnFormalArgs>) {
+;;}
+::<.+>
+}
+
+sub XXXgen_exit(Obj state: StateSimple)
 { Obj zstate = state.auxInfo();
 
   if(state ?instanceof classStateComposite) {
@@ -140,11 +178,23 @@ sub gen_exit(Obj state: StateSimple)
 :::://The generated exit routine calls the exit of the current state of composite and exits all states in the hierarchie till exclusive the parent composite state.
 :::://It is used when the parent composite state is exited.
 ::::void exitGen_<&state.stateId>(<&zsrc.stateRnFormalArgs>) {
-::::  //StateComposite
+::::  //StateComposite  
+::::
+::::  int levelComposite = <&state.statePath.[]>;
+::::  if(levelComposite < level) {
+::::    levelComposite = level; 
+::::  }                                 
 ::::  { StateBaseGen const* stateCurr = thiz->state.state<&state.stateId>; //(stateMcHgenC.jzgen: exitComposite)
 ::::    if(stateCurr != null) {
-::::      stateCurr->exit(<&zsrc.stateRnActArgs>);
+::::      int ixStatePath = stateCurr->statePath.length -1;
+::::      do {
+::::        stateCurr->exit(<&zsrc.stateRnActArgs>);
+::::        stateCurr = stateCurr->statePath.ptr[--ixStatePath];  //the enclosing state.
+::::      } while(ixStatePath >= levelComposite);
 ::::    }
+::::    if(level < levelComposite) {
+::::      thiz->state.state<&state.stateId>->exit(<&zsrc.stateRnActArgs>, level); 
+;;;;    }
 ::::  }
 ::::<.+>
   } elsif( state ?instanceof classStateParallel) {
@@ -228,7 +278,7 @@ sub gen_Trans(Obj state:StateSimple)
 ::::  { StateBaseGen const* stateCurr = thiz->state.state<&state.stateId>; //(stateMcHgenC.jzgen: genTrans)
 ::::    if(stateCurr == null) {
 ::::      //do entry.
-::::      stateCurr = thiz->state.state<&state.stateId> = &<&stateDefault.stateId>_StateConst.<&zDefault.stateIdName>_<&zDefault.stateId>;
+::::      stateCurr = thiz->state.state<&state.stateId> = &<&stateDefault.stateId>_StateConst.<&zDefault.stateIdName>;
 ::::    }
 ::::    ret = stateCurr->checkTrans(<&zsrc.stateRnActArgs>);
 ::::    if(ret & mEventConsumed_States_Fwc) {
@@ -264,33 +314,37 @@ sub gen_DoTrans(Obj state, Obj stateEncl, Obj trans)
 ::                     
 ::      
 :://Transition of <&state.stateId>
-::static int doTrans<&state.stateId>_<&stateEncl.stateId>_<&trans.transId>(<&zsrc.transFnArgs>) //(stateMcHgenC.jzgen dotrans)
+::static int doTrans<:---<&state.stateId>_---><&stateEncl.stateId>_<&trans.transId>(<&zsrc.transFnArgs>) //(stateMcHgenC.jzgen dotrans)
 ::{ int trans = 0;
+::  //state: <&state.stateId>
+::  //exit the current state of this composite till given level: (stateMcHgenC.jzgen: doTrans-exit)
+::  exitGenState(<&zsrc.stateRnActArgs>, thiz->state.state<&state.rootState.stateId>, <&trans.ixCommonInStatePath>);  ##Note: ixCommon+1, but statePath in C does not start with topState.
+##::  <&zsrc.stateInstance>.state<&state.enclState.stateId>->exit(<&zsrc.stateRnActArgs>, <&trans.ixCommonInStatePath>+1); 
 ::<.+>
-  for(exitState:trans.exitStates) {           
-    <+>
-::::  #ifdef __DEBUG_entryprintf_States_Fwc__
-::::    printf("   exit <&exitState.stateId>;\n");
-::::  #endif<.+>
-    
-    ##Build the argument list for the exit, entry and trans methods:
-    ##String transArgListAct = <:><:for:argVariable:exit1.argVariables>, <.for> &<&exit1.stateSrc.stateId>_StateConst<.>;
-    
-    ##
-    if(exitState ?instanceof classStateComposite) {
-      ##for a composite state the exitStateGen routine is generated regarding an given exit routine.
-      <+>
-::::::  //exit<&exitState.stateId>Gen(thiz, ev);  //(stateMcHgenC.jzgen exitGen)
-::::::  exitGen_<&exitState.stateId>(<&zsrc.stateRnActArgs>);
-::::::<.+>
-    } else {
-      Obj exit1 = idxExit.get(exitState.stateId);
-      if(exit1) {
-        String argListAct = <:><:for:argVariable:exit1.argVariables><&argVariable><:hasNext>, <.hasNext><.for><.>;
-        <+>
-::::::::  exit_<&exit1.restName>(<&argListAct>);   //(stateMcHgen.jzgen: call exit)<.+>
-      }
-    }
+##  for(exitState:trans.exitStates) {           
+##    <+>
+##::::  #ifdef __DEBUG_entryprintf_States_Fwc__
+##::::    printf("   exit <&exitState.stateId>;\n");
+##::::  #endif<.+>
+##    
+##    ##Build the argument list for the exit, entry and trans methods:
+##    ##String transArgListAct = <:><:for:argVariable:exit1.argVariables>, <.for> &<&exit1.stateSrc.stateId>_StateConst<.>;
+##    
+##    ##
+##    if(exitState ?instanceof classStateComposite) {
+##      ##for a composite state the exitStateGen routine is generated regarding an given exit routine.
+##      <+>
+##::::::  //exit<&exitState.stateId>Gen(thiz, ev);  //(stateMcHgenC.jzgen exitGen)
+##::::::  exitGen_<&exitState.stateId>(<&zsrc.stateRnActArgs>);
+##::::::<.+>
+##    } else {
+##      Obj exit1 = idxExit.get(exitState.stateId);
+##      if(exit1) {
+##        String argListAct = <:><:for:argVariable:exit1.argVariables><&argVariable><:hasNext>, <.hasNext><.for><.>;
+##        <+>
+##::::::::  exit_<&exit1.restName>(<&argListAct>);   //(stateMcHgen.jzgen: call exit)<.+>
+##      }
+##    }
 ##        if(zsrcState.hasHistory) {
 ##          <+>
 ##  ::::::::  //It is a composite state with a history state. Mark the state number with the inactive bit:
@@ -300,7 +354,7 @@ sub gen_DoTrans(Obj state, Obj stateEncl, Obj trans)
 ##  ::::::::  //It is a composite state without a history state. Set the state number to zero.
 ##  ::::::::  <todo&zsrc.variables.stateInstance>.state<&stateComposite.stateId> = 0; <.+>
 ##        } 
-  }//exitState                                           
+##  }//exitState                                           
   <+>  
 ::  <:if:trans.zsrcTrans><&trans.zsrcTrans.code><.if><.+>
   
@@ -315,7 +369,7 @@ sub gen_DoTrans(Obj state, Obj stateEncl, Obj trans)
       Obj zState = entryState.auxInfo();
       <+>
 ##::::  <&zsrc.stateInstance>.state<&entryState.rootState.stateId> = k<&entryState.stateId>_<&stateMethodSuffix>; //(stateMcHgenC.jzgen: set state)<.+>
-::::::  <&zsrc.stateInstance>.state<&entryState.rootState.stateId> = &<&entryState.stateId>_StateConst.<&zState.stateIdName>_<&zState.stateId>; //(stateMcHgenC.jzgen: set state)<.+>
+::::::  <&zsrc.stateInstance>.state<&entryState.rootState.stateId> = &<&entryState.stateId>_StateConst.<&zState.stateIdName>; //(stateMcHgenC.jzgen: set state)<.+>
     }
     if(entryState.auxInfo().timeCondition) { 
       <+>
@@ -385,17 +439,17 @@ sub generateStatePathConst(Obj state:StateSimple)
   Obj auxInfo = state.auxInfo();                                                
   String sep = "";      
     <+>
-:://generateStatePathConst: (stateMcHgenC.jzgen)
+::
 :://It is the path to the nested state inside the top state, used for a history transition, used as info for documentation.
 :://
-::static StateBaseGen const* const statePath_<&state.auxInfo().stateName> [] = //const statePath_<&state.auxInfo().stateName>
+::static StateBaseGen const* const statePath_<&state.auxInfo().stateName> [] = ////(stateMcHgenC.jzgen: const statePath)
 ::{<.+>
   Num nState = 0;
   for(stateParent: state.statePath) { 
-    if(nState > 0) {
+    if(nState > 0) { ##The top state is excluded because there is no state const presentation.
       Obj zState = stateParent.auxInfo();
       <+>
-::::::<&sep> &<&stateParent.stateId>_StateConst.<&zState.stateIdName>_<&zState.stateId><.+>    
+::::::<&sep> &<&stateParent.stateId>_StateConst.<&zState.stateIdName><.+>    
       sep = ",";
     }
     nState = nState + 1;
@@ -412,10 +466,10 @@ sub generateStateConst(Obj state: StateSimple)
   Obj auxInfo = state.auxInfo();
   //if(auxInfo && auxInfo.stateName){
     <+>   
-:::://generateStateConst: (stateMcHgenC.jzgen)
+::::
 :::://It is the const description data for a state, containing the reference to the doTransition... routines.
 :::://
-::::<&auxInfo.stateName> const <&auxInfo.stateName>_StateConst =
+::::<&auxInfo.stateName> const <&auxInfo.stateName>_StateConst = //generateStateConst: (stateMcHgenC.jzgen)
 ::::<.+>
     call generateStateConstDef(state = state, auxInfo = auxInfo);
     <+><:s>
@@ -431,10 +485,16 @@ sub generateStateConst(Obj state: StateSimple)
 
 sub generateStateConstDef(Obj state: StateSimple, Obj auxInfo)
 { 
-  String sep = ""; 
+  String sep = "";
+  if(state.rootState){
+    Num ixCompositeState = state.rootState.statePath.[] -1 ;
+  } else {
+    Num ixCompositeState = 0;
+  }
+  Num zStatePath = state.statePath.[] -1;
   <+><:s>
 ::{<.+>  
-  if(state.enclState) {
+  if(false && state.enclState) {
     //call recursively for the parent state
     Obj enclAuxInfo = state.enclState.auxInfo();
     if(enclAuxInfo && enclAuxInfo.stateName){
@@ -444,29 +504,28 @@ sub generateStateConstDef(Obj state: StateSimple, Obj auxInfo)
 ##:::::: , <.+>      
     }
   }
-  if(state.enclState && (state.enclState ?instanceof classStateParallel)) { 
+  if(false && state.enclState && (state.enclState ?instanceof classStateParallel)) { 
     <+><:s>
 ::::<&sep> //(stateMcHgen.jzgen: parent state) <&state.enclState.stateId>
 ::::  //Root state of stateParallel
 ::::<.+>
-  } elsif(state ?instanceof classStateParallel) {
+  } elsif(false && state ?instanceof classStateParallel) {
     <+><:s>
 ::::<&sep> //(stateMcHgen.jzgen: parent state) <&state.enclState.stateId>
 ::::  //StateParallel head data: (stateMcHgenC.jzgen: StateParallel const) 
-##::::  { { <&auxInfo.stateId>, checkTransGen_<&state.stateId>, &statePath_<&auxInfo.stateName>[0] } }  //stateId and reference to statePath array<.+>
-::::  { signature_State_Fwc, <&auxInfo.stateId>, checkTransGen_<&state.stateId>, exitGen_<&state.stateId> }  //stateId and reference to statePath array<.+>
+::::  { signature_State_Fwc, <&auxInfo.stateId>, <&ixCompositeState:%d>, {statePath_<&state.stateId>, <&zStatePath.intValue()> }, checkTransGen_<&state.stateId>, exitGen_<&state.stateId> }  //stateId and reference to statePath array<.+>
   } else { 
     //StateSimple or StateComposite, the data for StateBaseGen:
     <+><:s>
 :::: //(stateMcHgen.jzgen: parent state) <&state.enclState.stateId>
 ::::<&sep> //The state const head data:
-::::  { signature_State_Fwc, <&auxInfo.stateId>, checkTransGen_<&state.stateId>, exitGen_<&state.stateId><:---, &statePath_<&auxInfo.stateName>[0] ---> } //stateId and reference to statePath array<.+>
+::::  { signature_State_Fwc, <&auxInfo.stateId>, <&ixCompositeState:%d>, {statePath_<&state.stateId>, <&zStatePath.intValue()> }, checkTransGen_<&state.stateId>, exitGen_<&state.stateId><:---, &statePath_<&auxInfo.stateName>[0] ---> } //(stateMcHgen.jzgen: state const)<.+>
   }
   <+>
 ::  //The dotrans routines used in the manual written transition routines: (stateMcHgenC.jzgen)<.+>  
   for(dotransDst: auxInfo.dotransDst) {
     <+>
-::::, doTrans<&state.stateId>_<&dotransDst><.+>      
+::::, doTrans<&state.stateId>_<&dotransDst><.+>        
   }
 ##  if(state ?instanceof classStateCompositeFlat) {
 ##    call generateSubStateRef(state=state);
@@ -495,7 +554,7 @@ sub gen_stepStates()
 ::{ StateBaseGen const* stateTop = thiz->state.statetop;
 ::  if(stateTop == null) {
 ::    //do entry.
-::    stateTop = thiz->state.statetop = &<&stateDef.stateId>_StateConst.<&zstateDef.stateIdName>_<&zstateDef.stateId>;
+::    stateTop = thiz->state.statetop = &<&stateDef.stateId>_StateConst.<&zstateDef.stateIdName>;
 ::  }
 ::  return stateTop->checkTrans(<&zsrc.stateRnActArgs>);
 ::}

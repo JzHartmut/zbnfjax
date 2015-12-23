@@ -19,6 +19,8 @@ main(){
 ::::typedef struct StateBaseGen_t {
 ::::  void const* signature;
 ::::  int id;
+::::  int ixCompositeState;
+::::  ARRAYCONST_SimpleC(struct StateBaseGen_t const*) statePath;  
 ::::  TransRnGen* checkTrans;  //Function pointer, routine pointer
 ::::  ExitRnGen* exit;         //Function pointer, routine pointer
 ::::} StateBaseGen;
