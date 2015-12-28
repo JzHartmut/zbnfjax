@@ -11,18 +11,40 @@ main(){
 ::::#ifndef __<&outfile.name()>_h__
 ::::#define __<&outfile.name()>_h__
 ::::
+::::/**Function type definition for getting the current state of a composite. */
+::::typedef struct StateBaseGen_t const* StateCurrentRnGen(<&zsrc.stateRnFormalArgs>);
 ::::
+::::/**Function type definition for the generated trans check routine. */
 ::::typedef int TransRnGen(<&zsrc.stateRnFormalArgs>);
+::::
+::::/**Function type definition for the user's exit routine. */
+::::typedef int EntryRnGen(<&zsrc.stateRnFormalArgs>);
+::::
+::::/**Function type definition for the user's exit routine. */
 ::::typedef void ExitRnGen(<&zsrc.stateRnFormalArgs>);
 ::::
+::::/**Function type definition for the exit routine for a composite or parallel state. */
+::::typedef void ExitParallelRnGen(<&zsrc.stateRnFormalArgs>, struct StateBaseGen_t const* stateExitLast);
 ::::
+::::
+::::/**This structure is the base structure of any state in this context for the const STATE_StateConst definition. 
+:::: * It is special, therefore code-generated, because the TransRnGen and the ExitRnGen hava a special signature in the users context.
+:::: * The assembling of the data is the same for all code-generated state machines of this tool StateMcHgen.
+:::: */
 ::::typedef struct StateBaseGen_t {
 ::::  void const* signature;
 ::::  int id;
 ::::  int ixCompositeState;
-::::  ARRAYCONST_SimpleC(struct StateBaseGen_t const*) statePath;  
-::::  TransRnGen* checkTrans;  //Function pointer, routine pointer
-::::  ExitRnGen* exit;         //Function pointer, routine pointer
+::::  int ixOwnState;
+::::  ARRAYCONST_SimpleC(struct StateBaseGen_t const*) statePath;
+::::
+::::  /**Kind of the states, see bit definition in Fwc/fw_StateMachine.h. */
+::::  int kind;
+::::  StateCurrentRnGen* stateCurrent; //to get the current state of a composite.
+::::  TransRnGen* checkTrans;          //Function pointer, routine pointer
+::::  EntryRnGen* entry;               //Function pointer, routine pointer
+::::  ExitRnGen* exit;                 //Function pointer, routine pointer
+::::  ExitParallelRnGen* exitParallel; //to exit a Composite or Parallel state.
 ::::} StateBaseGen;
 ::::
 ::::
@@ -31,7 +53,7 @@ main(){
 ::::{<.+>  
   for(state:zsrc.stateM.rootStates) {
     <+> 
-::::  /**Contains the state identifier for nested level with history or parallel states. */
+::::  /**Reference to the current state of this level. It refers the _StateConst which contains the function pointer to checkTrans... etc.. */
 ::::  StateBaseGen const* state<&state.stateId>;<.+>
     if(state.auxInfo.hasTimer) {
       <+>

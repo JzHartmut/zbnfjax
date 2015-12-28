@@ -19,7 +19,7 @@ StateMachine::=
 }
 
 { #define StateInstance_StateMgen <* \n\r?StateInstance>
-| #define StateType_StateMgen <*\n\r\t ?topStateType>
+| #define TopStateType_StateMgen <*\n\r\t ?topStateType>
 | #define UserDataType_StateMgen <*\n\r\t ?userDataType>
 | typedef int TransFn([<?transFnArgs> { <* |,|)?transFnArg> ? , } ]); 
 }
@@ -35,25 +35,18 @@ StateMachine::=
 ##
 stateDef::=
 typedef struct [<$?tagname>] \{
-##[ <$?parallelParentState> parallelParent ;
-##  StateBaseGen <*_;\ ?StateIdName>[_<*\ ;?stateId>] ;
-##| 
-##  [<$?parentState> parent ; ]
-  StateBaseGen [ parallelBase_<?stateParallel>| parallel_<?parallelComposite>|] <*;\ ?parentState> ; ##[_<*\ ;?stateId>] ;
-##  | StateParallel_Fwc <*_;\ ?stateParallel>[_<*\ ;?stateId>] ; ## it it starts with this, it is a parallel state. 
-##  ]
+  StateBaseGen [ parallelBase_<?stateParallel>] <*;\ ?parentState> ; ##[_<*\ ;?stateId>] ;
   [{ TransFn * <$?dotransDst> ; }]
   [ StateHistory_Fwc <$?stateHistory> ; ]   ## or if it starts with this, it has a history state for history entry.
-##]
 \} <$?stateName> ;
-
-
+##
 ##Note: The state method should be written behind the state struct definition. Only one but the order should be free.
-[{ int entry_<stateMethod?entryState> ;
-| void exit_<stateMethod?exitState> ;
-| int checkTrans_<stateMethod?checkState>;
+##
+[{ [INLINE_Fwc] int entry_<stateMethod?entryState> 
+|  [INLINE_Fwc] void exit_<stateMethod?exitState> 
+|  [INLINE_Fwc] int checkTrans_<stateMethod?checkState>
+|  [INLINE_Fwc] void transAction_<stateMethod?transAction>
 }]
-
 .
 
 
@@ -61,6 +54,6 @@ typedef struct [<$?tagname>] \{
 ##Note: The [<?args> produces a String with the whole formal argument list till ),
 ##The <...?arg> produces one entry per argument till , or ). The right identifier is used as argVariables in the add_arg(String) method.
 ##
-stateMethod::=<$?restName> ( [<?args> { <* |,|)?arg> ? , } ] ). ##ZBNF-Sytax-Note: arg without left and right white spaces, space after asterisk
-
+stateMethod::=<$?restName> ( [<?args> { <* |,|)?arg> ? , } ] ) ##ZBNF-Sytax-Note: arg without left and right white spaces, space after asterisk
+[ ; | \{ <*|\n\}|\r\}?%srcCode> \}]  .  ##searches a '}' on start of line.
 
