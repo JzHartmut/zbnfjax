@@ -155,7 +155,7 @@ interfaceDefinition::=
   [extends {[<?SuperInterface> {<$?>?\.} |xxx] [<generic>] ? , }]
 \{
   [
-   {  <enumDefinition>
+   {  <enumDefinition> ;
     | <variableDefinition> ;
     | <methodDefinition>
     | <interfaceDefinition>
@@ -168,7 +168,7 @@ interfaceDefinition::=
 ##it is the primitive form yet only. 
 annotationDefinition::= 
   [{ <annotation> | <rententionpolicy> | /**[><description>*/] }]
-  \@ interface <$?ident> \{ [{ [<?param> <type> <$?ident> ( ) ; ] ?, }] \}.
+  [<AccessRight>] \@ interface <$?ident> \{ [{ [<?param> <type> <$?ident> ( ) ; ] ?, }] \}.
 
 
 classDefinition::= 
@@ -348,7 +348,7 @@ switch_statement::=switch ( <value?switchValue> )
 
 try_statement::=
   try <statementBlock> 
-  {<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> } 
+  [{<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> }] 
   [finally <statementBlock?finally>].
 
 statementsOrDefinition::=<?>
