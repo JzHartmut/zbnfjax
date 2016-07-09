@@ -99,7 +99,8 @@ sub genExitRoutine()
 {
 <+>
 
-//The generated exit routine calls the exit of the current state of composite and exits all states in the hierarchie till exclusive the parent composite state.
+//The generated exit routine calls the exit of the current state of composite 
+//and exits all states in the hierarchie till exclusive the parent composite state.
 //It is used when the parent composite state is exited. //(stateMcHgenC.jzgen: exitComposite)
 static void exitGenState(<&zsrc.stateRnFormalArgs>, StateBaseGen const* stateCurr, int level) {
   if(stateCurr != null) {

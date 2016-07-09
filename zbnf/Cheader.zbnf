@@ -34,7 +34,7 @@ Cheader::=
   /*@TOPIC <topic>
 | <CLASS_CPP>
 | <CLASS_C>              ##/*@CLASS_C ....
-| <DEFINE_C>             ##/*@DEFINE_C ....
+| <DEFINE_C?CLASS_C>             ##/*@DEFINE_C ....
 | <ARRAY>                ##/*@ARRAY ....
 | <INLINE>               ##/*@INLINE ....
 ##| <headerBlock>
@@ -59,8 +59,7 @@ headerBlock::=<?>
 | <undefDefinition>
 ##| extern <variableDecl?+@> ;
 ##| [<?modifier> extern_C| extern| static] <attribute?+?>
-| <attribute?+?>
-| EX <attribute?+?>       ##special case for a special programming style, EX is per define 'extern' or empty.
+##| <attribute?+?>
 | extern_C_BLOCK_
 | _END_extern_C_BLOCK
 | <enumDefinition> ;
@@ -90,11 +89,12 @@ headerBlock::=<?>
 | <classDecl?+@>
 | <structDecl?+@>
 | <classDef?+@> ;
-| <attribute>
+##| <attribute>
 | <methodDef?+@>
 | <methodWithBody>
 | <operatorDef?operator> [;|<statementBlock>]
 | <defineUse?+@>
+| [<?-modifier> extern "C" | extern_C<!\\s?>| extern<!\\s?>| static<!\\s?>|] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;]
 | ;  ##NOTE: an empty unnecessary semicolon is acceptable in C
 ].
 
@@ -134,11 +134,14 @@ ARRAY::= /*@ARRAY <$?classIdent> <*|*/?>*/
 
 
 DEFINE_C::=/*@DEFINE[_C] [<$?@name>]<*|*/?>*/
-[ /*@ <description>*/]
+ /**<DescriptionDEFINE_C?structDefinition>*/
 { [?/*@]
   <headerBlock>
 }
 .
+
+DescriptionDEFINE_C::=<$?@name> : <description>.
+
 
 INLINE::=/*@INLINE [<$?@name>]<*|*/?>*/
 [ /*@ <description>*/]
@@ -386,8 +389,9 @@ test_description::= <*|\e|\@?text>
  | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
  | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
  | @refl:{ <*,\.\e?refl>? ,}[ \.]
- | <auxDescription>
- | <*|\e|\@?text>
+ | @<auxDescription>
+## | <*|\e|\@?text>    ##text till @ or till end.
+ | <*\e\@?text>    ##text till @ or till end.
  }] \e.
 
 ?test_description.superClass::= "if a element is marked with @super, it is designated as the super element. 
@@ -428,6 +432,7 @@ structContent::=<?>
 | <implicitStructAttribute>
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
+| #ifndef __reflectionHidden__ <*|#endif?> #endif
 | <attribute>
 | [/**<description?-?>*/] # define <defineDefinition?+?>
 ##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
