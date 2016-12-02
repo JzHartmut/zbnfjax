@@ -63,12 +63,13 @@ headerBlock::=<?>
 | extern_C_BLOCK_
 | _END_extern_C_BLOCK
 | <enumDefinition> ;
-| struct <structDefinition?+?> ;
+| struct\W <structDefinition?+?> ;
 | union <unionDefinition?+@> ;
+| OS_PtrVal_DEF ( <OS_PtrVal_DEF?structDefinition> ) ;
 ##|<?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
 |<?constDef> [static<?staticConst>] const <attribute?+?>
 | [METHOD_C|C_TYPE|] typedef 
-  [ struct <structDefinition?+@> ;
+  [ struct\W <structDefinition?+@> ;
 	| union <unionDefinition?+@> ;
 	|<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
 	| <methodPtrTypedef?+@>
@@ -112,6 +113,7 @@ topic::=<?topics:topic> <$?@ident> <*\n?><*|*/?xhtml:body+>*/.
 
 
 CLASS_C::= /*@CLASS_C <$?@name> <*|*/?>*/
+[ /**CLASS_C_Description <CLASS_C_Description?structDefinition>*/ ] ##instead a structDefinition itself if not exist.
 { [?/*@]                                  ##stop repetition if /*@NEWBLOCK is detected
   <headerBlock>
 }
@@ -164,13 +166,16 @@ structDefinition::= [<$?@tagname>]
 
 unionDefinition::=[<$?@tagname>]
 \{ { ##[/**<description?-?>*/]
-     [ [<?variante> struct <structDefinition>] ;
+     [ [<?variante> struct\W <structDefinition>] ;
      | <attribute?variante>
      | # define <defineDefinition>
      | <headerBlock>
      ]
    }
 \} [GNU_PACKED] [<$?@name>[ <arraysize>]].
+
+
+OS_PtrVal_DEF::= <$?name> , <*)?type>.
 
 ##classDefinition::=class [<$?@tagname>] \{ [{ [ <classContent?> | <structContent?> ] }] \} <$?@name>;.
 
@@ -190,7 +195,10 @@ typedef::= <type> <$?name> [ \[ [ 0x<#x?nrofArrayElements> | <#?nrofArrayElement
 
 
 ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
-implicitStructAttribute::=[/**<description>*/] struct <structDefinition?><?@implicitStruct> ;.
+implicitStructAttribute::=[/**<description>*/] struct\W <structDefinition?><?@implicitStruct> ;.
+
+##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
+implicitUnionAttribute::=[/**<description>*/] union\W <structDefinition?><?@implicitStruct> ;.
 
 ##it is a method head, declaration.
 methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] )
@@ -283,11 +291,11 @@ defineUse::= <$?defineMethod> ( { <$?defineparameter> ? , } ).
 
 classDecl::=class <$?name> ;.
 
-structDecl::=[C_TYPE] struct <$?name> ;.
+structDecl::=[C_TYPE] struct\W <$?name> ;.
 
 
 type::= [<?@modifier>volatile|const|] 
-  [<?@forward>struct|class|union|] 
+  [<?@forward>struct\W|class\W|union\W|] 
   [ [unsigned<?unsigend>|signed<?signed>] 
     [  ##signed and unsigned only with int types! 
       int<!\\s?> <?@name=int32>
@@ -421,15 +429,16 @@ structContent::=<?>
   |<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
   | <methodPtrTypedef?+@>
   | <methodTypedef?+@>
-  | struct <structDefinition?+@> ;
+  | struct\W <structDefinition?+@> ;
   | union <unionDefinition?+?> ;
   |<?+classDefinition> <classDef?> <$?@name> ;
   | <enumDefinition?+?> ;
   | <typedef> ;
   ]
-| [/**<description?-?>*/] union <unionDefinition?+attribute> ;
+##| [/**<description?-?>*/] union <unionDefinition?+attribute> ;
 | <enumDefinition> ;
 | <implicitStructAttribute>
+| <implicitUnionAttribute>
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | #ifndef __reflectionHidden__ <*|#endif?> #endif
@@ -452,7 +461,7 @@ classContent::=<?>
 |<?friendClass> friend [class] <outerClassName> ;
 | <enumDefinition> ;
 |<?classForward> class <$?@name> ;
-|<?structForward> struct <$?@name> ;
+|<?structForward> struct\W <$?@name> ;
 |<?implicitAttribute> <classDef> <$?name> ;
 | <classDef> ;
 ##| <structDef?+@>
@@ -478,7 +487,8 @@ operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>
 statementBlock::=
 \{ [ STACKTRC_ENTRY ( <""?STACKTRC_ENTRY> ) ; ]
 [{ 
-  [ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [defined(<$?conditionDef>) | ! defined(<$?conditionDefNot>) ] ? && } ? \|\| } ]
+  #ifndef __reflectionHidden__ <*|#endif?> #endif
+| [ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [defined(<$?conditionDef>) | ! defined(<$?conditionDefNot>) ] ? && } ? \|\| } ]
   { <statement> }  ##statement in conditional compiling TODO semantic
   # endif
 | <statement> 

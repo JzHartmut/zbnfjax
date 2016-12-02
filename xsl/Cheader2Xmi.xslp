@@ -384,7 +384,7 @@
             <UML:ModelElement.taggedValue><xsl:value-of select="substring($Indent,1,number($IndentPos)+8)"/>
               <UML:TaggedValue tag="documentation" value="{description/text | ../description/text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							<xsl:for-each select="description/auxDescription">
-							  <UML:TaggedValue tag="{@name}" value="{@value}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
+							  <UML:TaggedValue tag="{@name}" value="{text}" /><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>
 							</xsl:for-each>
 						</UML:ModelElement.taggedValue><xsl:value-of select="substring($Indent,1,number($IndentPos)+4)" />
             <UML:BehavioralFeature.parameter><xsl:value-of select="substring($Indent,1,number($IndentPos)+6)"/>

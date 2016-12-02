@@ -8,6 +8,8 @@ if "%ZBNFJAX_HOME%" == "" call setZBNFJAX_HOME.bat
 
 %JAX_EXE% org.vishia.zbnf.Zmake -i:%INPUT% -tmp:%TMP_ZBNFJAX% -tmpantxml:_antcmdDocuGctr.xml -zbnf4ant:XmlDocu_xsl/DocuGenCtrl.zbnf -xslt4ant:XmlDocu_xsl/DocuGenCtrl2Ant.xslp --rlevel:333 --report:%TMP_ZBNFJAX%/cmdDocuGctr.rpt
 if errorlevel 1 goto :error
+echo for ant prepared: %TMP_ZBNFJAX%/_antcmdDocuGctr.xml
+pause
 call %ANT_HOME%\bin\ant -f %TMP_ZBNFJAX%/_antcmdDocuGctr.xml  -DcurDir="%CD%"
 if errorlevel 1 goto :error
 REM don't copy the htmlstd.css here, because the destination directory is unknown really.

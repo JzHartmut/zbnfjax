@@ -155,7 +155,7 @@
      -->
     <xsl:when test="count(UML:Classifier.feature/UML:Method)>0 or count(UML:Classifier.feature/UML:Operation)>0">
       <xsl:if test="$methods!='no'">
-        <xhtml:p class="caption_p">Methoden:</xhtml:p>
+        <xhtml:p class="caption_p">Methods:</xhtml:p>
         <xsl:call-template name="umlClassMethodsDetail">
           <xsl:with-param name="classLabel" select="$classLabel" />
           <xsl:with-param name="methodstyle" select="$methodstyle" />
@@ -543,7 +543,7 @@
           <xhtml:ul>
           
   					<xsl:for-each select="UML:BehavioralFeature.parameter/UML:Parameter
-						                      [@kind!='return' and @name!='ythis' and @name!='othis' and @name!='ithis' 
+						                      [@kind!='return' and @name!='ythis' and @name!='thiz' and @name!='othis' and @name!='ithis' 
 																	 and @name!='_thCxt' and @name!='_THC' and @name!='YTHIS' and @name!='THIZ' and @name!='OTHIZ']" >
 							<!-- ythis is used in C-like methods -->
               <xsl:variable name="xxxTypeName" select="key('id',@type)/@name" />

@@ -541,15 +541,16 @@
  --> 
 <xsl:template name="getTypeRootfocus">
 <xsl:param name="typeName" />
-  <xsl:message>getTypeRootFocus, typeName=<xsl:value-of select="$typeName"/></xsl:message>
+  <!-- xsl:message>getTypeRootFocus, typeName=<xsl:value-of select="$typeName"/></xsl:message -->
   <xsl:variable name="typeName1">
+    <!-- test 2015-03-15 there is a problem with contains, not clarified -->
     <!--xsl:choose><xsl:when test="contains($typeName, '.')" ><xsl:value-of select="substring-before($typeName, '.')" />
     </xsl:when><xsl:otherwise --><xsl:value-of select="$typeName" />  
     <!-- /xsl:otherwise></xsl:choose -->
   </xsl:variable>
   <xsl:call-template name="getTypeRootfocus-recursively"><xsl:with-param name="typeName" select="$typeName1" /></xsl:call-template>      
   <xsl:value-of select="$typeName" /> 
-  <xsl:message>getTypeRootFocus, success</xsl:message>
+  <!-- xsl:message>getTypeRootFocus, success</xsl:message -->
 </xsl:template>     
 
 <xsl:template name="getTypeRootfocus-recursively">
