@@ -3,6 +3,7 @@ $xmlns:topics="http://www.vishia.de/2006/Topics".
 $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 
 ##yyyy-mm-dd who      what
+##2016-12-02 Hartmut with \W for end of identifier. Only with new ZBNFParser from 2016-12-02
 ##2015-09-30 Hartmut some spaces before ; bug: syntax error if the source had contain a space before ;
 ##2012-06-08 Hartmut switch-statement. Some corrections while parsing normal C-files.
 ##2010-10-11 Hartmut for::=, using INLINE_Fwc in headerfiles whith some expressions
