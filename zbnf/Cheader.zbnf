@@ -22,7 +22,9 @@ $keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|priv
 .
 
 Cheader::=
-[{ #pragma <*\n?pragma> }] ##especially #pragma once is admissible
+[{ #pragma <*\n?pragma> ##especially #pragma once is admissible
+|  <includeDef?+@>      ## includes at begin
+}]
 [ [ #ifndef <$?HeaderEntry>
   | #if ! defined ( <$?HeaderEntry> )          ## the test to exclude of double includes is obligate!
   ]
@@ -35,7 +37,7 @@ Cheader::=
   /*@TOPIC <topic>
 | <CLASS_CPP>
 | <CLASS_C>              ##/*@CLASS_C ....
-| <DEFINE_C?CLASS_C>             ##/*@DEFINE_C ....
+| <DEFINE_C>             ##/*@DEFINE_C ....
 | <ARRAY>                ##/*@ARRAY ....
 | <INLINE>               ##/*@INLINE ....
 ##| <headerBlock>
@@ -194,12 +196,6 @@ enumDefinition::= [ /**<description>*/] enum [<$?@tagname>]
 
 typedef::= <type> <$?name> [ \[ [ 0x<#x?nrofArrayElements> | <#?nrofArrayElements>] \]].
 
-
-##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
-implicitStructAttribute::=[/**<description>*/] struct\W <structDefinition?><?@implicitStruct> ;.
-
-##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
-implicitUnionAttribute::=[/**<description>*/] union\W <structDefinition?><?@implicitStruct> ;.
 
 ##it is a method head, declaration.
 methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] )
@@ -438,8 +434,8 @@ structContent::=<?>
   ]
 ##| [/**<description?-?>*/] union <unionDefinition?+attribute> ;
 | <enumDefinition> ;
-| <implicitStructAttribute>
-| <implicitUnionAttribute>
+| struct\W <structDefinition?+implicitStructAttribute> ;  ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
+| union\W <structDefinition?+implicitUnionAttribute> ;
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | #ifndef __reflectionHidden__ <*|#endif?> #endif

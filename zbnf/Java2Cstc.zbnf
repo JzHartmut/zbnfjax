@@ -65,14 +65,19 @@ method::=
 							 | returnThis<?modeReturnThis> 
 							 | static<?modeStatic> 
 							 | returnNew<?modeReturnNew> 
-							 |returnNonPersistring<?modeReturnNonPersistring> 
+##							 | returnNonPersistring<?modeReturnNonPersistring> 
+##							 | ReturnInThreadCxt<?modeReturnInThreadCxt> 
+##							 | returnInThreadCxt<?modeReturnInThreadCxt> 
 							 ? + }] 
 : [<field?returnType> | <fieldShort?returnType> ]  
 [ ( { <field?param> | <fieldShort?param> ? , } ) |()|] ;
 .
 
-castTo::= <$/\.?typeJava> [:] [access = ][<?accessDst> $| &| *| t| %] [:] <""?castExpr> [\? access = ][<?accessSrc> $| &| *| t| %] ;.      
+##castExpr in form <pre>?<post> will be separated in the Java2C-translator in Java.
+##accessSrc and accessDst are that access types adequate to the castExpr. Other modeAccessSrc, Dst are regarded. 
 
-castFrom::= [<?accessDst> $| &| *| t| %] [:] <""?castExpr> <$/\.?typeJava> [<?accessSrc> $| &| *| t| %] ;.      
+castTo::= <$/\.?typeJava> [:] [access = ][<?accessDst> $| &| *| t| c| %] [:] <""?castExpr> [\? access = ][<?accessSrc> $| &| *| t| c| %] ;.      
+
+castFrom::= [<?accessDst> $| &| *| t| c| %] [:] <""?castExpr> <$/\.?typeJava> [<?accessSrc> $| &| *| t| c| %] ;.      
          
 

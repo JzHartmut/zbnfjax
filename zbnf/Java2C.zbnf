@@ -98,17 +98,23 @@ Java4CAnnotationClass::=<?>
 }].
 
 Java4CAnnotationVariable::=
-[ Exclude <?exclude>
+[ ExcludeCond <?excludeCond>
+| Exclude <?exclude>
+| EmbeddedData <?embeddedData>
 | DynamicCall <?dynamic-call>                        ##creates a Mtbl-Reference in C
 |<?staticInstance> StaticInstance            ##to class
 |<?nonPersistent> NonPersistent   ##attribute to param TODO unused yet. Ask it onnly in paramDesciption.
 |<?stackInstance> StackInstance   ##new creates an instance in stack
+| InstanceType(<""?InstanceType>)                     ##A reference in C refers always this instance type though the reference has a lesser type.
 |<?toStringNonPersist> ToStringNonPersist             ##The String is designated as non-persistant, especially located in ThreadContext
 |<?nonPersistent> NonPersistent                       ##The String is used only non-Persist. Written on definition of String variable.
 |<?declarePersist> DeclarePersist                     ##a StringJc is declared as persistent, the programmer knows it.
-| StringBuilderInStack [:|=] <#?StringBuilderInStack> ##used for String concatenation
-|<?StringBuilderInThreadCxt> StringBuilderInThreadCxt ##used for String concatenation and returned Strings
-|<?returnInThreadCxt> ReturnInThreadCxt               ##used to copy a returned an instance in stack in the thread context.
+| StringBuilderInStack ( <#?StringBuilderInStack> ) ##used for String concatenation
+| StringBuilderInThreadCxt ( sign = <*)?StringBuilderInThCxt> ) ##used for String concatenation and returned Strings
+##|<?InThreadCxt> InThreadCxt                           ##marks that the instance is located in the thread context.
+| InThCxtRet ( sign = <*)?InThCxtRet> )                           ##marks that the instance is located in the thread context.
+| InThCxtLocal ( sign = <*)?InThCxtLocal> )                           ##marks that the instance is located in the thread context.
+|<?ReturnInThreadCxt> ReturnInThreadCxt               ##marks that the reference is used to return in thread context.
 ].
 
 Java4CAnnotationMethod::=
@@ -117,11 +123,13 @@ Java4CAnnotationMethod::=
 | ExtendsOnlyMethods <?extendsOnlyMethods>
 | Inline <?inline>                                    ##method should translated to a simple define or inline function
 | Retinline <?retinline>      
-|<?return-this> Return-this
-|<?return-new> Return-new
+|<?ReturnThis> ReturnThis
+|<?ReturnNew> ReturnNew
+|<?ReturnInThreadCxt> ReturnInThreadCxt               ##marks that the returned instance is located in the thread context.
 |<?dynamic-call> Dynamic-call     ##to declare a enhanced Mtbl-reference in stack.
 |<?xxxoverride-able> Override-able   ##virtual method
 | Stacktrace: [ no-param <?noThCxt>| no <?noStacktrace>| yes]
+| NoStackTrace <?noStacktrace>
 | InstanceType : <""?instanceType>
 | Embedded Type : <$?embeddedType>
 |<?stackSize> StackSize ( { <#?bytes> | <* )+?type> ? + } )  ##only valid at thread.start()
@@ -131,12 +139,12 @@ Java4CAnnotationMethod::=
 Java4CAnnotationType::=
   FixArraySize(<#?fixArraySize>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
 ##| SimpleArraySize(<#?fixArraySize>)  ##staticArray with fix size, this annotation is able to see in Runtime in Java.
-|<?simpleArray> SimpleArray       ##simple Array with size in constructor. 
 |<?noGC> noGC                     ##only simple, not an enhanced refernece
 |<?noGC> SimpleRef                ##only simple, not an enhanced refernece
 |<?noGC> ConstRef                 ##a reference which is generated with type const* in C language, the referenced object is not modified in Java.
 |<?simpleVariableRef> SimpleVariableRef      ##in java forex a int[] x where x[0] is used. In C a int* x
 |<?simpleVariableRef> SimpleArrayRef      ##in java forex a int[] x where x[0] is used. In C a int* x
+|<?simpleArray> SimpleArray       ##simple Array with size in constructor. 
 |<?PtrVal> PtrVal                            ##in java forex a int[] stored in a PtrVal_TYPE instance.
 |<?embeddedYElements> EmbeddedArrayElements  ##to array def: all elements are embedded
 |<?zeroTermString> ZeroTermString ##to String name; a const char*
@@ -155,7 +163,7 @@ interfaceDefinition::=
   [extends {[<?SuperInterface> {<$?>?\.} |xxx] [<generic>] ? , }]
 \{
   [
-   {  <enumDefinition> ;
+   {  <enumDefinition>
     | <variableDefinition> ;
     | <methodDefinition>
     | <interfaceDefinition>
@@ -168,7 +176,7 @@ interfaceDefinition::=
 ##it is the primitive form yet only. 
 annotationDefinition::= 
   [{ <annotation> | <rententionpolicy> | /**[><description>*/] }]
-  [<AccessRight>] \@ interface <$?ident> \{ [{ [<?param> <type> <$?ident> ( ) ; ] ?, }] \}.
+  \@ interface <$?ident> \{ [{ [<?param> <type> <$?ident> ( ) ; ] ?, }] \}.
 
 
 classDefinition::= 
@@ -295,7 +303,8 @@ ModifierMethod::=<?>[ synchronized<?synchronized> | static<?static> | final<?fin
 
 
 statement::=
-[/*<description>*/]
+[ /*J2Ctest*/<?J2Ctest>]  ##a test point for the translater. Debug on Java level.
+[ /*<description>*/]
 [ \{ \} <?+emtypStatementBlock>
 | ; <?emptyStatement>
 |<?synchronizedBock> synchronized ( <simpleValue?synchronizedObject> ) <statementBlock>
@@ -348,7 +357,7 @@ switch_statement::=switch ( <value?switchValue> )
 
 try_statement::=
   try <statementBlock> 
-  [{<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> }] 
+  {<?catchBlock> catch ( <typeIdent?ExceptionType> <$?exceptionVariable> ) <statementBlock> } 
   [finally <statementBlock?finally>].
 
 statementsOrDefinition::=<?>
@@ -408,6 +417,7 @@ value::=
 ##Hint: [?<!\\w>] requires, that a non word char followes. It is necessary on test of true, false, class to different it from identifier beginning with that words, at ex. "trueValue"
 ##A simpleValue is a component of a value not concatenated with operators.
 simpleValue::=<?>
+[ /*J2Ctest<?J2Ctest>*/]  ##a test point for the translater. Debug on Java level.
 [
   <""?simpleStringLiteral>[ \. <simpleMethodCall?StringLiteralMethod> ]  ##StringLiteralMethod: It is a special form, in Java "xyz". is a String Object.
 | <''?simpleCharLiteral>
@@ -445,7 +455,16 @@ arrayElementAccess::=<?>{ \[ <value?arrayIndex> \] }.
 
 ##A reference is all things left from point.
 ##A referenceValue may be also a simpleMethodCall, but in parenthesis. A simpleMethodCall without () is more immediate. The same is with referenceAssociation.
-reference::=[ this \.<?this> | super \.<?super> | ( <newObject> ) \.| ( <value?referenceValue> ) \.| <simpleMethodCall?referenceMethod> \.| <simpleVariable?referenceAssociation> \.] [ <reference>].
+reference::=
+[ this \.<?this> 
+| super \.<?super> 
+| ( <newObject> ) \.
+| ( <value?referenceValue> ) \.
+| <simpleMethodCall?referenceMethod> \.
+| <simpleVariable?referenceAssociation> \.
+] 
+[ <reference>]
+.
 
 ##A variable is either a left value or a kind of value.
 simpleVariable::= <$?variableName>[{ \[ <value?arrayIndex> \] }].
