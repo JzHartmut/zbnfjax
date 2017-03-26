@@ -1,0 +1,148 @@
+
+
+Map typeSizes = {
+  Num int = 4;
+  Num int32_t = 4;
+  Num int32 = 4;
+  Num int16_t = 2;
+  Num int16 = 2;
+  Num int8_t = 1;
+  Num int8 = 1;
+  Num char = 1;
+  Num float = 4;
+  Num double = 8;
+};  
+
+
+Map typesJava = {
+  String int = "int";
+  String int32_t = "int";
+  String int32 = "int";
+  String int16_t = "short";
+  String int16 = "short";
+  String int8_t = "byte";
+  String int8 = "byte";
+  String char = "char";
+  String int16 = "short";
+  String float = "float";
+  String double = "double";
+};  
+
+Map accesses = {
+  Subtextvar int(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int32_t(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int32(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int16_t(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int16(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int8_t(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int8(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar char(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar int16(String name) = <:>super.getInt(k_<&name>)<.>;
+  Subtextvar float(String name) = <:>super.getFloat(k_<&name>)<.>;
+  Subtextvar double(String name) = <:>super.getDouble(k_<&name>)<.>;
+};  
+
+Map structSizes;
+
+sub Cheader2JavaByteDataAccess(Obj target: org.vishia.cmd.ZmakeTarget, String package)
+{
+
+  Obj headerTranslator = java new org.vishia.header2Reflection.CheaderParser(console);
+
+  Obj args = java new org.vishia.header2Reflection.CheaderParser$Args();
+  
+  List inputsExpanded = target.allInputFilesExpanded();
+  for(input:inputsExpanded)
+  { java org.vishia.util.DataAccess.debugMethod("setSrc");
+    args.addSrc(input.absfile(), input.namext());
+  }
+  args.setDst(target.output.absfile());
+  
+  args.setZbnfHeader(<:><&$ZBNFJAX_HOME>/zbnf/Cheader.zbnf<.>);
+  
+  
+  Obj headers = headerTranslator.execute(args);  //set the Zbnf syntax
+
+  
+  //String testout = ;
+  test.dataHtml(headers, File:<:><&target.output.absdir()>/test_<&target.output.name()>.html<.>);
+  
+  Openfile javaSrc = target.output.absfile(); 
+  call genCheader2JavaByteDataAccess(parseResult = headers, javaSrc = javaSrc, classname = target.output.name(), package = package);
+  javaSrc.close();
+  
+
+}
+
+
+
+sub genCheader2JavaByteDataAccess(Obj parseResult, Obj javaSrc, String classname, String package)
+{
+
+  <+javaSrc><:s>
+==package <&package>; 
+==import org.vishia.byteData.ByteDataAccessBase;
+==class <&classname> extends ByteDataAccessBase
+=={  
+  <.+>  
+
+  for(headerfile: parseResult.files){
+    for(classC: headerfile.listClassC) {
+      for(entry: classC.entries) {
+        if(entry.whatisit == "structDefinition") {
+          call genSubclass(struct=entry, javaSrc = javaSrc, headerName = &headerfile.fileName);
+        }
+      }
+    }                  
+  }
+  <+javaSrc>
+==}  
+  <.+>                                     
+
+
+}
+
+
+                                         
+
+sub genSubclass(Obj struct, Obj javaSrc, String headerName)
+{
+  <+javaSrc>                                                                                 
+==  class <&struct.name>_ByteDataAccess extends ByteDataAccessBase
+==  {  
+  <.+>  
+  Num pos = 0;
+  for(attrib: struct.entries) {                                                                              
+    <+javaSrc>
+====    private final int k_<&attrib.name> = <&pos>; //<&attrib.type.name><.+>
+    Obj size = typeSizes.get(attrib.type.name);
+    if(size){
+      pos = pos + size; 
+    } else {
+      size = structSizes.get(attrib.type.name);
+      if(size) { pos = pos + size; }
+      else { pos = pos + 4; }
+    }
+  } //for entries
+  <+javaSrc>
+==    private final int k_size = <&pos>; 
+==    <.+>
+
+  for(attrib: struct.entries) {                                                                              
+    String typeJava = typesJava.get(attrib.type.name);
+    Obj accessRtn = accesses.get(attrib.type.name);
+    if(typeJava) {
+      <+javaSrc>
+======    public final <&typeJava> get_<&attrib.name>(){ return <:subtext:&accessRtn:name=&attrib.name> //super.getint(k_<&attrib.name>); }<.+>
+    }
+  } //for entries
+
+
+  <+javaSrc>
+==  }  
+  <.+>  
+
+  structSizes.put(struct.name, pos);
+}
+
+
