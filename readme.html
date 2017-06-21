@@ -56,10 +56,10 @@
          <p class="debug">Topic:.readme_zbnfjax..</p>
          
          <p class="std">All <b>Java-Sources</b>, which are sources of the ready-to-use jar-Files in the <code>zbnfjax</code>-folder, are supplied in <code>../srcJava_...</code>-Folders. The Java sources are separated in additional folders because the independence of the sources shall be emphasized.
-            The makefiles uses only specific srcJava_...-Folders. The sources are also located in <a href="../../../../Java/index.html">www.vishia.org/Java</a>, maybe there in newer revisions.
+            The makefiles uses only specific srcJava_...-Folders. The sources are also located in <a href="../../Java/index.html">www.vishia.org/Java</a>, maybe there in newer revisions.
          </p>
          
-         <p class="std">The <b>Javadoc of this sources</b> are visible at <a href="../../../../Java/docuSrcJavaPublic/index.html">www.vishia.orgJava/docuSrcJavaPublic</a> or <a href="../../../../Java/docuSrcJavaSrc/index.html">www.vishia.orgJava/docuSrcJavaSrc</a>. It is possible to generate the Javadoc locally at the users filespace: Starting <code>../make/genjavadoc_Zbnf.bat</code> generates it in a parallel folder to ZBNF. The generated javadoc isn't a part of the download because the file space is greater
+         <p class="std">The <b>Javadoc of this sources</b> are visible at <a href="../../Java/docuSrcJavaPublic/index.html">www.vishia.orgJava/docuSrcJavaPublic</a> or <a href="../../Java/docuSrcJavaSrc/index.html">www.vishia.orgJava/docuSrcJavaSrc</a>. It is possible to generate the Javadoc locally at the users filespace: Starting <code>../make/genjavadoc_Zbnf.bat</code> generates it in a parallel folder to ZBNF. The generated javadoc isn't a part of the download because the file space is greater
             as all others.
          </p>
          
@@ -71,7 +71,7 @@
          <p class="std">All together are supplied in the download <a href="http://sourceforge.net/projects/zbnf">http://sourceforge.net/projects/zbnf</a>.
          </p>
          
-         <p class="std">The sources are self-documenting so far as well. Some additional explanations are provided at several pages of <a href="../../../../index.html">www.vishia.org</a>, some links are given in the examples to the vishia-page in internet.
+         <p class="std">The sources are self-documenting so far as well. Some additional explanations are provided at several pages of <a href="../../index.html">www.vishia.org</a>, some links are given in the examples to the vishia-page in internet.
          </p>
       </div><br clear="all"><a no_id="generate-id" name="chapter_2"></a><a id="Topic.readme_zbnfjax.." name="Topic.readme_zbnfjax.." test="labela"></a><a no_id="generate-id" name="2"></a><h2>2 Which other tools and sources are needed ?</h2>
       <div class="">
@@ -150,110 +150,15 @@
          </p>
          
          <table class="stdTable">
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>cmd</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">description, arguments</p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>call "cmdsh" "args"</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">The named cmd-shell-script is executed, all Arguments should supplied in the second arg in "". The path to the script should
-                     be given as relativ full qualified path. Typically it is located in the same directory, than write "./script"
-                  </p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>genDocu ctrlfile</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">The documentation generation is invoked.</p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>javacjar</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">Java-compilation and building a jar file.</p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>java class args</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">Java is invoked with the classpath defined in zbnfjax. <code>class</code> is the path to the Main-class. All Arguments should supplied in the second arg in "".
-                  </p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>zbnf2Xml args</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">The call of the java-programm org.vishia.zbnf.Zbnf2Xml is invoked.</p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>zmake args</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">The call of Zmake is invoked.</p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>CHeader2JavaByteCoding args</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">The call of CHeader2JavaByteCoding is invoked.</p>
-               </td>
-            </tr>
-            <tr class="stdTable">
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">
-                     <code>Header2Reflection args</code></p>
-               </td>
-               <td class="stdTable_td">
-                  
-                  <p class="std_td">The call of Header2Reflection is invoked. To support a lot of inputfiles, all inputfiles may be accumulated in a environment
-                     variable <code>INPUT</code> in form <code>-i:PATHFILE </code> separated with spaces. Than this calling arguments should not be given in the argument line.
-                  </p>
-               </td>
-            </tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
+            <tr class="stdTable"></tr>
          </table>
          
          <p class="std">The variants of second parameter calls the named script under <code>$ZBNFJAX_HOME/unixscript/name</code> internally.
@@ -427,12 +332,12 @@ saxon9_jdom.jar
             <li>
                <p class="std">
                   <code>CHeader2JavaByteCoding.bat</code>: Windows-batch-file to execute conversion from a C-headerfile to a Java-source-file to support structural access to data
-                  in a Java-<code>byte[]</code>array. See <a href="../examples_XML/ByteDataAccessJava/readme.html">../examples_XML/ByteDataAccessJava/readme.html</a> and <a href="../../../../Java/indexByteDataAccess.html">www.vishia.org/Java/indexByteDataAccess.html</a>.
+                  in a Java-<code>byte[]</code>array. See <a href="../examples_XML/ByteDataAccessJava/readme.html">../examples_XML/ByteDataAccessJava/readme.html</a> and <a href="../../Java/indexByteDataAccess.html">www.vishia.org/Java/indexByteDataAccess.html</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>cmdDocuGctr.bat</code>: Windows-batch-file to execute the documentation generation. See <a href="../examples_XML/DocuGenerationViaXML/readme.html">../examples_XML/DocuGenerationViaXML/readme.html</a> and <a href="../../../../XmlDocu/index.html">www.vishia.org/XmlDocu/index.html</a>.
+                  <code>cmdDocuGctr.bat</code>: Windows-batch-file to execute the documentation generation. See <a href="../examples_XML/DocuGenerationViaXML/readme.html">../examples_XML/DocuGenerationViaXML/readme.html</a> and <a href="../../XmlDocu/index.html">www.vishia.org/XmlDocu/index.html</a>.
                </p>
             </li>
          </ul>
@@ -490,22 +395,22 @@ saxon9_jdom.jar
             <li>
                <p class="std">
                   <code>FreemindTopic.xsl</code>: It is the xsl-script to transform from topics in a freemind file (see <a href="http://freemind.sourceforge.net/wiki/index.php/Main_Page">http://freemind.sourceforge.net/wiki/index.php/Main_Page</a>. to Xhtml-elements, which are used to compose a document. This xsl-file can be included in the control script of the documentation
-                  generation (<a href="../../../../XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="../../../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
+                  generation (<a href="../../XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>Pre2Word.xsl</code>: It is the xsl-script to transform from the <a href="../../../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> to a <em>Microsoft-Word.xml</em>-Format. The <code>word.xml</code>-output file can be opened with MS-Word directly, or it can be inserted in an existing word document.
+                  <code>Pre2Word.xsl</code>: It is the xsl-script to transform from the <a href="../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> to a <em>Microsoft-Word.xml</em>-Format. The <code>word.xml</code>-output file can be opened with MS-Word directly, or it can be inserted in an existing word document.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>Pre2Xhtml.xsl</code>: It is the xsl-script to transform from the <a href="../../../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> to a HTML output.
+                  <code>Pre2Xhtml.xsl</code>: It is the xsl-script to transform from the <a href="../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> to a HTML output.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>TopixXhtml.xsl</code>: This xsl-script converts the parsed <a href="../../../../XmlDocu/html/Topics.html">TextTopics</a> to Xhtml-Elements. It is used adequate to <code>FreemindTopic.xsl</code> to compose a document from TextTopic-Sources.
+                  <code>TopixXhtml.xsl</code>: This xsl-script converts the parsed <a href="../../XmlDocu/html/Topics.html">TextTopics</a> to Xhtml-Elements. It is used adequate to <code>FreemindTopic.xsl</code> to compose a document from TextTopic-Sources.
                </p>
             </li>
             <li>
@@ -526,36 +431,36 @@ saxon9_jdom.jar
             <li>
                <p class="std">
                   <code>DocuGenCtrl2Xsl.xslp</code>: This xsl-Script converts the content of the parsed GenCtrl-File to a xsl-File, which controls the composition of the document.
-                  The generated XML-File is a xsl-File, which is used to prepare the <a href="../../../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> from all inputs (two-stage operation).
+                  The generated XML-File is a xsl-File, which is used to prepare the <a href="../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a> from all inputs (two-stage operation).
                </p>
             </li>
             <li>
                <p class="std">
                   <code>HeaderDocu.xslp</code>: This xsl-script converts parsed Headerfiles (parsed with <code>../zbnf/Cheader.zbnf</code>) to Xhtml-elements, which are used to compose a document. This xsl-file can be included in the control script of the documentation
-                  generation (<a href="../../../../XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="../../../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
+                  generation (<a href="../../XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>RequCrossRef.xslp</code>: This xsl-script is used inside a <a href="../../../../XmlDocu/html/Hyperlink.html#CorrectHref">CorrectHref</a>-preparation to produce Xhtml-elements for texts, which shows cross references in a document. The appearance of cross references
+                  <code>RequCrossRef.xslp</code>: This xsl-script is used inside a <a href="../../XmlDocu/html/Hyperlink.html#CorrectHref">CorrectHref</a>-preparation to produce Xhtml-elements for texts, which shows cross references in a document. The appearance of cross references
                   in the text may be adapted here. The input of the XSL-translation are an internal produced XML-tree.
                </p>
             </li>
             <li>
                <p class="std">
                   <code>XmiDocu.xslp</code>: This xsl-script converts informations from a <span class="removedHref">XMI</span>-file (from an <span class="removedHref">UML</span>-model) to Xhtml-elements, which are used to compose a document. This xsl-file can be included in the control script of the
-                  documentation generation (<a href="../../../../XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="../../../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
+                  documentation generation (<a href="../../XmlDocu/html/DocuGenCtrl.html">DocuGenCtrl</a>). It is used in te phase of preparing the <a href="../../XmlDocu/html/XhtmlPre.html">XhtmlPre-Format</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>AsciiTopics.zbnf</code>: This is a ZBNF-syntax to parse <a href="../../../../XmlDocu/html/Topics.html">TextTopics</a>.
+                  <code>AsciiTopics.zbnf</code>: This is a ZBNF-syntax to parse <a href="../../XmlDocu/html/Topics.html">TextTopics</a>.
                </p>
             </li>
             <li>
                <p class="std">
                   <code>DocuGenCtrl.zbnf</code>: This is a ZBNF-syntax to parse the textual given documentation control file. The parser output is used as input for the
-                  xsl-scripts <code>DocuGenCtrl2Ant.xslp</code> and <code>DocuGenCtrl2Xsl.xslp</code> and for <a href="../../../../XmlDocu/html/Hyperlink.html#CorrectHref">CorrectHref</a>-preparation too.
+                  xsl-scripts <code>DocuGenCtrl2Ant.xslp</code> and <code>DocuGenCtrl2Xsl.xslp</code> and for <a href="../../XmlDocu/html/Hyperlink.html#CorrectHref">CorrectHref</a>-preparation too.
                </p>
             </li>
          </ul>
@@ -585,22 +490,22 @@ saxon9_jdom.jar
             </li>
             <li>
                <p class="std">
-                  <code>Cheader2ByteDataAccess_Java.xslp</code>: This xsl-scripts works with inputs from header-files, parsed with <code>../zbnf/Cheader.zbnf</code>. It controls the creation of a Java-file, which controls a byte-data-access using the superclass <a href="../../../../Java/docuSrcJavaSrc/org/vishia/byteData/ByteDataAccess.html">javadoc-src:_org/vishia/byteData/ByteDataAccess</a>. See <a href="../examples_XML/ByteDataAccessJava/readme.html">../examples_XML/ByteDataAccessJava/readme.html</a> or <a href="../../../../Java/indexByteDataAccess.html">Cheader2ByteDataAccess</a>.
+                  <code>Cheader2ByteDataAccess_Java.xslp</code>: This xsl-scripts works with inputs from header-files, parsed with <code>../zbnf/Cheader.zbnf</code>. It controls the creation of a Java-file, which controls a byte-data-access using the superclass <a href="../../Java/docuSrcJavaSrc/org/vishia/byteData/ByteDataAccess.html">javadoc-src:_org/vishia/byteData/ByteDataAccess</a>. See <a href="../examples_XML/ByteDataAccessJava/readme.html">../examples_XML/ByteDataAccessJava/readme.html</a> or <a href="../../Java/indexByteDataAccess.html">Cheader2ByteDataAccess</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>Cheader2Xmi.xslp</code>: Xsl-script to generate <span class="removedHref">XMI</span> from headers. See <a href="../examples_XML/Header2XMI/readme.html">../examples_XML/Header2XMI/readme.html</a> or <a href="../../../../SwEng/html/Cheader2Xmi.html">Cheader2XMI</a>.
+                  <code>Cheader2Xmi.xslp</code>: Xsl-script to generate <span class="removedHref">XMI</span> from headers. See <a href="../examples_XML/Header2XMI/readme.html">../examples_XML/Header2XMI/readme.html</a> or <a href="../../SwEng/html/Cheader2Xmi.html">Cheader2XMI</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>Java2Xmi.xslp</code>: Xsl-script to generate <span class="removedHref">XMI</span> from Java sources. See <a href="../examples_XML/Java2XMI/readme.html">../examples_XML/Java2XMI/readme.html</a> or <a href="../../../../SwEng/html/ModelBasedSwDevlp.html#Topic.ExampleJava2xmi.">Java2XMI</a>.
+                  <code>Java2Xmi.xslp</code>: Xsl-script to generate <span class="removedHref">XMI</span> from Java sources. See <a href="../examples_XML/Java2XMI/readme.html">../examples_XML/Java2XMI/readme.html</a> or <a href="../../SwEng/html/ModelBasedSwDevlp.html#Topic.ExampleJava2xmi.">Java2XMI</a>.
                </p>
             </li>
             <li>
                <p class="std">
-                  <code>ZmakeStd.xslp</code>: The xsl-script which produces <span class="removedHref">ANT</span>.xml to run <a href="../../../../ZBNF/sf/docu/Zmake.html">Zmake</a>. This script contains all Zmake-standard-possibilities. The input for the XSL-translation is a parsed Zmake-Script, see next.
+                  <code>ZmakeStd.xslp</code>: The xsl-script which produces <span class="removedHref">ANT</span>.xml to run <a href="../sf/docu/Zmake.html">Zmake</a>. This script contains all Zmake-standard-possibilities. The input for the XSL-translation is a parsed Zmake-Script, see next.
                   This xsl-file is included in the documentation generation too. It means, that all opportunities of Zmake can use within the
                   documentation generation. A twice scripting is prevent.
                </p>
@@ -628,7 +533,7 @@ saxon9_jdom.jar
             </li>
             <li>
                <p class="std">
-                  <code>xslt.jar</code>: To run the <a href="../../../../Xml/html/XsltMultinp.html">vishia-XSLT</a>-Translator. The SAXON- and JDOM jars should be present in the class path too to run the translator.
+                  <code>xslt.jar</code>: To run the <a href="../../Xml/html/XsltMultinp.html">vishia-XSLT</a>-Translator. The SAXON- and JDOM jars should be present in the class path too to run the translator.
                </p>
             </li>
          </ul>

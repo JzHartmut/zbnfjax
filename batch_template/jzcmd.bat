@@ -9,7 +9,7 @@ set TMP=d:\tmp
 
 REM adapt the path to the zbnfjax folder of vishia-ZBNF tools.
 REM It contains the jar archive for execution of JZcmd and some JZcmd scripts which may be included.
-set ZBNFJAX_HOME=D:/vishia/ZBNF/sf/ZBNF/zbnfjax
+set ZBNFJAX_HOME=D:/vishia/ZBNF/zbnfjax
 
 REM If necessary adapt the PATH for a special java version. Comment it if the standard Java installation should be used.
 REM Note Java does not need an installation. It runs well if it is only present in the file system.

@@ -291,48 +291,50 @@ classDecl::=class <$?name> ;.
 structDecl::=[C_TYPE] struct\W <$?name> ;.
 
 
-type::= [<?@modifier>volatile|const|] 
+type::= [<constVolatileModifier?>] ##not if it is a reference this is the reference modifier.
   [<?@forward>struct\W|class\W|union\W|] 
-  [ [unsigned<?unsigend>|signed<?signed>] 
-    [  ##signed and unsigned only with int types! 
-      int<!\\s?> <?@name=int32>
+  [ [unsigned<?unsigend>|signed<?signed>]  ##signed and unsigned notification      
+    [ int<!\\s?> <?@name=int32>
     | short<!\\s?> int <?@name=int16>
     | short<!\\s?> <?@name=int16>
     | long long<!\\s?> <?@name=int64>
     | long int<!\\s?> <?@name=int32>
     | long<!\\s?>     <?@name=int32>
     | char<!\\s?>     <?@name=int8>
-    | <?@name=int>                  ##unsigned or signed allone
+    | <?@name=int>                        ##unsigned or signed allone
     ]
   | [{ <$?environmentClass> ::}] 
-    [
-      int<!\\s?> <?@name=int32>
-    | short int<?@name=int16> 
+    [ int<!\\s?> <?@name=int32>           ##notification without first signed or unsigend
+    | short int<?@name=int16>             ##special int types assigned to int16 etc.
     | short<!\\s?> <?@name=int16> 
     | long long<!\\s?><?@name=int64> 
     | long int<!\\s?><?@name=int32> 
     | long<!\\s?><?@name=int32> 
     | char<!\\s?>     <?@name=int8>
     | long double<?@long_double>
-    | <$?@name>                     ##any type name, also float, double, or a user type 
+    | <$?@name>                           ##any other type name, also float, double, or a user type 
+    ##  [ ( { <* |,|)?macro_arg> ? , } ) ]         ##MACRO(arg) also admissible.
     ] 
-    [ \< <type?templateType> \> ] 
+    [ \< <type?templateType> \> ]        ##<templatetype> 
   ]
-  [<typeRefModifier?>]
-  [<?@modifier2>volatile|const|].
+  [<typeRefModifier?>]                    ##reference designation maybe with reference modifier
+  [<constVolatileModifier?>].             ##this is always the modifier of the variable/field
 
 
 
 typeRefModifier::=
-  { * *<?@pointer2>
-  | * &<?@pointerRef>
-  | *<?@pointer>
-  | const **<?@constPointer2>
-  | const *<?@constPointer>
-  | volatile *<?@volatilePointer>
+  { *<?@Pointer>
+  | const <?@constVar>
+  | volatile <?@volatileVar>
   | &<?cppRef>
   }. 
 
+  
+constVolatileModifier::=
+{ const <?constVar>
+| volatile <?volatileVar>
+}.
+  
 
 inlineMethod::=<methodDef?>.
 
@@ -439,11 +441,12 @@ structContent::=<?>
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | #ifndef __reflectionHidden__ <*|#endif?> #endif
+| <$?macro> ( <type> , <$?@name> [ <arraysize>| : <#?bitField> |] ) <?_end>;  ##definition written as macro
 | <attribute>
 | [/**<description?-?>*/] # define <defineDefinition?+?>
 ##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
 | <structContentInsideCondition>
-| <methodPtrTypedef?+@>
+##| <methodPtrTypedef?+@>
 ].
 
 
@@ -484,7 +487,8 @@ operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>
 statementBlock::=
 \{ [ STACKTRC_ENTRY ( <""?STACKTRC_ENTRY> ) ; ]
 [{ 
-  #ifndef __reflectionHidden__ <*|#endif?> #endif
+  #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
+| #ifndef __reflectionHidden__ <*|#endif?> #endif
 | [ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [defined(<$?conditionDef>) | ! defined(<$?conditionDefNot>) ] ? && } ? \|\| } ]
   { <statement> }  ##statement in conditional compiling TODO semantic
   # endif
