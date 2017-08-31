@@ -13,19 +13,15 @@ set ZBNFJAX_HOME=D:/vishia/ZBNF/zbnfjax
 
 REM If necessary adapt the PATH for a special java version. Comment it if the standard Java installation should be used.
 REM Note Java does not need an installation. It runs well if it is only present in the file system.
-set JAVA_HOME=D:\Programs\JAVA\JRE8_92
+set JAVA_HOME=D:\Programs\JAVA\JRE
 set PATH=%JAVA_HOME%\bin;%PATH%
 
-REM adapt the path to the Java-JDK directory. That should contain bin/javac.exe.
-REM The JDK is necessary for compilation of java sources. Comment it if not used.
-::set JAVA_JDK=D:\Programs\JAVA\jdk1.8.0_92
-
 REM adapt the path to the Xml-Tools. See zbnfjax-readme. 
-REM The XML tools are necessary for some XML operations. This environment variable may be used in some JZcmd scripts. 
+REM The XML tools are necessary for some XML operations. This environment variable may be used in some JZtxtcmd scripts. 
 REM Comment it if not used.
 set XML_TOOLS=D:\Programs\XML_Tools
 
 REM This is the invocation of JZcmd, with up to 9 arguments.
-java -cp %ZBNFJAX_HOME%/zbnf.jar   org.vishia.zcmd.JZcmd   %1 %2 %3 %4 %5 %6 %7 %8 %9
+java -cp %ZBNFJAX_HOME%/zbnf.jar org.vishia.jztxtcmd.JZtxtcmd   %1 %2 %3 %4 %5 %6 %7 %8 %9
 if errorlevel 1 pause
 

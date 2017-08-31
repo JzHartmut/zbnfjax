@@ -22,4 +22,4 @@ set JAVA_JDK="/usr/local/bin/JAVA/jdk1.7.0_51"
 set XML_TOOLS="/usr/local/bin/XML_Tools"
 
 # This is the invocation of JZcmd, with up to 9 arguments.
-java -cp $ZBNFJAX_HOME/zbnf.jar   org.vishia.zcmd.JZcmd   $1 $2 $3 $4 $5 $6 $7 $8 $9
+java -cp $ZBNFJAX_HOME/zbnf.jar   org.vishia.jztxtcmd.JZtxtcmd   $1 $2 $3 $4 $5 $6 $7 $8 $9
