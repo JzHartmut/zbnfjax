@@ -554,7 +554,7 @@
           </xsl:apply-templates>
         </p>
       </xsl:if>
-      <xsl:apply-templates select="xhtml:p|xhtml:ul|xhtml:ol|xhtml:dl|xhtml:table|xhtml:img">
+      <xsl:apply-templates select="xhtml:p|xhtml:ul|xhtml:ol|xhtml:dl|xhtml:table|xhtml:img|xhtml:pre">
           <xsl:with-param name="pStyle"    select="$pStyle" />
           <xsl:with-param name="ulStyle"    select="$ulStyle" />
           <xsl:with-param name="olStyle"    select="$olStyle" />

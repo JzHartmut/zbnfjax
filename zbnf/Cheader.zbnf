@@ -22,7 +22,7 @@ $keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|priv
 .
 
 Cheader::=
-[{ #pragma <*\n?pragma> ##especially #pragma once is admissible
+[{ # pragma <*\n?pragma> ##especially #pragma once is admissible
 |  <includeDef?+@>      ## includes at begin
 }]
 [ [ #ifndef <$?HeaderEntry>
@@ -82,7 +82,7 @@ headerBlock::=<?>
 	| <typedef> ;
   ]
 | [inline|INLINE_Fwc] <inlineMethod?+@>
-| inline <operatorDef?operator> [;|<statementBlock>]
+| inline <operatorDef?operator>
 | <includeDef?+@>
 | # define CONST<defineDefinition?+const_initializer>
 | # define NULL<defineDefinition?+null_initializer>
@@ -96,7 +96,7 @@ headerBlock::=<?>
 ##| <attribute>
 | <methodDef?+@>
 | <methodWithBody>
-| <operatorDef?operator> [;|<statementBlock>]
+| <operatorDef?operator>
 | <defineUse?+@>
 | [<?-modifier> extern "C" | extern_C<!\\s?>| extern<!\\s?>| static<!\\s?>|] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;]
 | ;  ##NOTE: an empty unnecessary semicolon is acceptable in C
@@ -130,7 +130,7 @@ CLASS_C::= /*@CLASS_C <$?@name> <*|*/?>*/
 
 ##/*@ARRAY ObjectRefvalues_Jc @@@@@@@
 ##Definition of arrays of types outside the CLASS_C-block:
-ARRAY::= /*@ARRAY <$?classIdent> <*|*/?>*/
+ARRAY::= /*@ARRAY <$?name> <*|*/?>*/
 { [?/*@]
   <headerBlock>
 }
@@ -218,7 +218,10 @@ methodArgumentList::=
 .
 
 ##Argument in conditional block, either with , before or , after:
-conditionalArgument::= # ifdef <$?conditionDef>  [,] { <typedParameter> ? , } # endif.
+conditionalArgument::= 
+  # ifdef <$?conditionDef>  [,] { <typedParameter> ? , } # endif
+| # ifndef <$?conditionNotDef>  [,] { <typedParameter> ? , } # endif
+.
 
 
 
@@ -252,7 +255,11 @@ validBlock::=
 # endif.
 
 
-includeDef::= # include [<""?!prepFilePath>|\<<*\>?!prepFilePath><?@sysInclude>\>].
+includeDef::= [ # include [<""?!prepFilePath>|\<<*\>?!prepFilePath><?@sysInclude>\>]
+| # ifndef <$?includeGuard> 
+  # include [<""?!prepFilePath>|\<<*\>?!prepFilePath><?@sysInclude>\>]
+  # endif
+].
 
 
 prepFilePath::=<$NoWhiteSpaces><! *?>
@@ -323,7 +330,7 @@ type::= [<constVolatileModifier?>] ##not if it is a reference this is the refere
 
 
 typeRefModifier::=
-  { *<?@Pointer>
+  { *<?@pointer>             ##if '*' is detected, the constVar or volatileVar bit is transferred to the pointer list. Only in post preparation.
   | const <?@constVar>
   | volatile <?@volatileVar>
   | &<?cppRef>
@@ -357,6 +364,9 @@ superclass::= <AccessRight?visibility> [<?isVirtual>virtual] { <$?name>? ::}.
 
 
 
+fnPointer::=<type> ( * <$?name>) ( [|<methodArgumentList?>] ).
+
+
 ##old, it doesnt considere int a,b:# attribute::= [/** <*{ *}|*/?!test_description>*/] <type> <$?name> [<arraysize>];. ## | [ = <value> ] ];.
 
 ##NOTE: <?*> means, a result from outer isn't store here, but in the deeper level.
@@ -385,7 +395,9 @@ implementDescription::= <*{ * }|*/?!test_description>.
 ##The test_desciption syntax is used to parse the inner structure of a description.
 test_description::= <*|\e|\@?text>
 [{ @return <*@\e?returnDescription/text>
- | @simulink <*@\e?simulinkTag>
+ | @simulink [> <*\.@\e?!test_simulinkTag> ] [\. <*@\e?>]
+ | @vtbl <$?vtbl> <*@\e?>
+ | @noReflection <?noReflection> <*@\e?>
  | @param <paramDescription>
  | @sizeof = <sizeofDescription>
  | @super <?superClass>
@@ -408,6 +420,9 @@ test_description::= <*|\e|\@?text>
 ?test_description.lastUndefsizeArray::= "This annotation can be written on the last element. It should be an array, 
   whereby its size is not determined. The size depends on other informations in the context.".
 
+  
+test_simulinkTag::= { [<?simulinkTag> Object-FB | Operation-FB | ctor | dtor | defPortTypes | init | accel-tlc | bus | no-bus | no-thizInit | no-thizStep | step-in | step-out ] ? , }  \e .  
+  
 
 paramDescription::=<$?@name> <*@\e?text>.
 
@@ -440,7 +455,9 @@ structContent::=<?>
 | union\W <structDefinition?+implicitUnionAttribute> ;
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
-| #ifndef __reflectionHidden__ <*|#endif?> #endif
+| #ifndef __reflectionHidden__ <*|#endif?> #endif                                                          ##it is semantically for prevent variables in reflection
+| #ifndef __ignoreInCheader_zbnf__ <*|#endif//__ignoreInCheader_zbnf__?> #endif//__ignoreInCheader_zbnf__  ##use this for designation: do not parse
+| <fnPointer> ;
 | <$?macro> ( <type> , <$?@name> [ <arraysize>| : <#?bitField> |] ) <?_end>;  ##definition written as macro
 | <attribute>
 | [/**<description?-?>*/] # define <defineDefinition?+?>
@@ -466,9 +483,9 @@ classContent::=<?>
 | <classDef> ;
 ##| <structDef?+@>
 | <Destructor>
-| [inline] <operatorDef?operator> [<?@modifier>volatile|const|] [ ;|<statementBlock>]
+| [inline] <operatorDef?operator> 
 | [inline] <methodDef> 
-|<?constructor> <$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>]
+| <Constructor> 
 | <attribute?+?>
 ##| <variableDecl>;
 | <structContent?>
@@ -480,15 +497,19 @@ outerClassName::=<$?name>[ :: <outerClassName>].
 ##outerClassName::=<$?-name> [::<outerClassName?+outerClass>|<?+name>].
 ##outerClassName::=<$?@name> :: [<outerClassName>|<?+name>].
 
-Destructor::= [virtual] ~<$?className> ( ) [ = 0 ;<?@abstract>| ;|<statementBlock>].
+Constructor::=<$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initialization><$?ident>({ <value> ? ,} )? ,}][ ;| <statementBlock>].
 
-operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>|<unaryOperator?>|<binaryOperator?>|<type?typeConversion>] ( [| void |{ <typedParameter> ? ,}] ).
+Destructor::= [virtual<?virtual>] ~<$?className> ( ) [ = 0 ;<?@abstract>| ;|<statementBlock>].
+
+operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>|<unaryOperator?>|<binaryOperator?>|<type?typeConversion>] 
+( [| void |{ <typedParameter> ? ,}] ) [<?@modifier>volatile|const|] [ ;<?declaration>|<statementBlock>].
 
 statementBlock::=
 \{ [ STACKTRC_ENTRY ( <""?STACKTRC_ENTRY> ) ; ]
 [{ 
   #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
-| #ifndef __reflectionHidden__ <*|#endif?> #endif
+| #ifndef __reflectionHidden__ <*|#endif?> #endif                                                             ##deprecated, not semantically exact.
+| #ifndef __ignoreInCheader_zbnf__ <*|#endif//__ignoreInCheader_zbnf__?> #endif//__ignoreInCheader_zbnf__     ##use this for designation: do not parse
 | [ # ifdef <$?conditionDef>| # ifndef <$?conditionDefNot>| # if {<?OrCondition> {<?AndCondition> [defined(<$?conditionDef>) | ! defined(<$?conditionDefNot>) ] ? && } ? \|\| } ]
   { <statement> }  ##statement in conditional compiling TODO semantic
   # endif
@@ -503,6 +524,7 @@ statement::=
 | <assignment> ;
 | <if_statement>
 | <while_statement>
+| <dowhile_statement>
 | <for_statement>
 | <switch_statement>
 | <try_statement>
@@ -551,7 +573,7 @@ value::= <assignment> |
 
 
 
-assignOperator::= [<?assignOperator> = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>= ].
+assignOperator::= [<?assignOperator> = | += | \|= | &= | -= | *= | /= | \<\<= | \>\>= | ^= ].
 
 ##NOTE: It is possible in C to have more as one unary operator one before another. But that is usefull only for special situations.
 ##      The sequence of unary operators is checked here.  
@@ -582,7 +604,7 @@ structContentInsideCondition::=
 
 ##variableDecl::= <type> <$?name> [\[<?arrayType>\]].
 
-AccessRight::=[<?accessRight/@value> public | private | protected |].
+AccessRight::=[<?accessRight> public | private | protected |].
 
 ##arraysize can be simple, or a complex value. NOTE: Only the simpe variants are regarded in Header2Reflection. 
 arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }| <?unknown>] \] [<arraysize>].
@@ -609,6 +631,8 @@ externObject::= { [<simpleMethodCall>|<$?association>[ \[ <value?index> \]] ] [-
 if_statement::=if ( <value?condition> ) [<statementBlock>|<statement>] [ else [<statementBlock>|<statement>] ].
 
 while_statement::=while ( <condition> ) [<statementBlock>|<statement>].
+
+dowhile_statement::=do [<statementBlock>|<statement>]  while ( <condition> ) ; .
 
 for_statement::=for ( 
   [<variabledefinition> ; | <assignment?startAssignment> ;]  
