@@ -118,6 +118,10 @@ sub genReflStruct(Obj struct)
 ====} reflection_Fields_<&struct.name> =
 ===={ CONST_ObjectArrayJc(FieldJc, <&nrElements>, OBJTYPE_FieldJc, null, &reflection_Fields_<&struct.name>)
 ====, { <.>
+    String offset = "0";
+    String sizetype = "0+0";
+    Bool bitfield = 0;
+    Num bitPosition = 0;
     for(entry:struct.entries){ if(entry.name) {
       String sTypeRefl;
       String bytesType;
@@ -137,7 +141,14 @@ sub genReflStruct(Obj struct)
         if(bytesType){ modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>; } else { modifier = "0"; }
         sTypeRefl = reflSimpleTypes.get(typeRefl.name);
         if(!sTypeRefl) { 
-          sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
+          if(reflReplacement) {
+            sTypeRefl = reflReplacement.get(typeRefl.name);
+            if(!sTypeRefl) { 
+              sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
+            }
+          } else {
+            sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
+          }
         }
       } else {
         //another macro is ignored.
@@ -149,8 +160,27 @@ sub genReflStruct(Obj struct)
       } else {
         arraysize = "0   //no Array, no Bitfield";
       }
-      if((entry.arraysize || not bytesType) && not typeRefl.pointer && not typeRefl.pointer2) {
-        modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
+      if(entry.bitField) {
+        arraysize = <:><&bitPosition> + (<&entry.bitField> << kBitNrofBitsInBitfield_FieldJc)<.>;
+        bitPosition = bitPosition + entry.bitField;
+        sTypeRefl = "REFLECTION_BITFIELD";
+        modifier = "kBitfield_Modifier_reflectJc";
+        if(!bitfield) {                                 ##the first bitfield:
+          offset = <:><&offset> + <&sizetype><.>;
+          bitfield = 1;
+        }
+        ##keep offset. 
+      } else {
+        if((entry.arraysize || not bytesType) && not typeRefl.pointer && not typeRefl.pointer2) {
+          modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
+        }
+        offset = <:>(int16)(((int32)(&((<&struct.name>*)(0x1000))-><&entry.name>)) -0x1000)<.>;
+        if(entry.type) {
+          sizetype = <:>sizeof(<&entry.type.name>)<.>;
+        } else {
+          sizetype = "4-4 /*unknown type*/";
+        }
+        bitfield = 0;
       }
       if(typeRefl.pointer) { modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; }
       if(sTypeRefl) { ##else: a #define
@@ -159,7 +189,7 @@ sub genReflStruct(Obj struct)
 ======    , <&arraysize>
 ======    , <&sTypeRefl>                                                                                            
 ======    , <&modifier> //bitModifiers
-======    , (int16)((int32)(&((<&struct.name>*)(0x1000))-><&entry.name>) -(int32)(<&struct.name>*)0x1000)
+======    , <&offset>
 ======    , 0  //offsetToObjectifcBase
 ======    , &reflection_<&struct.name>
 ======    }
@@ -275,6 +305,7 @@ sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileDst, St
 ##
 sub genReflectionHeader(Obj headerfile, String fileDst)
 {
+  FileSystem.mkDirPath(fileDst);  ##Note: makes only the directory, because fileDst does not end with /
   Openfile outRefl = fileDst;
     <+outRefl>
     <:>
