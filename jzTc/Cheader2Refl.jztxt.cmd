@@ -18,6 +18,7 @@ Obj headerTranslator = java new org.vishia.header2Reflection.CheaderParser(conso
 
 
 Map reflSimpleTypes = {
+  String void = "REFLECTION_void";
   String int = "REFLECTION_int32";
   String char = "REFLECTION_uint8";
   String uint32_t = "REFLECTION_uint32";
@@ -37,6 +38,7 @@ Map reflSimpleTypes = {
 };  
 
 Map bytesSimpleTypes = {
+  String void =     "4";
   String int =      "4";
   String char =     "1";
   String uint32_t = "4";
@@ -64,23 +66,36 @@ sub genReflStruct(Obj struct)
   } }
   <:>
 ==
-==extern_C const ClassJc reflection_<&struct.name>;  //the just defined reflection_ used in the own fields.
-  <.>
+==extern_C const ClassJc reflection_<&struct.name>;  //the just defined reflection_ used in the own fields.<.>
   for(entry:struct.entries) { if(entry.name && entry.type) { ##Note a type is not present for a #define inside a struct.
-    String typeRefl;
-    if(not reflSimpleTypes.get(entry.type.name)) { 
+    Obj typeRefl;
+    if(entry.description.reflType) {
+      typeRefl = entry.description.reflType;
+    } elsif(entry.type) {
+      typeRefl = entry.type;
+    }
+    if(not reflSimpleTypes.get(typeRefl.name)) { 
+      if(typeRefl.forward && typeRefl.name.endsWith("_t")) {
+        Num zname = typeRefl.name.length();
+        String defname = typeRefl.name.substring(0, zname -2);
+        <:>
+========#define reflection_<&typeRefl.name> reflection_<&defname><.> 
+      }
       <:>
-======extern_C const ClassJc reflection_<&entry.type.name>;  //used for field <&entry.name><.>      
+======extern_C const ClassJc reflection_<&typeRefl.name>;  //used for field <&entry.name>
+      <.>      
     }
   }}
+  Num hasSuperclass = 0;
   if(struct.entries.size()>0) {
    Obj base = struct.entries.get(0);
    String reflSuperName;
    if(base ?instanceof reflStructDefinition && (base.name == "base" || base.name == "obj" || base.name == "object" || base.name == "super")) {
-    if(base.isUnion) { ##base class and interface or ObjectJc are joined in a union. The first element should be the super class. 
+    hasSuperclass = 1;
+    if(base.isUnion || (base ?instanceof reflStructDefinition && not base.type)) { ##base class and interface or ObjectJc are joined in a union. The first element should be the super class. 
       reflSuperName = <:>reflection_<&base.entries.get(0).type.name><.>;
     } else {
-      reflSuperName = <:>reflection_<&base.type.name><.>;
+      reflSuperName = <:>reflection_<&base.type.name><.>; ####type.name><.>;
     }
     <:>  
 ====
@@ -93,66 +108,80 @@ sub genReflStruct(Obj struct)
 ====};
 ====<.>
   } }
-  <:>
-==const struct Reflection_Fields_<&struct.name>_t
-=={ ObjectArrayJc head;
-==  FieldJc data[<&struct.entries.size>];
-==} reflection_Fields_<&struct.name> =
-=={ CONST_ObjectArrayJc(FieldJc, <&nrElements>, OBJTYPE_FieldJc, null, &reflection_Fields_<&struct.name>)
-==, { <.>
-  for(entry:struct.entries){ if(entry.name) {
-    String typeRefl;
-    String bytesType;
-    String modifier;
-    if(entry.type.pointer){ modifier = "kReference_Modifier_reflectJc"; }  ##reference type, from primitive or class type. 
-    if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
-      typeRefl = <:>&reflection_<&entry.type.name><.>;
-      modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
-    } elsif(entry.type) {  
-      bytesType = bytesSimpleTypes.get(entry.type.name);
-      if(bytesType){ modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>; } else { modifier = "0"; }
-      typeRefl = reflSimpleTypes.get(entry.type.name);
-      if(!typeRefl) { typeRefl = <:>&reflection_<&entry.type.name><.>; }
-    } else {
-      //another macro is ignored.
-    }
-    String arraysize;
-    if(entry.arraysize.value) {
-      arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
-      modifier = <:><&modifier> | kStaticArray_Modifier_reflectJc<.>;
-    } else {
-      arraysize = "0   //no Array, no Bitfield";
-    }
-    if((entry.arraysize || not bytesType) && not entry.type.pointer && not entry.type.pointer2) {
-      modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
-    }
-    if(entry.type.pointer) { modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; }
-    if(typeRefl) { ##else: a #define
-    <:><:indent:2=><: >
-      { "<&entry.name>"
-====    , <&arraysize>
-====    , <&typeRefl>                                                                                            
-====    , <&modifier> //bitModifiers
-====    , (int16)((int32)(&((<&struct.name>*)(0x1000))-><&entry.name>) -(int32)(<&struct.name>*)0x1000)
-====    , 0  //offsetToObjectifcBase
-====    , &reflection_<&struct.name>
-====    }
-====  <:hasNext>, <.hasNext><: >
+  String sFieldsInStruct = "null";
+  if(struct.entries.size() > hasSuperclass) { ##hasSuperclass is 1 if the first entry is the superclass.
+    String sFieldsInStruct = <:>(FieldJcArray const*)&reflection_Fields_<&struct.name><.>;
+    <:>
+====const struct Reflection_Fields_<&struct.name>_t
+===={ ObjectArrayJc head;
+====  FieldJc data[<&struct.entries.size>];
+====} reflection_Fields_<&struct.name> =
+===={ CONST_ObjectArrayJc(FieldJc, <&nrElements>, OBJTYPE_FieldJc, null, &reflection_Fields_<&struct.name>)
+====, { <.>
+    for(entry:struct.entries){ if(entry.name) {
+      String sTypeRefl;
+      String bytesType;
+      String modifier;
+      Obj typeRefl;
+      if(entry.description.reflType) {
+        typeRefl = entry.description.reflType;
+      } elsif(entry.type) {
+        typeRefl = entry.type;
+      }
+      if(typeRefl.pointer){ modifier = "kReference_Modifier_reflectJc"; }  ##reference type, from primitive or class type. 
+      if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
+        sTypeRefl = <:>&reflection_<&typeRefl.name><.>;
+        modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
+      } elsif(typeRefl) {  
+        bytesType = bytesSimpleTypes.get(typeRefl.name);
+        if(bytesType){ modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>; } else { modifier = "0"; }
+        sTypeRefl = reflSimpleTypes.get(typeRefl.name);
+        if(!sTypeRefl) { 
+          sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
+        }
+      } else {
+        //another macro is ignored.
+      }
+      String arraysize;
+      if(entry.arraysize.value) {
+        arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
+        modifier = <:><&modifier> | kStaticArray_Modifier_reflectJc<.>;
+      } else {
+        arraysize = "0   //no Array, no Bitfield";
+      }
+      if((entry.arraysize || not bytesType) && not typeRefl.pointer && not typeRefl.pointer2) {
+        modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
+      }
+      if(typeRefl.pointer) { modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; }
+      if(sTypeRefl) { ##else: a #define
+      <:><:indent:2=><: >
+        { "<&entry.name>"
+======    , <&arraysize>
+======    , <&sTypeRefl>                                                                                            
+======    , <&modifier> //bitModifiers
+======    , (int16)((int32)(&((<&struct.name>*)(0x1000))-><&entry.name>) -(int32)(<&struct.name>*)0x1000)
+======    , 0  //offsetToObjectifcBase
+======    , &reflection_<&struct.name>
+======    }
+======  <:hasNext>, <.hasNext><: >
+      <.>
+      }
+    } } //if for
+    <:>  
+====} }; 
+====                                                    
     <.>
-    }
-  } } //if for
+  }
   ##The class:
   String classModif;
   
-  <:>  
-==} };
-==
+  <:>
 ==const ClassJc reflection_<&struct.name> =
 =={ CONST_ObjectJc(OBJTYPE_ClassJc + sizeof(ClassJc), &reflection_<&struct.name>, &reflection_ClassJc)
 ==, "<&struct.name>"
 ==, 0
 ==, sizeof(<&struct.name>)
-==, (FieldJcArray const*)&reflection_Fields_<&struct.name>  //attributes and associations
+==, <&sFieldsInStruct>  //attributes and associations
 ==, null  //method      
 ==, <:if:reflSuperName>(ClassOffset_idxMtblJcARRAY*)&superClasses_<&struct.name><:else>null<.if>  //superclass  
 ==, null  //interfaces  ##TODO check first union
@@ -175,7 +204,7 @@ sub genReflStruct(Obj struct)
 ##The routine to generate reflection files, one file per header file.
 ##It parses all header files one after another, then generates reflection
 ##
-sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String html = null)
+sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String genRoutine, String fileExt, String html = null)
 {
 
   <+out>currdir=<&currdir><.+n>
@@ -186,17 +215,26 @@ sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String html = null)
   List inputsExpanded = target.allInputFilesExpanded();
   for(headerfile:inputsExpanded)
   { <+out><&headerfile.absfile()><.+n>
-    call genReflectionFile(filepath = headerfile, fileRefl = <:><&target.output.absdir()>/<&headerfile.localname()>.crefl<.>, html = html);
+    call genDstFile(filepath = headerfile, fileDst = <:><&target.output.absdir()>/<&headerfile.localname()><&fileExt><.>, genRoutine=genRoutine, html = html);
   }
+}
+
+
+sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String html = null)
+{
+  call genDstFiles(target = target, html=html, genRoutine="genReflectionHeader", fileExt=".crefl");
+}
+
+
+sub XXXXXXXXgenReflectionFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileRefl, String html = null)
+{
+  call genDstFile(filepath=filepath, fileDst=fileRefl, genRoutine="genReflectionHeader", html=html);
 }
 
 
 
 
-
-
-
-sub genReflectionFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileRefl, String html = null)
+sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileDst, String genRoutine, String html = null)
 {
   ##java org.vishia.util.DataAccess.debugMethod("setSrc");
   Obj args = java new org.vishia.header2Reflection.CheaderParser$Args();
@@ -218,7 +256,7 @@ sub genReflectionFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String file
       mkdir <:><&html>/<&headerfile.fileName>'<.>;
       test.dataHtml(headers, File:<:><&html>/<&headerfile.fileName>.html<.>);
     }
-    call genReflectionHeader(headerfile = headerfile, fileRefl = fileRefl);
+    call &genRoutine(headerfile = headerfile, fileDst = fileDst);
   }
 } 
 
@@ -235,9 +273,9 @@ sub genReflectionFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String file
 ##The routine to generate reflection files, one file per header file.
 ##It parses all header files one after another, then generates reflection
 ##
-sub genReflectionHeader(Obj headerfile, String fileRefl)
+sub genReflectionHeader(Obj headerfile, String fileDst)
 {
-  Openfile outRefl = fileRefl;
+  Openfile outRefl = fileDst;
     <+outRefl>
     <:>
 ========//This file is generated by ZBNF/zbnfjax/jzTc/Cheader2Refl.jzTc
@@ -247,7 +285,11 @@ sub genReflectionHeader(Obj headerfile, String fileRefl)
     <.><.+>
   for(classC: headerfile.listClassC) {
     for(entry: classC.entries) {
-      if(entry.whatisit == "structDefinition" && not entry.description.noReflection) {
+      if(  entry.whatisit == "structDefinition" 
+        && not entry.description.noReflection
+        && not(entry.name >= "Mtbl")
+        && not(entry.name >= "Vtbl")
+        ) {
         ##
         ##check whether a Bus should be generated.
         ##
@@ -276,6 +318,5 @@ sub genReflectionHeader(Obj headerfile, String fileRefl)
 ##
 sub xxxmain()
 { ##NOTE: to test parsed data from header add an argument html="path/to/outdirForhtml"
-  call genReflectionFile(filepath = Filepath: &$1, fileRefl = $2);
+  call genReflectionFile(filepath = Filepath: &$1, fileDst = $2);
 }
-

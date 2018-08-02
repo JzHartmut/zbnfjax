@@ -116,7 +116,7 @@ topic::=<?topics:topic> <$?@ident> <*\n?><*|*/?xhtml:body+>*/.
 
 
 CLASS_C::= /*@CLASS_C <$?@name> <*|*/?>*/
-[ /**CLASS_C_Description <CLASS_C_Description?structDefinition>*/ ] ##instead a structDefinition itself if not exist.
+[ /**CLASS_C_Description <description> */ ] ##<CLASS_C_Description?structDefinition>*/ ] ##instead a structDefinition itself if not exist.
 { [?/*@]                                  ##stop repetition if /*@NEWBLOCK is detected
   <headerBlock>
 }
@@ -139,13 +139,13 @@ ARRAY::= /*@ARRAY <$?name> <*|*/?>*/
 
 
 DEFINE_C::=/*@DEFINE[_C] [<$?@name>]<*|*/?>*/
- /**<DescriptionDEFINE_C?structDefinition>*/
+ /**<DescriptionDEFINE_C?>*/
 { [?/*@]
   <headerBlock>
 }
 .
 
-DescriptionDEFINE_C::=<$?@name> : <description>.
+DescriptionDEFINE_C::=<$?@headerBlockNameDescr> : <description>.
 
 
 INLINE::=/*@INLINE [<$?@name>]<*|*/?>*/
@@ -199,7 +199,7 @@ typedef::= <type> <$?name> [ \[ [ 0x<#x?nrofArrayElements> | <#?nrofArrayElement
 
 ##it is a method head, declaration.
 methodDef::= [METHOD_C|extern "C"|extern_C |extern |C_TYPE |] <type> {<$?name>? ::} ([|<methodArgumentList?>] )
-[<?@modifier>volatile|const|] [;|<statementBlock>|].
+[<?@modifier>volatile|const|] [; | = 0 ; <?abstract> | <statementBlock>|].
 
 methodPtrTypedef::= [METHOD_C |extern "C"|extern_C |extern |C_TYPE |] <type> ( [<$?class> :: ] * <$?name> ) ([|<methodArgumentList?>]) ;.
 
@@ -293,14 +293,14 @@ undefDefinition::= #undef<![ \t]*?><$?@name>[( { <$?parameter/@name> ? , } )].
 
 defineUse::= <$?defineMethod> ( { <$?defineparameter> ? , } ).
 
-classDecl::=class <$?name> ;.
+classDecl::=class\W <$?name> ;.
 
 structDecl::=[C_TYPE] struct\W <$?name> ;.
 
 
 type::= [<constVolatileModifier?>] ##not if it is a reference this is the reference modifier.
   [<?@forward>struct\W|class\W|union\W|] 
-  [ [unsigned<?unsigend>|signed<?signed>]  ##signed and unsigned notification      
+  [ [unsigned<?unsigned>|signed<?signed>]  ##signed and unsigned notification      
     [ int<!\\s?> <?@name=int32>
     | short<!\\s?> int <?@name=int16>
     | short<!\\s?> <?@name=int16>
@@ -375,8 +375,11 @@ fnPointer::=<type> ( * <$?name>) ( [|<methodArgumentList?>] ).
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
 ##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,} ;.
 attribute::=<?> [/**<description?-?>*/] [<?-modifier> extern "C" | extern_C<!\\s?>| extern<!\\s?>| static<!\\s?>|] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
-attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |] ; [//:<*\n?description/text>].
+attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |] ; [//<*\n\r?!attrdescription>].
 attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |].
+
+attrdescription::=<test_attrdescriptiontext?description>.
+test_attrdescriptiontext::= <*\e?text>.
 
 ?attributedefDescr::="Possibility to write //: as endline comment description. It is applicable if only one attribute is defined, not more as one separated with colon ".
 
@@ -395,10 +398,10 @@ implementDescription::= <*{ * }|*/?!test_description>.
 ##The test_desciption syntax is used to parse the inner structure of a description.
 test_description::= <*|\e|\@?text>
 [{ @return <*@\e?returnDescription/text>
- | @simulink [> <*\.@\e?!test_simulinkTag> ] [\. <*@\e?>]
- | @vtbl <$?vtbl> <*@\e?>
- | @noReflection <?noReflection> <*@\e?>
- | @param <paramDescription>
+ | @simulink [> <*\.@\e?!test_simulinkTag> ] [\. <*@\e?>]  ##for Sfunction code generation for simulink
+ | @vtbl <$?vtbl> <*@\e?>                   ##name of the const virtual table for reflection generation
+ | @noReflection <?noReflection> <*@\e?>    ##do not generate an reflection entry for this element.
+ | @param <paramDescription>                ##javadoc like
  | @sizeof = <sizeofDescription>
  | @super <?superClass>
  | @bytepos = [0x<#x?bytepos/@value>|<#?bytepos/@value>]
@@ -407,7 +410,7 @@ test_description::= <*|\e|\@?text>
  | @container = [<$?containerType>] \< <$?containerElementType> [ * <?referencedContainerElement> ] \> [\.]
  | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
  | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
- | @refl:{ <*,\.\e?refl>? ,}[ \.]
+ | @refl: [ no <?noRefl> | <type?reflType> ] [ \.] ##<*,\.\e?refl>     ##either 'no' or type for reflection.
  | @<auxDescription>
 ## | <*|\e|\@?text>    ##text till @ or till end.
  | <*\e\@?text>    ##text till @ or till end.
@@ -421,7 +424,12 @@ test_description::= <*|\e|\@?text>
   whereby its size is not determined. The size depends on other informations in the context.".
 
   
-test_simulinkTag::= { [<?simulinkTag> Object-FB | Operation-FB | ctor | dtor | defPortTypes | init | accel-tlc | bus | no-bus | no-thizInit | no-thizStep | step-in | step-out ] ? , }  \e .  
+test_simulinkTag::= 
+{ [<?simulinkTag> Object-FB | Operation-FB | ctor | dtor | defPortTypes | init | accel-tlc 
+  | bus | no-bus | no-thizInit | no-thizStep | step-in | step-out 
+  ] 
+  | fnCall: <$?fnCallVar> & <$?fnCallMask>[$<?fnCallMaskAddClass>] 
+  ? , }  \e .  
   
 
 paramDescription::=<$?@name> <*@\e?text>.
@@ -468,14 +476,13 @@ structContent::=<?>
 
 
 classContent::=<?>
-[ [inline] virtual <methodDef?abstractMethod> = 0 ;
-| [inline] virtual <methodDef?virtualMethod> 
-| [inline] virtual <operatorDef?abstractOperator> = 0 ;
+[ [inline] virtual <methodDef?virtualMethod> 
 | [inline] virtual <operatorDef?virtualOperator>
 | static <methodDef?staticMethod>  
 | static <attribute?+staticAttribute>
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
-|<?friendClass> friend [class] <outerClassName> ;
+##|<?friendClass> friend [class] <outerClassName> ;
+| friend [class] <friendClassDef> ;
 | <enumDefinition> ;
 |<?classForward> class <$?@name> ;
 |<?structForward> struct\W <$?@name> ;
@@ -493,7 +500,7 @@ classContent::=<?>
 
 
 ##TODO experience
-outerClassName::=<$?name>[ :: <outerClassName>].
+friendClassDef::=<$?name>[ :: <friendClassDef>].
 ##outerClassName::=<$?-name> [::<outerClassName?+outerClass>|<?+name>].
 ##outerClassName::=<$?@name> :: [<outerClassName>|<?+name>].
 
@@ -502,7 +509,7 @@ Constructor::=<$?@name> ( [| void |{ <typedParameter> ? ,}] ) [ : {<?initializat
 Destructor::= [virtual<?virtual>] ~<$?className> ( ) [ = 0 ;<?@abstract>| ;|<statementBlock>].
 
 operatorDef::= [<type>] operator [<?operator> ()<?parenthesis>|<assignOperator?>|<unaryOperator?>|<binaryOperator?>|<type?typeConversion>] 
-( [| void |{ <typedParameter> ? ,}] ) [<?@modifier>volatile|const|] [ ;<?declaration>|<statementBlock>].
+( [| void |{ <typedParameter> ? ,}] ) [<?@modifier>volatile|const|] [ ;<?declaration> | = 0 ; <?abstract> |<statementBlock>].
 
 statementBlock::=
 \{ [ STACKTRC_ENTRY ( <""?STACKTRC_ENTRY> ) ; ]
@@ -607,9 +614,8 @@ structContentInsideCondition::=
 AccessRight::=[<?accessRight> public | private | protected |].
 
 ##arraysize can be simple, or a complex value. NOTE: Only the simpe variants are regarded in Header2Reflection. 
-arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }| <?unknown>] \] [<arraysize>].
-##arraysize::=\[ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> | <*<!\\s?>\]?value>] \] [<arraysize>].
-##arraysize::=\[ [ <*<!\\s?>\]?value> ] \] [<arraysize>].
+##arraysize::= \[ [{ [ 0x<#x?@value> | <#?@value> | <$?@symbolValue> [!<binaryOperator>|\]] | <value>] ? <binaryOperator> }| <?unknown>] \] [<arraysize>].
+arraysize::= \[ [ <?unknown> \] | [ 0x<#x?@value> | <#?@value> | <$?@symbolValue>] \] | <value?exprValue> \] ] [<arraysize>].
 
 ?en:arraysize.unknown::="An unknown arraysize is possible on extern declarations of arrays writing 'extern type name[];' ".
 
@@ -624,6 +630,7 @@ variable::=[ <superAccess>| <externObject>|] [{<$?environmentClass>::}] <$?simpl
 
 superAccess::=xxx.
 
+##The instance which's method is called or which's variable is accessed. externObject->method(...)
 externObject::= { [<simpleMethodCall>|<$?association>[ \[ <value?index> \]] ] [-\>|\.] }.
 
 

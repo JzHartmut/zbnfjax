@@ -291,7 +291,11 @@ enumDefinition::=
  | @SuppressWarnings([<""?>| \{ { <""?> ?, } \}])
  | <ModifierClass?-?>
 }] 
-enum <$?ident> \{  [{ <$?value> ? , }] \}.
+enum <$?ident> \{  [{ <$?value> [ ( <actualArguments> ) ] ? , }]
+[ ; 
+ <classContent?>
+]
+\}.
 
 ##NOTE: write <AccessRight> at last position of alternative because if 'package private' is set (no keyword, no content), the repetition is broken off.
 ##      it is a Java specification problem!
