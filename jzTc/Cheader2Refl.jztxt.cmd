@@ -111,93 +111,17 @@ sub genReflStruct(Obj struct)
   String sFieldsInStruct = "null";
   if(struct.entries.size() > hasSuperclass) { ##hasSuperclass is 1 if the first entry is the superclass.
     String sFieldsInStruct = <:>(FieldJcArray const*)&reflection_Fields_<&struct.name><.>;
+    Stringjar wrFields;
+    Map retEntries;
+    retEntries = call entries_struct(wr = wrFields, struct = struct, structNameRefl=struct.name);
     <:>
 ====const struct Reflection_Fields_<&struct.name>_t
 ===={ ObjectArrayJc head;
-====  FieldJc data[<&struct.entries.size>];
+====  FieldJc data[<&retEntries.nrofEntries>];
 ====} reflection_Fields_<&struct.name> =
-===={ CONST_ObjectArrayJc(FieldJc, <&nrElements>, OBJTYPE_FieldJc, null, &reflection_Fields_<&struct.name>)
-====, { <.>
-    String offset = "0";
-    String sizetype = "0+0";
-    Bool bitfield = 0;
-    Num bitPosition = 0;
-    for(entry:struct.entries){ if(entry.name) {
-      String sTypeRefl;
-      String bytesType;
-      String modifier;
-      Obj typeRefl;
-      if(entry.description.reflType) {
-        typeRefl = entry.description.reflType;
-      } elsif(entry.type) {
-        typeRefl = entry.type;
-      }
-      if(typeRefl.pointer){ modifier = "kReference_Modifier_reflectJc"; }  ##reference type, from primitive or class type. 
-      if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
-        sTypeRefl = <:>&reflection_<&typeRefl.name><.>;
-        modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
-      } elsif(typeRefl) {  
-        bytesType = bytesSimpleTypes.get(typeRefl.name);
-        if(bytesType){ modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>; } else { modifier = "0"; }
-        sTypeRefl = reflSimpleTypes.get(typeRefl.name);
-        if(!sTypeRefl) { 
-          if(reflReplacement) {
-            sTypeRefl = reflReplacement.get(typeRefl.name);
-            if(!sTypeRefl) { 
-              sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
-            }
-          } else {
-            sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
-          }
-        }
-      } else {
-        //another macro is ignored.
-      }
-      String arraysize;
-      if(entry.arraysize.value) {
-        arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
-        modifier = <:><&modifier> | kStaticArray_Modifier_reflectJc<.>;
-      } else {
-        arraysize = "0   //no Array, no Bitfield";
-      }
-      if(entry.bitField) {
-        arraysize = <:><&bitPosition> + (<&entry.bitField> << kBitNrofBitsInBitfield_FieldJc)<.>;
-        bitPosition = bitPosition + entry.bitField;
-        sTypeRefl = "REFLECTION_BITFIELD";
-        modifier = "kBitfield_Modifier_reflectJc";
-        if(!bitfield) {                                 ##the first bitfield:
-          offset = <:><&offset> + <&sizetype><.>;
-          bitfield = 1;
-        }
-        ##keep offset. 
-      } else {
-        if((entry.arraysize || not bytesType) && not typeRefl.pointer && not typeRefl.pointer2) {
-          modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
-        }
-        offset = <:>(int16)(((int32)(&((<&struct.name>*)(0x1000))-><&entry.name>)) -0x1000)<.>;
-        if(entry.type) {
-          sizetype = <:>sizeof(<&entry.type.name>)<.>;
-        } else {
-          sizetype = "4-4 /*unknown type*/";
-        }
-        bitfield = 0;
-      }
-      if(typeRefl.pointer) { modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; }
-      if(sTypeRefl) { ##else: a #define
-      <:><:indent:2=><: >
-        { "<&entry.name>"
-======    , <&arraysize>
-======    , <&sTypeRefl>                                                                                            
-======    , <&modifier> //bitModifiers
-======    , <&offset>
-======    , 0  //offsetToObjectifcBase
-======    , &reflection_<&struct.name>
-======    }
-======  <:hasNext>, <.hasNext><: >
-      <.>
-      }
-    } } //if for
-    <:>  
+===={ CONST_ObjectArrayJc(FieldJc, <&retEntries.nrofEntries>, OBJTYPE_FieldJc, null, &reflection_Fields_<&struct.name>)
+====, {  
+    <&wrFields>
 ====} }; 
 ====                                                    
     <.>
@@ -221,6 +145,124 @@ sub genReflStruct(Obj struct)
 ==
 ==<.>
 }
+
+
+
+
+
+
+
+
+##
+##Subroutine writes the C-code for an entry of a struct.
+##Regards bitfields
+##
+sub entries_struct(Obj wr, Obj struct, String structNameRefl)
+{ Num return.nrofEntries = 0;
+  String offset = "0";    ##initial value, keep it on bitfields
+  String sizetype = "0";  ##initial, no element before 1. bitfield
+  Bool bitfield = 0;
+  Num bitPosition = 0;
+  for(entry:struct.entries) { 
+    if(entry ?instanceof reflStructDefinition && !entry.conditionDef){
+      <:>/*INNER STRUCT */
+      <.>
+      Map ret;
+      String structNameReflSub;
+      if(entry.name){ structNameReflSub = entry.name; }
+      else { structNameReflSub = structNameRefl; }  ##an unnamed struct, use the outside name.
+      ##embedded sub struct, named or no named.
+      ret = call entries_struct(wr = wr, struct = entry, structNameRefl = structNameRefl);
+      return.nrofEntries = return.nrofEntries + ret.nrofEntries;
+      ##
+      <+wr><:>
+      ========  <:hasNext>, <.hasNext><.><.+>
+    }
+    if(!entry.name) {
+      ##unnamed entry, especially on inner struct, do nothing. The inner struct is handled already.
+      ##unnamed entry on bitfields, do nothing don't show it.
+    } else {
+      String sTypeRefl;
+      String bytesType;
+      String modifier;
+      Obj typeRefl;
+      ##
+      ## sTypeRefl
+      ##
+      if(entry.description.reflType) {  ##from annotation in comment, CHeader.zbnf: @refl: <type?reflType> 
+        typeRefl = entry.description.reflType;
+      } elsif(entry.type) {
+        typeRefl = entry.type;  ##from parsed type
+      }
+      if(typeRefl.pointer){ modifier = "kReference_Modifier_reflectJc"; }  ##reference type, from primitive or class type. 
+      if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
+        sTypeRefl = <:>&reflection_<&typeRefl.name><.>;
+        modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
+      } elsif(typeRefl) {  
+        bytesType = bytesSimpleTypes.get(typeRefl.name);
+        if(bytesType){ modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>; } else { modifier = "0"; }
+        sTypeRefl = reflSimpleTypes.get(typeRefl.name);
+        if(!sTypeRefl) { 
+          if(reflReplacement) {
+            sTypeRefl = reflReplacement.get(typeRefl.name);
+            if(!sTypeRefl) { 
+              sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
+            }
+          } else {
+            sTypeRefl = <:>&reflection_<&typeRefl.name><.>; 
+          }
+        }
+      } else {
+        //another macro is ignored.
+      }
+      ##
+      String arraysize;
+      ##
+      if(entry.arraysize.value) {
+        arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
+        modifier = <:><&modifier> | kStaticArray_Modifier_reflectJc<.>;
+      } else {
+        arraysize = "0   //no Array, no Bitfield";
+      }
+      if(entry.bitField) {
+        arraysize = <:>(uint16)(<&bitPosition> + (<&entry.bitField> << kBitNrofBitsInBitfield_FieldJc))<.>;
+        bitPosition = bitPosition + entry.bitField;
+        sTypeRefl = "REFLECTION_BITFIELD";
+        modifier = "kBitfield_Modifier_reflectJc";
+        if(!bitfield) {   ##the first bitfield:
+          offset = <:><&offset> + <&sizetype>/* offset on bitfield: offset of element before + sizeof(element before) */<.>;
+          bitfield = 1;
+        } ##else: further bitfields: keep offset string 
+      } elsif(sTypeRefl) { ##don't set offset = ... for an entry which is not used (espec. #define)
+        if((entry.arraysize || not bytesType) && not typeRefl.pointer && not typeRefl.pointer2) {
+          modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
+        }
+        offset = <:>(int16)( ((intptr_t)(&((<&structNameRefl>*)(0x1000))-><&entry.name>)) -0x1000 )<.>;
+        if(entry.type) {
+          sizetype = <:>sizeof(<&entry.type.name>)<.>;
+        } else {
+          sizetype = "4-4 /*unknown type*/";
+        }
+        bitfield = 0;  ##detect a next bitfield, for offset calculation.
+      }
+      if(typeRefl.pointer) { modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; }
+      if(sTypeRefl) { ##else: a #define
+        return.nrofEntries = return.nrofEntries +1;
+        <+wr><:><:indent:2=>
+========    { "<&entry.name>"
+========    , <&arraysize>
+========    , <&sTypeRefl>                                                                                            
+========    , <&modifier> //bitModifiers
+========    , <&offset>
+========    , 0  //offsetToObjectifcBase
+========    , &reflection_<&structNameRefl>
+========    }
+========  <:hasNext>, <.hasNext><: >
+        <.><.+>
+        }
+    } } //if for
+}
+
 
 
 
@@ -316,7 +358,7 @@ sub genReflectionHeader(Obj headerfile, String fileDst)
     <.><.+>
   for(classC: headerfile.listClassC) {
     for(entry: classC.entries) {
-      if(  entry.whatisit == "structDefinition" 
+      if(  (entry.whatisit == "structDefinition" || entry.whatisit == "unionDefinition")  
         && not entry.description.noReflection
         && not(entry.name >= "Mtbl")
         && not(entry.name >= "Vtbl")
