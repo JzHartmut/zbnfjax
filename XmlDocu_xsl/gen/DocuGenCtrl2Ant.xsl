@@ -137,7 +137,7 @@
     <exec dir="{$curDir}" executable= "java" failonerror="true">
       <arg line ="-cp {'${'}env.JAVACP_ZBNF{'}'} org.vishia.zbnf.Zbnf2Xml" />
       <arg line ="--rlevel:334 --report:{'${tmp}'}/hrefAssociations2Xml.rpt"/>
-      <arg line ="-i:{'${'}curDir{'}'}/{GenCtrl/hrefCtrl/@path}{GenCtrl/hrefCtrl/@file}{GenCtrl/hrefCtrl/@ext} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/DocuGenCtrl.zbnf -y:{'${tmp}'}/{GenCtrl/hrefCtrl/@file}.xml"/>
+      <arg line ="-i:{'${'}curDir{'}'}/{GenCtrl/hrefCtrl/@path}{GenCtrl/hrefCtrl/@file}{GenCtrl/hrefCtrl/@ext} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/DocuGenCtrl.zbnf -x:{'${tmp}'}/{GenCtrl/hrefCtrl/@file}.xml"/>
     </exec>
   </target>
   <target name="isUptodate_hrefAssociations2Xml" description="DocuGenCtr2Ant.xslp:isuptodateHrefAss">
@@ -470,7 +470,7 @@
   <exec dir="{$curDir}" executable= "java" failonerror="true">
     <arg line ="-cp {'${'}env.JAVACP_ZBNF{'}'} org.vishia.zbnf.Zbnf2Xml" />
     <arg line ="--rlevel:334 --report:{$targetfile}.rpt"/>
-    <arg line ="-i:{$srcfile} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/AsciiTopics.zbnf -y:{$targetfile}"/>
+    <arg line ="-i:{$srcfile} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/AsciiTopics.zbnf -x:{$targetfile}"/>
   </exec>
 </xsl:template>
 
@@ -501,7 +501,7 @@
   <exec dir="{$curDir}" executable= "java" failonerror="true">
     <arg line ="-cp {'${'}env.JAVACP_ZBNF{'}'} org.vishia.zbnf.Zbnf2Xml" />
     <arg line ="--rlevel:336 --report:{$targetfile}.rpt"/>
-    <arg line ="-i:{$srcfile} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/StateMachine.zbnf -y:{$targetfile}"/>
+    <arg line ="-i:{$srcfile} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/StateMachine.zbnf -x:{$targetfile}"/>
   </exec>
 </xsl:template>
 
@@ -530,7 +530,7 @@
     <exec dir="{'${'}curDir{'}'}" executable= "java" failonerror="true">
       <arg line ="-cp {'${'}env.JAVACP_ZBNF{'}'} org.vishia.zbnf.Zbnf2Xml" />
             <arg line ="--rlevel:334 --report:{'${'}tmp{'}'}/{$outputfile}.rpt"/>
-            <arg line ="-i:{input/@path}{input/@file} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/AsciiTopics.zbnf -y:{'${'}tmp{'}'}/{$outputfile}"/>
+            <arg line ="-i:{input/@path}{input/@file} -s:{'${'}env.ZBNFJAX_HOME{'}'}/XmlDocu_xsl/AsciiTopics.zbnf -x:{'${'}tmp{'}'}/{$outputfile}"/>
            </exec>
   </target>
   <target name="isUptodate_{$outputfile}"  description="DocuGenCtr2Ant.xslp:prepXmlTextTopicIsUptodate">
@@ -556,7 +556,7 @@
             <arg line ="--rlevel:334 --report:{'${'}tmp{'}'}/{$Outputfile}.rpt"/>
             <arg line ="-i:{@inputpath}{@inputfile}"/>
             <arg line ="-s:{'${'}env.ZBNFJAX_HOME{'}'}/zbnf/Cheader.zbnf"/>
-            <arg line ="-y:{'${'}tmp{'}'}/{$Outputfile}"/>
+            <arg line ="-x:{'${'}tmp{'}'}/{$Outputfile}"/>
            </exec>
   </target>
   <target name="isUptodate_{$Outputfile}"  description="DocuGenCtr2Ant.xslp:Header2XmlUptd">
@@ -628,7 +628,7 @@
             <arg line ="--rlevel:334 --report:{'${'}tmp{'}'}/{@file}.zbnf.rpt"/>
             <arg line ="-i:{@path}{@file}"/>
             <arg line ="-s:{'${'}env.ZBNFJAX_HOME{'}'}/zbnf/Cheader.zbnf"/>
-            <arg line ="-y:{'${'}tmp{'}'}/{@file}.xml"/>
+            <arg line ="-x:{'${'}tmp{'}'}/{@file}.xml"/>
            </exec>
   </target>
   <target name="isUptodate_{$Outputfile}-{@file}" description="DocuGenCtr2Ant.xslp:HeaderZBNFUptd">
@@ -651,7 +651,7 @@
             <arg line ="--rlevel:334 --report:{'${'}tmp{'}'}/{@outputfile}.rpt"/>
             <arg line ="-i{@inputpath}{@inputfile}"/>
             <arg line ="-s{'${'}env.ZBNFJAX_HOME{'}'}/zbnf/Cheader.zbnf"/>
-            <arg line ="-y{'${'}tmp{'}'}/{@inputfile}.xml"/>
+            <arg line ="-x{'${'}tmp{'}'}/{@inputfile}.xml"/>
            </exec>
     <echo message="...running HeaderXmlDissolveTypes.xsl" />
     <exec dir="{'${'}curDir{'}'}" executable= "java" failonerror="true">
