@@ -81,7 +81,7 @@ headerBlock::=<?>
 	|<enumDefinition> ;
 	| <typedef> ;
   ]
-| [inline|INLINE_Fwc] <inlineMethod?+@>
+| [inline|INLINE_Fwc|INLINE_emC] <inlineMethod?+@>
 | inline <operatorDef?operator>
 | <includeDef?+@>
 | # define CONST<defineDefinition?+const_initializer>
@@ -148,7 +148,11 @@ DEFINE_C::=/*@DEFINE[_C] [<$?@name>]<*|*/?>*/
 DescriptionDEFINE_C::=<$?@headerBlockNameDescr> : <description>.
 
 
-INLINE::=/*@INLINE [<$?@name>]<*|*/?>*/
+INLINE::=/*@[inline|INLINE]<*|/*@?>. ##ignore till next /*@
+
+
+
+xxxINLINE::=/*@INLINE [<$?@name>]<*|*/?>*/
 [ /*@ <description>*/]
 { [?/*@]
   <headerBlock>
