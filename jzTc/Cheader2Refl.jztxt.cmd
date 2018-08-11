@@ -10,7 +10,18 @@ exit /B
 
 ##jzTc script to generate a Reflection.crefl file from some struct of Header.
 ##invoke this batch with 2 arguments: path/to/headerfile.h path/to/dst.crefl 
-##made by Hartmut Schorrig,  
+##made by Hartmut Schorrig, www.vishia.org, 2018-08-11  
+##
+##History:
+##2017-06: created, used instead Java-core-programmed reflection generation. Advantage: pattern-oriented, 
+##2018-08-11: 
+##  * Now supports unnamed or named embedded struct or union. Before: compiler error.
+##  * Generates the super class not as attribute.
+##  * writes now the field in ClassOffset_idxMtblJc:
+##  ** It is valid for new sources of emC, especially emC/Object_emC.h for definition of ClassOffset_idxMtblJc
+##  with element field, and for Jc/ReflectionJc.h: The definition of FieldJc is moved to emC/Object_emC.h.
+##  ** For older sources it runs if superclasses are not used.
+
 
 Class reflStructDefinition = org.vishia.header2Reflection.CheaderParser$StructDefinition;
 
@@ -105,7 +116,18 @@ sub genReflStruct(Obj struct)
 ======  ClassOffset_idxMtblJc data[1];
 ======}  superClasses_<&struct.name> =   //reflection instance for the super class
 ======{ INITIALIZER_ObjectArrayJc(ClassOffset_idxMtblJc, 1, OBJTYPE_ClassOffset_idxMtblJc, null, &superClasses_<&struct.name>)
-======  , { &<&reflSuperName>, 0} //TODO Index of mtbl of superclass
+======  , { &<&reflSuperName>
+======    , 0 //TODO Index of mtbl of superclass
+======      //The field which presents the superclass data in inspector access.
+======    , { "super"
+======      , 0 //arraysize
+======      , &<&reflSuperName>  //type of super                                                                                         
+======      , 0 //bitModifiers
+======      , 0 //offsetalways 0 (C++?)
+======      , 0  //offsetToObjectifcBase
+======      , &<&reflSuperName>  
+======      }
+======    }
 ======};
 ======<.>
   } }
