@@ -67,13 +67,13 @@ headerBlock::=<?>
 | _END_extern_C_BLOCK
 | <enumDefinition> ;
 | struct\W <structDefinition?+?> ;
-| union <unionDefinition?+@> ;
+| union <structDefinition?+unionDefinition> ;
 | OS_PtrVal_DEF ( <OS_PtrVal_DEF?structDefinition> ) ;
 ##|<?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
 |<?constDef> [static<?staticConst>] const <attribute?+?>
 | [METHOD_C|C_TYPE|] typedef 
   [ struct\W <structDefinition?+@> ;
-	| union <unionDefinition?+@> ;
+	| union <structDefinition?+unionDefinition> ;
 	|<?ARRAY_Jc> ARRAY_Jc(<$?@elementType> , <#?@size>) <$?@name> ;
 	| <methodPtrTypedef?+@>
 	| <methodTypedef?+@>
@@ -171,7 +171,7 @@ structDefinition::= [<$?@tagname>]
 
 ?en:structDefinition.referenceStruct::="A * before the struct-name or struct-typename inside a typedef means, the struct is used as referenced type.".
 
-unionDefinition::=[<$?@tagname>]
+XXXXXunionDefinition::=[<$?@tagname>]
 \{ { ##[/**<description?-?>*/]
      [ [<?variante> struct\W <structDefinition>] ;
      | <attribute?variante>
@@ -456,7 +456,7 @@ structContent::=<?>
   | <methodPtrTypedef?+@>
   | <methodTypedef?+@>
   | struct\W <structDefinition?+@> ;
-  | union <unionDefinition?+?> ;
+  | union <structDefinition?+unionDefinition> ;
   |<?+classDefinition> <classDef?> <$?@name> ;
   | <enumDefinition?+?> ;
   | <typedef> ;
