@@ -4,8 +4,8 @@ REM alternatively:
 ::set ZBNFJAX_HOME=D:/vishia/ZBNF/zbnfjax
 ::java -cp %ZBNFJAX_HOME%/zbnf.jar org.vishia.jztxtcmd.JZtxtcmd  %0 %1 %2
 
-exit /B
-
+exit /B                                      
+                                                                   
 ==JZtxtcmd==
 
 ##jzTc script to generate a Reflection.crefl file from some struct of Header.
@@ -14,8 +14,9 @@ exit /B
 ##
 ##History:
 ##2017-06: created, used instead Java-core-programmed reflection generation. Advantage: pattern-oriented, 
+##2018-08-12: Fine adjustments to new Sources of emC.  
 ##2018-08-11: 
-##  * Now supports unnamed or named embedded struct or union. Before: compiler error.
+##  * Now supports unnamed or named embedded struct or union. Before: compiler error for such constructs
 ##  * Generates the super class not as attribute.
 ##  * writes now the field in ClassOffset_idxMtblJc:
 ##  ** It is valid for new sources of emC, especially emC/Object_emC.h for definition of ClassOffset_idxMtblJc
@@ -117,14 +118,14 @@ sub genReflStruct(Obj struct)
 ======{ ObjectArrayJc head;
 ======  ClassOffset_idxMtblJc data[1];
 ======}  superClasses_<&struct.name> =   //reflection instance for the super class
-======{ INITIALIZER_ObjectArrayJc(ClassOffset_idxMtblJc, 1, OBJTYPE_ClassOffset_idxMtblJc, null, &superClasses_<&struct.name>)
-======  , { &<&reflSuperName>
+======{ INIZ_ObjectArrayJc(superClasses_<&struct.name>, 1, ClassOffset_idxMtblJc, null, INIZ_ID_ClassOffset_idxMtblJc)
+======  , { &<&reflSuperName>                                   
 ======    , 0 //TODO Index of mtbl of superclass
 ======      //The field which presents the superclass data in inspector access.
 ======    , { "<&struct.superclass.name>"     
 ======      , 0 //arraysize
 ======      , &<&reflSuperName>  //type of super                                                                                         
-======      , 0 //bitModifiers
+======      , kEmbeddedContainer_Modifier_reflectJc //The superclass is always embedded. It is to show the really type.
 ======      , 0 //offsetalways 0 (C++?)
 ======      , 0  //offsetToObjectifcBase
 ======      , &<&reflSuperName>  
@@ -145,7 +146,7 @@ sub genReflStruct(Obj struct)
 ===={ ObjectArrayJc head;
 ====  FieldJc data[<&retEntries.nrofEntries>];
 ====} reflection_Fields_<&struct.name> =
-===={ CONST_ObjectArrayJc(FieldJc, <&retEntries.nrofEntries>, OBJTYPE_FieldJc, null, &reflection_Fields_<&struct.name>)
+===={ INIZ_ObjectArrayJc(reflection_Fields_<&struct.name>, <&retEntries.nrofEntries>, FieldJc, null, INIZ_ID_FieldJc)
 ====, {  
     <&wrFields>
 ====} }; 
@@ -157,9 +158,10 @@ sub genReflStruct(Obj struct)
   String sizeName;
   if(struct.implicitName !=null) { sizeName = <:>((<&struct.nameTypeOffs>*)0x1000)-><&struct.implicitName><.>; }
   else { sizeName = struct.name; }
-  <:>
+  
+  <:>                                                                   
 ==const ClassJc reflection_<&struct.name> =
-=={ CONST_ObjectJc(OBJTYPE_ClassJc + sizeof(ClassJc), &reflection_<&struct.name>, &reflection_ClassJc)
+=={ INIZ_objReflId_ObjectJc(reflection_<&struct.name>, &reflection_ClassJc, INIZ_ID_ClassJc)
 ==, "<&struct.name>"
 ==, 0
 ==, sizeof(<&sizeName>)
@@ -167,7 +169,7 @@ sub genReflStruct(Obj struct)
 ==, null  //method      
 ==, <:if:reflSuperName>(ClassOffset_idxMtblJcARRAY*)&superClasses_<&struct.name><:else>null<.if>  //superclass  
 ==, null  //interfaces  ##TODO check first union
-==, 0 ##TODO |mObjectJc_Modifier_reflectJc if union{ ObjectJc obj, ...} or 1. element ObjectJc
+==, <:if:struct.isBasedOnObjectJc>mObjectJc_Modifier_reflectJc<:else>0<.if>   ## if union{ ObjectJc obj, ...} or 1. element ObjectJc
 ==, <:if:struct.description.vtbl>&<&struct.description.vtbl>.tbl.head<:else>null<.if>  //virtual table
 ==};
 ==
@@ -179,13 +181,13 @@ sub genReflStruct(Obj struct)
 
 
 
-
+                
 
 ##
 ##Subroutine writes the C-code for an entry of a struct.
 ##Regards bitfields
 ##
-sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String structNameOuter="", String textNameOuter="")
+sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructNameOuter="", String XXXXtextNameOuter="")
 { Num return.nrofEntries = 0;
   String offset = "0";    ##initial value, keep it on bitfields
   String sizetype = "0";  ##initial, no element before 1. bitfield
@@ -196,27 +198,27 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String structNameO
   Num bitPosition = 0;
   ##for(entry:struct.entries) { 
   for(entry:struct.attribs) { 
-    if(entry ?instanceof reflStructDefinition && !entry.conditionDef){
-      <:>/*INNER STRUCT */
-      <.>
-      Map ret;
-      String structNameOuterSub;
-      String textNameOuterSub;
-      if(entry.name){ 
-        structNameOuterSub = <:><&entry.name>.<.>; 
-        textNameOuterSub = <:><&entry.name>_<.>; 
-      } else { 
-        structNameOuterSub = structNameOuter;  ##an unnamed struct, use the outside name.
-        textNameOuterSub = textNameOuter;
-      }
-      ##embedded sub struct, named or no named.
-      ret = call attribs_struct(wr = wr, struct = entry, structNameRefl = structNameRefl
-            , structNameOuter = structNameOuterSub, textNameOuter = textNameOuterSub);
-      return.nrofEntries = return.nrofEntries + ret.nrofEntries;
-      ##
-      <+wr><:>
-      ========  <:hasNext>, <.hasNext><.><.+>
-    }
+##    if(entry ?instanceof reflStructDefinition && !entry.conditionDef){
+##      <:>/*INNER STRUCT */
+##      <.>
+##      Map ret;
+##      String structNameOuterSub;                                          
+##      String textNameOuterSub;
+##      if(entry.name){ 
+##        structNameOuterSub = <:><&entry.name>.<.>; 
+##        textNameOuterSub = <:><&entry.name>_<.>; 
+##      } else { 
+##        structNameOuterSub = XXXXstructNameOuter;  ##an unnamed struct, use the outside name.
+##        textNameOuterSub = XXXXtextNameOuter;
+##      }
+##      ##embedded sub struct, named or no named.
+##      ret = call attribs_struct(wr = wr, struct = entry, structNameRefl = structNameRefl
+##            , XXXXstructNameOuter = structNameOuterSub, XXXXtextNameOuter = textNameOuterSub);
+##      return.nrofEntries = return.nrofEntries + ret.nrofEntries;
+##      ##
+##      <+wr><:>
+##      ========  <:hasNext>, <.hasNext><.><.+>
+##    }
     if(!entry.name) {
       ##unnamed entry, especially on inner struct, do nothing. The inner struct is handled already.
       ##unnamed entry on bitfields, do nothing don't show it.
@@ -278,14 +280,14 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String structNameO
         }
         structNameRefl = struct.nameTypeOffs;
         if(struct.implicitName) {
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&struct.implicitName>.<&structNameOuter><&entry.name>)) <: >
+          offset = <:>(int16)( ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&struct.implicitName>.<&XXXXstructNameOuter><&entry.name>)) <: >
                               - ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&struct.implicitName>)) )<.>;
         } else {
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&structNameOuter><&entry.name>)) -0x1000 )<.>;
+          offset = <:>(int16)( ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&XXXXstructNameOuter><&entry.name>)) -0x1000 )<.>;
         }
         if(entry.type) {
           sizetype = <:>sizeof(<&entry.type.name>)<.>;
-        } else {
+        } else {                                              
           sizetype = "4-4 /*unknown type*/";
         }
         bitfield = 0;  ##detect a next bitfield, for offset calculation.
@@ -293,7 +295,7 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String structNameO
       if(typeRefl.pointer) { modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; }
       if(sTypeRefl) { ##else: a #define
         return.nrofEntries = return.nrofEntries +1;
-        String nameRefl = java org.vishia.header2Reflection.CheaderParser.prepareReflName(<:><&textNameOuter><&entry.name><.>);
+        String nameRefl = java org.vishia.header2Reflection.CheaderParser.prepareReflName(<:><&XXXXtextNameOuter><&entry.name><.>);
         <+wr><:><:indent:2=>
 ========    { "<&nameRefl>"
 ========    , <&arraysize>                           
