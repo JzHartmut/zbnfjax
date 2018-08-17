@@ -125,7 +125,7 @@ sub genReflStruct(Obj struct)
 ======    , { "<&struct.superclass.name>"     
 ======      , 0 //arraysize
 ======      , &<&reflSuperName>  //type of super                                                                                         
-======      , kEmbeddedContainer_Modifier_reflectJc //The superclass is always embedded. It is to show the really type.
+======      , kEmbeddedContainer_Modifier_reflectJc //hint: embd helps to show the real type.
 ======      , 0 //offsetalways 0 (C++?)
 ======      , 0  //offsetToObjectifcBase
 ======      , &<&reflSuperName>  
