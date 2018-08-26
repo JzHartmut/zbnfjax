@@ -18,20 +18,21 @@ $xmlns:xhtml="http://www.w3.org/1999/xhtml".
 ##methodTyp instead @name name because construct {<$?name>?::}
 ##classDef instead class in CLASS_C to unify the HeaderXml2Xmi for C and C++
 
-$keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|private|protected|inline|INLINE_Fwc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|
+$keywords=return|if|else|while|do|for|switch|case|default|break|goto|public|private|protected|inline|INLINE_Fwc|INLINE_Jc|static|virtualstatic_cast|struct|class|union|enum|operator|extern|extern_C|C_TYPE|METHOD_C|
 .
 
 Cheader::=
+[ /*@NoReflection<*|\e?>]  ##skip over the whole content.
 [{ # pragma <*\n?pragma> ##especially #pragma once is admissible
-|  <includeDef?+@>      ## includes at begin
+|  <includeDef?+@>       ## includes at begin before guard
 }]
-[ [ #ifndef <$?HeaderEntry>
-  | #if ! defined ( <$?HeaderEntry> )          ## the test to exclude of double includes is obligate!
+[ [ #ifndef <$?HeaderEntry>            ##guard is optional, but recommended. Elsewhere not element HeaderEntry
+  | #if ! defined ( <$?HeaderEntry> )  
   ]
   # define <$?HeaderEntryDef>
 ]
-[/*@PACKAGE <*\ *?package/@name> <*|*/?>*/]
-[{ <includeDef?+@> }]    ## includes at begin
+[/*@PACKAGE <*\ *?package/@name> <*|*/?>*/]   ##optional a package name for documentation
+[{ <includeDef?+@> }]    ## includes at begin after guard
 [<OutsideHeaderBlock>]
 [{                        ##repetition of blocks
   /*@TOPIC <topic>
@@ -70,7 +71,7 @@ headerBlock::=<?>
 | union <structDefinition?+unionDefinition> ;
 | OS_PtrVal_DEF ( <OS_PtrVal_DEF?structDefinition> ) ;
 ##|<?constDef> const <variableDecl?+@> = [<#?value>|0x<#x?value>|<#f?floatValue>];  ##:TODO: value more variants!
-|<?constDef> [static<?staticConst>] const <attribute?+?>
+##|<?constDef> [static<?staticConst>] const <attribute?>
 | [METHOD_C|C_TYPE|] typedef 
   [ struct\W <structDefinition?+@> ;
 	| union <structDefinition?+unionDefinition> ;
@@ -81,7 +82,7 @@ headerBlock::=<?>
 	|<enumDefinition> ;
 	| <typedef> ;
   ]
-| [inline|INLINE_Fwc|INLINE_emC] <inlineMethod?+@>
+| [inline|INLINE_Fwc|INLINE_emC|INLINE_Jc] <inlineMethod?+@>
 | inline <operatorDef?operator>
 | <includeDef?+@>
 | # define CONST<defineDefinition?+const_initializer>
@@ -148,7 +149,7 @@ DEFINE_C::=/*@DEFINE[_C] [<$?@name>]<*|*/?>*/
 DescriptionDEFINE_C::=<$?@headerBlockNameDescr> : <description>.
 
 
-INLINE::=/*@[inline|INLINE]<*|/*@?>. ##ignore till next /*@
+INLINE::=/*@[inline|INLINE]<*|/*@|\e?>. ##ignore till next /*@
 
 
 
@@ -379,8 +380,8 @@ fnPointer::=<type> ( * <$?name>) ( [|<methodArgumentList?>] ).
 ##     It is a impreciseness to the C syntax definition.  Do not use such construct, better is int* name; int* other;
 ##attribute::=<?*> [/**<description?-?>*/] <type?-?> {<attributedef?+attribute>  ?,} ;.
 attribute::=<?> [/**<description?-?>*/] [<?-modifier> extern "C" | extern_C<!\\s?>| extern<!\\s?>| static<!\\s?>|] <type?-?> [<attributedefDescr?+attribute> | {<attributedef?+attribute>  ?,} ;].
-attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |] ; [//<*\n\r?!attrdescription>].
-attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value> ] | _INIT0_ |].
+attributedefDescr::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value?defaultValue> ] | _INIT0_ |] ; [//<*\n\r?!attrdescription>].
+attributedef::=[<$?@name>] [ <arraysize>| : <#?bitField> |] [ = [ \{ <arrayValue> \} | <value?defaultValue> ] | _INIT0_ |].
 
 attrdescription::=<test_attrdescriptiontext?description>.
 test_attrdescriptiontext::= <*\e?text>.
@@ -548,7 +549,7 @@ statement::=
 
 
 ##variabledefinition::=<$?type> <$?attribute> [ = [<objectAccess>|<value>] ];.
-variabledefinition::=<type> { [<typeRefModifier>] <$?name> [ = [<objectAccess>|<value>] ] ? , } ;.
+variabledefinition::=<type> { [<typeRefModifier>] <$?name> [ = [<objectAccess>|<value?defaultValue>] ] ? , } ;.
 
 
 
