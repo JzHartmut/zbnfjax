@@ -69,9 +69,13 @@ Map bytesSimpleTypes = {
   String double =   "8";
 };  
 
-    
-                   
-sub genReflStruct(Obj struct) 
+
+
+##
+##Generates the reflection of one type (struct, class).
+##It is invoked as subtext call.
+##
+sub genReflStruct(Obj struct, Obj fileBin) 
 { Num nrElements = 0;
   for(entry:struct.entries){if(entry.name) {
     nrElements = nrElements +1;
@@ -134,13 +138,21 @@ sub genReflStruct(Obj struct)
 ======};
 ======<.>
   } 
+  String sClassNameShow = struct.name;  ##TODO shorten
+  if(fileBin) {
+    fileBin.addClass(sClassNameShow, struct.name);
+  }
   String sFieldsInStruct = "null";
   ##if(struct.entries.size() > hasSuperclass) { ##hasSuperclass is 1 if the first entry is the superclass.
   if(struct.attribs.size() > 0) { ##hasSuperclass is 1 if the first entry is the superclass.
     sFieldsInStruct = <:>(FieldJcArray const*)&reflection_Fields_<&struct.name><.>;
     Stringjar wrFields;  ##the container for the generated field data
     Map retEntries;
-    retEntries = call attribs_struct(wr = wrFields, struct = struct, structNameRefl=struct.name);
+    ##
+    ## generates all fields:
+    ##
+    retEntries = call attribs_struct(wr = wrFields, fileBin = fileBin, struct = struct, structNameRefl=struct.name);
+    ##
     <:>
 ====const struct Reflection_Fields_<&struct.name>_t
 ===={ ObjectArrayJc head;
@@ -174,6 +186,9 @@ sub genReflStruct(Obj struct)
 ==};
 ==
 ==<.>
+  if(binFile) {
+    binFile.closeAddClass();
+  }
 }
 
 
@@ -187,7 +202,7 @@ sub genReflStruct(Obj struct)
 ##Subroutine writes the C-code for an entry of a struct.
 ##Regards bitfields
 ##
-sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructNameOuter="", String XXXXtextNameOuter="")
+sub attribs_struct(Obj wr, Obj fileBin, Obj struct, String structNameRefl, String XXXXstructNameOuter="", String XXXXtextNameOuter="")
 { Num return.nrofEntries = 0;
   String offset = "0";    ##initial value, keep it on bitfields
   String sizetype = "0";  ##initial, no element before 1. bitfield
@@ -219,13 +234,14 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructN
 ##      <+wr><:>
 ##      ========  <:hasNext>, <.hasNext><.><.+>
 ##    }
-    if(!entry.name) {
+    if(!entry.name || entry.description.noRefl) {
       ##unnamed entry, especially on inner struct, do nothing. The inner struct is handled already.
       ##unnamed entry on bitfields, do nothing don't show it.
     } else {
       String sTypeRefl;
       String bytesType;
       String modifier;
+      Num mModifier = 0;
       Obj typeRefl;
       ##
       ## sTypeRefl
@@ -235,13 +251,20 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructN
       } elsif(entry.type) {
         typeRefl = entry.type;  ##from parsed type
       }
-      if(typeRefl.pointer){ modifier = "kReference_Modifier_reflectJc"; }  ##reference type, from primitive or class type. 
-      if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
-        sTypeRefl = <:>&reflection_<&typeRefl.name><.>;
-        modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
-      } elsif(typeRefl) {  
+      
+      ##if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
+      ##  sTypeRefl = <:>&reflection_<&typeRefl.name><.>;
+      ##  modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
+      ##} els
+      if(typeRefl) {  
         bytesType = bytesSimpleTypes.get(typeRefl.name);
-        if(bytesType){ modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>; } else { modifier = "0"; }
+        if(bytesType){ 
+          modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>;
+          Num nBytesType = bytesType;  //conversion to numeric
+          Num test = java org.vishia.byteData.Class_Jc.kBitPrimitiv_Modifier;
+          debug;
+          mModifier = Num.shBits32To(nBytesType, %org.vishia.byteData.Class_Jc.kBitPrimitiv_Modifier, 3);
+        } else { modifier = "0"; }
         sTypeRefl = reflSimpleTypes.get(typeRefl.name);
         if(!sTypeRefl) { 
           if(reflReplacement) {                           
@@ -259,6 +282,9 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructN
       ##
       String arraysize;
       ##
+      if(entry.bOS_HandlePointer) { modifier = <:><&modifier> | kHandlePtr_Modifier_reflectJc<.>;}
+      if(typeRefl.pointer){ modifier = "kReference_Modifier_reflectJc"; }  ##reference type, from primitive or class type. 
+      
       if(entry.arraysize.value) {
         arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
         modifier = <:><&modifier> | kStaticArray_Modifier_reflectJc<.>;
@@ -308,6 +334,11 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructN
 ========  <:hasNext>, <.hasNext><: >
         <.><.+>
         }
+        if(fileBin) {
+          if(return.nrofEntries == 1) { fileBin.addFieldHead(); }
+          Num typeAddress = -1;
+          fileBin.addField(nameRefl, -1, typeRefl.name, mModifier,0); ##modifier, arraysize); 
+        }
     } } //if for
 }
 
@@ -324,7 +355,7 @@ sub attribs_struct(Obj wr, Obj struct, String structNameRefl, String XXXXstructN
 ##The routine to generate reflection files, one file per header file.
 ##It parses all header files one after another, then generates reflection
 ##
-sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String genRoutine, String fileExt, String html = null)
+sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String sfileBin, String genRoutine, String fileExt, String html = null)
 {
 
   <+out>currdir=<&currdir><.+n>
@@ -333,16 +364,25 @@ sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String genRoutine, Strin
   { <+out>files: <&input.absfile()><.+n>
   }
   List inputsExpanded = target.allInputFilesExpanded();
+  Obj fileBin;
+  if(sfileBin) {
+    ##Bool false=0; Bool true=1;
+    fileBin = new org.vishia.header2Reflection.BinOutPrep(sfileBin, true, false, 0);
+  }
   for(headerfile:inputsExpanded)
   { <+out><&headerfile.absfile()><.+n>
-    call genDstFile(filepath = headerfile, fileDst = <:><&target.output.absdir()>/<&headerfile.localname()><&fileExt><.>, genRoutine=genRoutine, html = html);
+    call genDstFile(filepath = headerfile, fileBin = fileBin, fileDst = <:><&target.output.absdir()>/<&headerfile.localname()><&fileExt><.>, genRoutine=genRoutine, html = html);
+  }
+  if(fileBin) {
+    fileBin.postProcessBinOut();
+    fileBin.close();
   }
 }
 
 
-sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String html = null)
+sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String fileBin = null, String html = null)
 {
-  call genDstFiles(target = target, html=html, genRoutine="genReflectionHeader", fileExt=".crefl");
+  call genDstFiles(target = target, html=html, sfileBin = fileBin, genRoutine="genReflectionHeader", fileExt=".crefl");
 }
 
 
@@ -354,7 +394,7 @@ sub XXXXXXXXgenReflectionFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, Str
 
 
 
-sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileDst, String genRoutine, String html = null)
+sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, Obj fileBin, String fileDst, String genRoutine, String html = null)
 {
   ##java org.vishia.util.DataAccess.debugMethod("setSrc");
   Obj args = java new org.vishia.header2Reflection.CheaderParser$Args();
@@ -376,7 +416,7 @@ sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileDst, St
       mkdir <:><&html>/<&headerfile.fileName>'<.>;
       test.dataHtml(headers, File:<:><&html>/<&headerfile.fileName>.html<.>);
     }
-    call &genRoutine(headerfile = headerfile, fileDst = fileDst);
+    call &genRoutine(headerfile = headerfile, fileBin = fileBin, fileDst = fileDst);
   }
 } 
 
@@ -393,7 +433,7 @@ sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, String fileDst, St
 ##The routine to generate reflection files, one file per header file.
 ##It parses all header files one after another, then generates reflection
 ##
-sub genReflectionHeader(Obj headerfile, String fileDst)
+sub genReflectionHeader(Obj headerfile, Obj fileBin, String fileDst)
 {
   FileSystem.mkDirPath(fileDst);  ##Note: makes only the directory, because fileDst does not end with /
   Openfile outRefl = fileDst;
@@ -414,7 +454,7 @@ sub genReflectionHeader(Obj headerfile, String fileDst)
         ##
         ##check whether a Bus should be generated.
         ##
-        <+outRefl><:call:genReflStruct:struct=entry><.+>
+        <+outRefl><:call:genReflStruct:struct=entry, fileBin=fileBin><.+>
       }
       if(entry.whatisit == "unionDefinition") {
         <+>  union <.n+>
