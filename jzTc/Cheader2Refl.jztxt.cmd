@@ -47,6 +47,8 @@ Map reflSimpleTypes = {
   String int8 =     "REFLECTION_int8";
   String float =    "REFLECTION_float";
   String double =   "REFLECTION_double";
+  String int32BigEndian =    "REFLECTION_int32";
+  String int16BigEndian =    "REFLECTION_int16";
 };  
 
 Map bytesSimpleTypes = {
@@ -67,6 +69,8 @@ Map bytesSimpleTypes = {
   String int8 =     "1";
   String float =    "4";
   String double =   "8";
+  String int32BigEndian =    "4";
+  String int16BigEndian =    "2";
 };  
 
 
@@ -97,6 +101,8 @@ Map idSimpleTypes = {
   Num ObjectJc =     25;
   Num StringJc =     29;
   Num OS_PtrValue =  30;
+  Num int32BigEndian =    4;
+  Num int16BigEndian =    6;
 };  
 
 
@@ -176,7 +182,8 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
 ======, reflectionOffset_<&struct.name>    //access the array<.><.+>
       <+fileOffs>
       <:>
-======int32 reflectionOffset_<&struct.name>[] =
+======extern int32 const reflectionOffset_<&struct.name>[];  //for usage as root instance
+======int32 const reflectionOffset_<&struct.name>[] =
 ======{ <&nrClass>   //index of class in Offset data<.><.+>
     }
   }
@@ -189,7 +196,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
     ##
     ## generates all fields:
     ##
-    retEntries = call attribs_struct(wr = wrFields, fileBin = fileBin, fileOffs = fileOffs, struct = struct, structNameRefl=struct.name);
+    retEntries = call attribs_struct(wr = wrFields, fileBin = fileBin, fileOffs = fileOffs, struct = struct);
     ##
     <:>
 ====const struct Reflection_Fields_<&struct.name>_t
@@ -206,7 +213,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
   ##The class:
   String classModif;
   String sizeName;
-  if(struct.implicitName !=null) { sizeName = <:>((<&struct.nameTypeOffs>*)0x1000)-><&struct.implicitName><.>; }
+  if(struct.implicitName !=null) { sizeName = <:>((<&struct.parent.name>*)0x1000)-><&struct.implicitName><.>; }
   else { sizeName = struct.name; }
   
   <:>                                                                   
@@ -247,7 +254,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
 ##Subroutine writes the C-code for an entry of a struct.
 ##Regards bitfields
 ##
-sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct, String structNameRefl, String XXXXstructNameOuter="", String XXXXtextNameOuter="")
+sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
 { Num return.nrofEntries = 0;
   String offset = "0";    ##initial value, keep it on bitfields
   String sizetype = "0";  ##initial, no element before 1. bitfield
@@ -333,9 +340,11 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct, String structN
         modifier = <:><&modifier> | kHandlePtr_Modifier_reflectJc<.>;
         mModifier = mModifier + %org.vishia.byteData.Class_Jc.kHandlePtr_Modifier;
       }
-      if(typeRefl.pointer){ 
+      Num zPointer = 0;
+      if(typeRefl.pointer_) { zPointer = typeRefl.pointer_.size();}
+      if(zPointer >0){ 
         modifier = "kReference_Modifier_reflectJc";   ##reference type, from primitive or class type. 
-        mModifier = mModifier + %org.vishia.byteData.Class_Jc.mReference_Modifier;
+        mModifier = mModifier + %org.vishia.byteData.Class_Jc.kReference_Modifier;
       }
       if(entry.arraysize.value) {
         arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
@@ -355,16 +364,15 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct, String structN
           bitfield = 1;
         } ##else: further bitfields: keep offset string 
       } elsif(sTypeRefl) { ##don't set offset = ... for an entry which is not used (espec. #define)
-        if((entry.arraysize || not bytesType) && not typeRefl.pointer && not typeRefl.pointer2) {
+        if((entry.arraysize || not bytesType) && not typeRefl.pointer_) {
           modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
           mModifier = mModifier + %org.vishia.byteData.Class_Jc.kEmbeddedContainer_Modifier;
         }
-        structNameRefl = struct.nameTypeOffs;
         if(struct.implicitName) {
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&struct.implicitName>.<&XXXXstructNameOuter><&entry.name>)) <: >
-                              - ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&struct.implicitName>)) )<.>;
+          offset = <:>(int16)( ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName>.<&entry.name>)) <: >
+                              - ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName>)) )<.>;
         } else {
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.nameTypeOffs>*)(0x1000))-><&XXXXstructNameOuter><&entry.name>)) -0x1000 )<.>;
+          offset = <:>(int16)( ((intptr_t)(&((<&struct.name>*)(0x1000))-><&entry.name>)) -0x1000 )<.>;
         }
         if(entry.type) {
           sizetype = <:>sizeof(<&entry.type.name>)<.>;
@@ -373,20 +381,16 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct, String structN
         }
         bitfield = 0;  ##detect a next bitfield, for offset calculation.
       }
-      if(typeRefl.pointer) { 
-        modifier = <:><&modifier>|mReference_Modifier_reflectJc<.>; 
-        mModifier = mModifier + %org.vishia.byteData.Class_Jc.mReference_Modifier;
-      }
       if(sTypeRefl) { ##else: a #define
         return.nrofEntries = return.nrofEntries +1;
-        String nameRefl = java org.vishia.header2Reflection.CheaderParser.prepareReflName(<:><&XXXXtextNameOuter><&entry.name><.>);
+        String nameRefl = java org.vishia.header2Reflection.CheaderParser.prepareReflName(<:><&entry.name><.>);
         <+wr><:><:indent:2=>
 ========    { "<&nameRefl>"
 ========    , <&arraysize>                           
 ========    , <&sTypeRefl>                                                                                            
 ========    , <&modifier> //bitModifiers
 ========    , <&offset>
-========    , 0  //offsetToObjectifcBase
+========    , 0  //offsetToObjectifcBase                                                            
 ========    , &reflection_<&struct.name>
 ========    }
 ========  <:hasNext>, <.hasNext><: >
@@ -438,6 +442,7 @@ sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String sfileBin, String 
     <+fileOffs><:>
 ====//This file is generated by zbnfjax/jzTc/Cheader2Refl.jztxt.cmd. Do not modify.
 ====#include <applstdef_emC.h>
+====#include <Inspc/Target2Proxy_Inspc.h>  //declares reflectionOffsetArrays
 ====
     <.><.+>
     Obj fileOffsTypetable = new java.lang.StringBuilder(1000);
@@ -457,7 +462,7 @@ sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String sfileBin, String 
   if(fileOffs) {
     <+fileOffs><:>
 ====    
-====int32* reflectionOffsetArrays[] =
+====int32 const* const reflectionOffsetArrays[] =
 ===={ null  //index 0 left free
 ====<&fileOffsTypetable>
 ====};
@@ -562,11 +567,3 @@ sub genReflectionHeader(Obj headerfile, Obj fileBin, Obj fileOffs, Obj fileOffsT
 
 
 
-##############################################################################################################
-##
-## main only if it is invoked with absolute path to one headerfile.
-##
-sub xxxmain()
-{ ##NOTE: to test parsed data from header add an argument html="path/to/outdirForhtml"
-  call genReflectionFile(filepath = Filepath: &$1, fileDst = $2);
-}
