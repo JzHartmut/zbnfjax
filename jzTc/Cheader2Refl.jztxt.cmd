@@ -52,7 +52,7 @@ Map reflSimpleTypes = {
 };  
 
 Map bytesSimpleTypes = {
-  String void =     "4";
+  ##String void =     "4";  ##void is a reference usual. Not a primitive type.
   String int =      "4";
   String char =     "1";
   String uint32_t = "4";
@@ -401,7 +401,8 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
           if(idType ==0) { idType = -1; }  ##to signal, unknown type
           if(return.nrofEntries == 1) { fileBin.addFieldHead(); }
           Num typeAddress = -1;
-          fileBin.addField(nameRefl, idType, typename, mModifier,0); ##modifier, arraysize); 
+          Num nArraySize = entry.arraysize.value;
+          fileBin.addField(nameRefl, idType, typename, mModifier,nArraySize); ##modifier, arraysize); 
           if(fileOffs) {
           <+fileOffs><:>
 ==========, (sizeof(<&typename>) | <&offset>) <.><.+>          
@@ -434,8 +435,8 @@ sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String sfileBin, String 
   List inputsExpanded = target.allInputFilesExpanded();
   Obj fileBin;
   if(sfileBin) {
-    ##Bool false=0; Bool true=1;
-    fileBin = new org.vishia.header2Reflection.BinOutPrep(sfileBin, true, false, 0);
+    Bool endian = false;  ##Note: depends on the target processor, false for PC platform.
+    fileBin = new org.vishia.header2Reflection.BinOutPrep(sfileBin, endian, false, 0);
   }
   if(sfileOffs) {
     Openfile fileOffs = &sfileOffs;
