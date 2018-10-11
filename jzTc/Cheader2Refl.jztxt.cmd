@@ -24,7 +24,7 @@ exit /B
 ##  ** For older sources it runs if superclasses are not used.
 
 
-Class reflStructDefinition = org.vishia.header2Reflection.CheaderParser$StructDefinition;
+##Class reflStructDefinition = org.vishia.header2Reflection.CheaderParser$StructDefinition;
             
 Obj headerTranslator = java new org.vishia.header2Reflection.CheaderParser(console);
 
@@ -113,12 +113,13 @@ Map idSimpleTypes = {
 ##
 sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable) 
 { Num nrElements = 0;
+  String structBasename = struct.baseName("_s");
   for(entry:struct.entries){if(entry.name) {
     nrElements = nrElements +1;
   } }
   <:>
 ==
-==extern_C const ClassJc reflection_<&struct.name>;  //the just defined reflection_ used in the own fields.<.>
+==extern_C const ClassJc reflection_<&structBasename>;  //the just defined reflection_ used in the own fields.<.>
   for(entry:struct.entries) { if(entry.name && entry.type) { ##Note a type is not present for a #define inside a struct.
     Obj typeRefl;
     if(entry.description.reflType) {
@@ -127,29 +128,19 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
       typeRefl = entry.type;
     }
     if(not reflSimpleTypes.get(typeRefl.name)) { 
-      if(typeRefl.forward && typeRefl.name.endsWith("_t")) {
-        Num zname = typeRefl.name.length();
-        String defname = typeRefl.name.substring(0, zname -2);
-        <:>
-========#define reflection_<&typeRefl.name> reflection_<&defname><.> 
-      }
+      String sTypename = typeRefl.baseName("_s", "_t");
+##      if(typeRefl.forward && typeRefl.name.endsWith("_t")) {
+##        Num zname = typeRefl.name.length();
+##        String defname = typeRefl.name.substring(0, zname -2);
+##        <:>
+##========#define reflection_<&typeRefl.name> reflection_<&defname><.> 
+##      }
       <:>
-======extern_C const ClassJc reflection_<&typeRefl.name>;  //used for field <&entry.name>
+======extern_C const ClassJc reflection_<&sTypename>;  //used for field <&entry.name>
       <.>      
     }
   }}
   Num hasSuperclass = 0;
-##  if(struct.entries.size()>0) {
-##    Obj base = struct.entries.get(0);
-##    String reflSuperName;
-##    if( base ?instanceof reflStructDefinition 
-##       && (base.name == null ||base.name == "base" || base.name == "obj" || base.name == "object" || base.name == "super")) {
-##      hasSuperclass = 1;
-##      if(base.isUnion || (base ?instanceof reflStructDefinition && not base.type)) { ##base class and interface or ObjectJc are joined in a union. The first element should be the super class. 
-##        reflSuperName = <:>reflection_<&base.entries.get(0).type.name><.>;
-##      } else {
-##        reflSuperName = <:>reflection_<&base.type.name><.>; ####type.name><.>;
-##      }
     if(struct.superclass) {
       String reflSuperName = <:>reflection_<&struct.superclass.type.name><.>;
       <:>  
@@ -215,11 +206,10 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
   String sizeName;
   if(struct.implicitName !=null) { sizeName = <:>((<&struct.parent.name>*)0x1000)-><&struct.implicitName><.>; }
   else { sizeName = struct.name; }
-  
   <:>                                                                   
-==const ClassJc reflection_<&struct.name> =
-=={ INIZ_objReflId_ObjectJc(reflection_<&struct.name>, &reflection_ClassJc, INIZ_ID_ClassJc)
-==, "<&struct.name>"
+==const ClassJc reflection_<&structBasename> =
+=={ INIZ_objReflId_ObjectJc(reflection_<&structBasename>, &reflection_ClassJc, INIZ_ID_ClassJc)
+==, "<&structBasename>"
 ==, 0
 ==, sizeof(<&sizeName>)
 ==, <&sFieldsInStruct>  //attributes and associations
@@ -263,29 +253,10 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
   }
   Bool bitfield = 0;
   Num bitPosition = 0;
+  String structBasename = struct.baseName("_s");
+
   ##for(entry:struct.entries) { 
   for(entry:struct.attribs) { 
-##    if(entry ?instanceof reflStructDefinition && !entry.conditionDef){
-##      <:>/*INNER STRUCT */
-##      <.>
-##      Map ret;
-##      String structNameOuterSub;                                          
-##      String textNameOuterSub;
-##      if(entry.name){ 
-##        structNameOuterSub = <:><&entry.name>.<.>; 
-##        textNameOuterSub = <:><&entry.name>_<.>; 
-##      } else { 
-##        structNameOuterSub = XXXXstructNameOuter;  ##an unnamed struct, use the outside name.
-##        textNameOuterSub = XXXXtextNameOuter;
-##      }
-##      ##embedded sub struct, named or no named.
-##      ret = call attribs_struct(wr = wr, struct = entry, structNameRefl = structNameRefl
-##            , XXXXstructNameOuter = structNameOuterSub, XXXXtextNameOuter = textNameOuterSub);
-##      return.nrofEntries = return.nrofEntries + ret.nrofEntries;
-##      ##
-##      <+wr><:>
-##      ========  <:hasNext>, <.hasNext><.><.+>
-##    }
     if(!entry.name || entry.description.noRefl) {
       ##unnamed entry, especially on inner struct, do nothing. The inner struct is handled already.
       ##unnamed entry on bitfields, do nothing don't show it.
@@ -304,29 +275,22 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
         typeRefl = entry.type;  ##from parsed type
       }
       
-      ##if(entry.macro && entry.macro == "OS_HandlePtr") {  ##special macro for bus - handle
-      ##  sTypeRefl = <:>&reflection_<&typeRefl.name><.>;
-      ##  modifier = "kHandlePtr_Modifier_reflectJc | kReference_Modifier_reflectJc";
-      ##} els
       if(typeRefl) {
-        String typename = typeRefl.name;
-        if(typeRefl.forward && typename.endsWith("_t")) {
-          typename = typename.substring(0, typename.length()-2);
-        }
+        String typename = typeRefl.baseName("_s", "_t");  ##name ends on _s then without _s, forward ends on _t then without
         bytesType = bytesSimpleTypes.get(typename);
         if(bytesType){ 
           modifier = <:>(<&bytesType><<kBitPrimitiv_Modifier_reflectJc)<.>;
           Num nBytesType = bytesType;  //conversion to numeric
           mModifier = Num.shBits32To(nBytesType, %org.vishia.byteData.Class_Jc.kBitPrimitiv_Modifier, 3);
         } else { modifier = "0"; }
-        sTypeRefl = reflSimpleTypes.get(typename);
-        if(!sTypeRefl) { 
-          if(reflReplacement) {                           
-            sTypeRefl = reflReplacement.get(typename);
-            if(!sTypeRefl) { 
-              sTypeRefl = <:>&reflection_<&typename><.>; 
-            }
-          } else {
+        if(reflReplacement) {                           
+          sTypeRefl = reflReplacement.get(typename);
+          if(!sTypeRefl) { 
+            sTypeRefl = <:>&reflection_<&typename><.>; 
+          }
+        } else {
+          sTypeRefl = reflSimpleTypes.get(typename); ##check whether the type is known as simple type
+          if(!sTypeRefl) { ##not a simple type
             sTypeRefl = <:>&reflection_<&typename><.>; 
           }
         }
@@ -368,8 +332,13 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
           modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
           mModifier = mModifier + %org.vishia.byteData.Class_Jc.kEmbeddedContainer_Modifier;
         }
-        if(struct.implicitName) {
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName>.<&entry.name>)) <: >
+        if(struct.implicitName) { ##it is an implicitely struct
+          if(struct.arraysize !=null) {
+            String sImplArray = <:>[0]<.>; ##offset inside first element.
+          } else {
+            String sImplArray = "";
+          }
+          offset = <:>(int16)( ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName><&sImplArray>.<&entry.name>)) <: >
                               - ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName>)) )<.>;
         } else {
           offset = <:>(int16)( ((intptr_t)(&((<&struct.name>*)(0x1000))-><&entry.name>)) -0x1000 )<.>;
@@ -391,7 +360,7 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
 ========    , <&modifier> //bitModifiers
 ========    , <&offset>
 ========    , 0  //offsetToObjectifcBase                                                            
-========    , &reflection_<&struct.name>
+========    , &reflection_<&structBasename>
 ========    }
 ========  <:hasNext>, <.hasNext><: >
         <.><.+>

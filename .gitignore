@@ -1,5 +1,7 @@
 .gitCommit
 .gitRepository
+*.jar
 *.marks
 *.old
+#*
 tmp
