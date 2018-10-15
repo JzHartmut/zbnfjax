@@ -300,15 +300,16 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
       ##
       String arraysize;
       ##
-      if(entry.bOS_HandlePointer) { 
-        modifier = <:><&modifier> | kHandlePtr_Modifier_reflectJc<.>;
-        mModifier = mModifier + %org.vishia.byteData.Class_Jc.kHandlePtr_Modifier;
-      }
       Num zPointer = 0;
       if(typeRefl.pointer_) { zPointer = typeRefl.pointer_.size();}
       if(zPointer >0){ 
         modifier = "kReference_Modifier_reflectJc";   ##reference type, from primitive or class type. 
         mModifier = mModifier + %org.vishia.byteData.Class_Jc.kReference_Modifier;
+      }
+      if(entry.bOS_HandlePointer) { 
+        //debug "OS_HandlePointer";
+        modifier = <:><&modifier> | kHandlePtr_Modifier_reflectJc<.>;
+        mModifier = mModifier + %org.vishia.byteData.Class_Jc.kHandlePtr_Modifier;
       }
       if(entry.arraysize.value) {
         arraysize = <:><&entry.arraysize.value> //nrofArrayElements<.>;
