@@ -416,6 +416,8 @@ test_description::= <*|\e|\@?text>
  | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
  | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
  | @refl: [ no <?noRefl> | <type?reflType> ] [ \.] ##<*,\.\e?refl>     ##either 'no' or type for reflection.
+ | @acclevel=[<?acclevel>0|1|2|3|4]\. 
+ | @chglevel=[<?chglevel>0|1|2|3|4][<?acclevel>0|1|2|3|4|]\. 
  | @<auxDescription>
 ## | <*|\e|\@?text>    ##text till @ or till end.
  | <*\e\@?text>    ##text till @ or till end.
@@ -470,14 +472,16 @@ structContent::=<?>
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | #ifndef __reflectionHidden__ <*|#endif?> #endif                                                          ##it is semantically for prevent variables in reflection
 | #ifndef __ignoreInCheader_zbnf__ <*|#endif//__ignoreInCheader_zbnf__?> #endif//__ignoreInCheader_zbnf__  ##use this for designation: do not parse
+| <attribMacro>
 | <fnPointer> ;
-| <$?macro> ( <type> , <$?@name> [ <arraysize>| : <#?bitField> |] ) <?_end>;  ##definition written as macro
 | <attribute>
 | [/**<description?-?>*/] # define <defineDefinition?+?>
-##| [<?implicitAttribute> <structDefinition> <$?name>|xxx] ;
 | <structContentInsideCondition>
-##| <methodPtrTypedef?+@>
 ].
+
+
+attribMacro::=[/**<description>*/] [<?macro>HandlePtr_emC|OS_HandlePtr] ( <type> , <$?@name> [ <arraysize>| : <#?bitField> |] );.  ##definition written as macro
+
 
 
 classContent::=<?>

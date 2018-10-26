@@ -263,7 +263,7 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
     } else {
       String sTypeRefl;
       String bytesType;
-      String modifier;
+      String modifier = "0";
       Num mModifier = 0;
       Obj typeRefl;
       ##
@@ -303,8 +303,16 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
       Num zPointer = 0;
       if(typeRefl.pointer_) { zPointer = typeRefl.pointer_.size();}
       if(zPointer >0){ 
-        modifier = "kReference_Modifier_reflectJc";   ##reference type, from primitive or class type. 
+        modifier = <:><&modifier> | kReference_Modifier_reflectJc<.>;   ##reference type, from primitive or class type. 
         mModifier = mModifier + %org.vishia.byteData.Class_Jc.kReference_Modifier;
+      }
+      if(entry.description && entry.description.accLevel >0) {
+        modifier = <:><&modifier> | (<&entry.description.accLevel> << kBitAccessLevel_Modifier_FieldJc)<.>;
+        mModifier = mModifier + &entry.description.accLevel *1024;
+      }
+      if(entry.description && entry.description.chgLevel >0) {
+        modifier = <:><&modifier> | (<&entry.description.chgLevel> << kBitChangeLevel_Modifier_FieldJc)<.>;
+        mModifier = mModifier + &entry.description.chgLevel * 8192;
       }
       if(entry.bOS_HandlePointer) { 
         //debug "OS_HandlePointer";
@@ -322,7 +330,7 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
         arraysize = <:>(uint16)(<&bitPosition> + (<&entry.bitField> << kBitNrofBitsInBitfield_FieldJc))<.>;
         bitPosition = bitPosition + entry.bitField;
         sTypeRefl = "REFLECTION_BITFIELD";
-        modifier = "kBitfield_Modifier_reflectJc";
+        modifier = <:><&modifier> | kBitfield_Modifier_reflectJc<.>;
         mModifier = mModifier + %org.vishia.byteData.Class_Jc.kBitfield_Modifier;
         if(!bitfield) {   ##the first bitfield:
           offset = <:><&offset> + <&sizetype>/* offset on bitfield: offset of element before + sizeof(element before) */<.>;
