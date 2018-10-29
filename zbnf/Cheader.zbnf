@@ -416,7 +416,7 @@ test_description::= <*|\e|\@?text>
  | @headerForType = <""?headerForType>                    ##TODO is it necessary? Java2ByteCoding
  | @lastUndefsizeArray <?lastUndefsizeArray> <*@\e?lastUndefsizeArrayText>  
  | @refl: [ no <?noRefl> | <type?reflType> ] [ \.] ##<*,\.\e?refl>     ##either 'no' or type for reflection.
- | @acclevel=[<?acclevel>0|1|2|3|4]\. 
+ | @acclevel=[<?acclevel>0|1|2|3|4][<?chglevel>0|1|2|3|4|5|6|7|]\. 
  | @chglevel=[<?chglevel>0|1|2|3|4][<?acclevel>0|1|2|3|4|]\. 
  | @<auxDescription>
 ## | <*|\e|\@?text>    ##text till @ or till end.
@@ -467,7 +467,7 @@ structContent::=<?>
 ##| [/**<description?-?>*/] union <unionDefinition?+attribute> ;
 | <enumDefinition> ;
 | struct\W <structDefinition?+implicitStructAttribute> ;  ##it is used in structDefinition itself: struct ...{... struct Tag_t{ .... } attribute; ...}
-| union\W <structDefinition?+implicitUnionAttribute> ;
+| [/**<description?-?>*/] union\W <structDefinition?+implicitUnionAttribute> ;
 | #ifndef refl <*|#endif//refl?> #endif//refl
 | #ifndef __NoReflection__ <*|#endif//__NoReflection__?> #endif//__NoReflection__
 | #ifndef __reflectionHidden__ <*|#endif?> #endif                                                          ##it is semantically for prevent variables in reflection

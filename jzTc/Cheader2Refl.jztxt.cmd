@@ -142,6 +142,10 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
   }}
   Num hasSuperclass = 0;
     if(struct.superclass) {
+      Num accessLevel = 0;
+      if(struct.superclass.description) {
+        accessLevel = struct.superclass.description.accLevel;
+      }
       String reflSuperName = <:>reflection_<&struct.superclass.type.name><.>;
       <:>  
 ======
@@ -153,10 +157,12 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
 ======  , { &<&reflSuperName>                                   
 ======    , 0 //TODO Index of mtbl of superclass
 ======      //The field which presents the superclass data in inspector access.
-======    , { "<&struct.superclass.name>"     
+======    , { "super"              ##<&struct.superclass.name>"     
 ======      , 0 //arraysize
 ======      , &<&reflSuperName>  //type of super                                                                                         
 ======      , kEmbeddedContainer_Modifier_reflectJc //hint: embd helps to show the real type.
+======        | (<&accessLevel><< kBitAccessLevel_Modifier_FieldJc)  //access level
+======        | (7<< kBitChangeLevel_Modifier_FieldJc)  //never change
 ======      , 0 //offsetalways 0 (C++?)
 ======      , 0  //offsetToObjectifcBase
 ======      , &<&reflSuperName>  
