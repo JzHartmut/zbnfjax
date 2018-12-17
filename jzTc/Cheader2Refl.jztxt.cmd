@@ -31,10 +31,15 @@ Obj headerTranslator = java new org.vishia.header2Reflection.CheaderParser(conso
 
 Map reflSimpleTypes = {
   String void = "REFLECTION_void";
-  String int = "REFLECTION_int32";
+  String uint = "REFLECTION_int";
+  String int = "REFLECTION_uint";
+  String char16 = "REFLECTION_uint16";
+  String char_T = "REFLECTION_uint8";
   String char = "REFLECTION_uint8";
+  String uint32_T = "REFLECTION_uint32";
   String uint32_t = "REFLECTION_uint32";
   String uint32 =   "REFLECTION_uint32";
+  String int32_T =  "REFLECTION_int32";
   String int32_t =  "REFLECTION_int32";
   String int32 =    "REFLECTION_int32";
   String uint16_t = "REFLECTION_uint16";
@@ -46,6 +51,7 @@ Map reflSimpleTypes = {
   String uint8 =    "REFLECTION_uint8";
   String int8_t =   "REFLECTION_int8";
   String int8 =     "REFLECTION_int8";
+  String real32_T =    "REFLECTION_float";
   String float =    "REFLECTION_float";
   String double =   "REFLECTION_double";
   String int32BigEndian =    "REFLECTION_int32";
@@ -55,9 +61,13 @@ Map reflSimpleTypes = {
 Map bytesSimpleTypes = {
   ##String void =     "4";  ##void is a reference usual. Not a primitive type.
   String int =      "4";
+  String char16 =   "2";
+  String char_T =   "1";
   String char =     "1";
+  String uint32_T = "4";
   String uint32_t = "4";
   String uint32 =   "4";
+  String int32_T =  "4";
   String int32_t =  "4";
   String int32 =    "4";
   String uint16_t = "2";
@@ -69,6 +79,7 @@ Map bytesSimpleTypes = {
   String uint8 =    "1";
   String int8_t =   "1";
   String int8 =     "1";
+  String real32_T =    "4";
   String float =    "4";
   String double =   "8";
   String int32BigEndian =    "4";
@@ -79,9 +90,13 @@ Map bytesSimpleTypes = {
 Map idSimpleTypes = {
   Num void =     1;
   Num int =      4;
-  Num char =     14;
+  Num char16 =   7;
+  Num char_T =  14;
+  Num char =    14;
+  Num uint32_T = 5;
   Num uint32_t = 5;
   Num uint32 =   5;
+  Num int32_T =  4;
   Num int32_t =  4;
   Num int32 =    4;
   Num uint16_t = 7;
@@ -93,11 +108,14 @@ Map idSimpleTypes = {
   Num uint8 =    9;
   Num int8_t =   8;
   Num int8 =     8;
+  Num real32_T =12;
   Num float =    12;
   Num int64 =    2;
   Num int64_t =  2;
   Num uint64 =   3;
   Num uint64_t = 3;
+  Num boolean_T =     15;
+  Num boolean =     15;
   Num bool =     15;
   Num float_complex =   20;
   Num double_complex =  21;
@@ -132,12 +150,6 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
     }
     if(not reflSimpleTypes.get(typeRefl.name)) { 
       String sTypename = typeRefl.baseName("_s", "_t");
-##      if(typeRefl.forward && typeRefl.name.endsWith("_t")) {
-##        Num zname = typeRefl.name.length();
-##        String defname = typeRefl.name.substring(0, zname -2);
-##        <:>
-##========#define reflection_<&typeRefl.name> reflection_<&defname><.> 
-##      }
       <:>
 ======extern_C const ClassJc reflection_<&sTypename>;  //used for field <&entry.name>
       <.>      
@@ -174,16 +186,23 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
 ======};
 ======<.>
   } 
-  String sClassNameShow = struct.name;  ##TODO shorten
+  String sClassNameShow = struct.name();  ##TODO shorten
   if(fileBin) {
-    Num nrClass = fileBin.addClass(sClassNameShow, struct.name);
+    Num posSuperClassAddr;
+    if(struct.superclass) {
+      posSuperClassAddr = fileBin.addSuperclass(struct.superclass.type.baseName("_s", "_t"));
+    }
+    Num nrClass = fileBin.addClass(struct.baseName("_s"), sClassNameShow);
+    if(struct.superclass) {
+      fileBin.setClassSuperclass(posSuperClassAddr); 
+    }
     if(fileOffs) {
       <+fileOffsTypetable><:>
-======, reflectionOffset_<&struct.name>    //access the array<.><.+>
+======, reflectionOffset_<&struct.baseName("_s")>    //access the array<.><.+>
       <+fileOffs>
       <:>
-======extern int32 const reflectionOffset_<&struct.name>[];  //for usage as root instance
-======int32 const reflectionOffset_<&struct.name>[] =
+======extern int32 const reflectionOffset_<&struct.baseName("_s")>[];  //for usage as root instance
+======int32 const reflectionOffset_<&struct.baseName("_s")>[] =
 ======{ <&nrClass>   //index of class in Offset data<.><.+>
     }
   }
@@ -231,6 +250,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffs, Obj fileOffsTypetable)
 ==
 ==<.>
   if(fileBin) {
+    if(struct.isBasedOnObjectJc){ fileBin.setClassBasedOnObjectJc(); }
     fileBin.closeAddClass();
     if(fileOffs) {
       <+fileOffs>
@@ -273,7 +293,7 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
       String sTypeRefl;
       String bytesType;
       String modifier = "0";
-      Num mModifier = 0;
+      Num mModifier = 0;                                
       Obj typeRefl;
       ##
       ## sTypeRefl
@@ -350,22 +370,32 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
           modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
           mModifier = mModifier + %org.vishia.byteData.Class_Jc.kEmbeddedContainer_Modifier;
         }
+        ##
+        String sElement;
         if(struct.implicitName) { ##it is an implicitely struct
           if(struct.arraysize !=null) {
             String sImplArray = <:>[0]<.>; ##offset inside first element.
           } else {
             String sImplArray = "";
           }
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName><&sImplArray>.<&entry.name>)) <: >
-                              - ((intptr_t)(&((<&struct.parent.name>*)(0x1000))-><&struct.implicitName>)) )<.>;
+          String structParentName = struct.parent.name;
+          if(structParentName == null) { structParentName = <:>struct <&struct.parent.tagname><.>; } ##on struct tagname{...}; definition kind.
+          sElement = <:>((<&structParentName>*)(0x1000))-><&struct.implicitName><&sImplArray>.<&entry.name><.>;
+          offset = <:>(int16)( ((intptr_t)(&<&sElement>)) <: >
+                              - ((intptr_t)(&((<&structParentName>*)(0x1000))-><&struct.implicitName>)) )  /*implicit struct*/<.>;
         } else {
-          offset = <:>(int16)( ((intptr_t)(&((<&struct.name>*)(0x1000))-><&entry.name>)) -0x1000 )<.>;
+          String structName = struct.name;
+          if(structName == null) { structName = <:>struct <&struct.tagname><.>; } ##on struct tagname{...}; definition kind.
+          sElement = <:>((<&structName>*)(0x1000))-><&entry.name><.>;
+          offset = <:>(int16)( ((intptr_t)(&<&sElement>)) -0x1000 )<.>;
         }
-        if(entry.type) {
-          sizetype = <:>sizeof(<&entry.type.name>)<.>;
-        } else {                                              
-          sizetype = "4-4 /*unknown type*/";
-        }
+        sizetype = <:>sizeof(<&sElement>)<.>;
+        ##
+        ##if(entry.type) {
+        ##  sizetype = <:>sizeof(<&entry.type.name>)<.>;
+        ##} else {                                              
+        ##  sizetype = "4-4 /*unknown type*/";
+        ##}
         bitfield = 0;  ##detect a next bitfield, for offset calculation.
       }
       if(sTypeRefl) { ##else: a #define
@@ -391,8 +421,9 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffs, Obj struct)
           Num nArraySize = entry.arraysize.value;
           fileBin.addField(nameRefl, idType, typename, mModifier,nArraySize); ##modifier, arraysize); 
           if(fileOffs) {
-          <+fileOffs><:>
-==========, (sizeof(<&typename>) | <&offset>) <.><.+>          
+            <+fileOffs><:>
+============, ((<&sizetype><<16) | <&offset>) <.><.+>          
+##============//, ((sizeof(<:if:entry.type.pointerDepth() ?gt0 > void* <:else><&typename><.if>)<<16) | <&offset>)<.><+>       
           }
         }
     } } //if for
