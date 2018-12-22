@@ -12,13 +12,13 @@ String javaclass = "MyJavaOutput";
 
 ==JZtxtcmd==
 
-##set the text output for this script:
-##
-text = <:><&javaDir>/<&pkgpath.replace(".","/")>/<&javaclass>.java<.>;
 
 
 sub writeRootClassFromXmlCfg( Obj xmlCfg, String javaDir, String pkgpath, String javaclass)
 {
+  ##set the text output for this sub routine and call sub:
+  ##
+  text = <:><&javaDir>/<&pkgpath.replace(".","/")>/<&javaclass>.java<.>;
 
   test.dataHtml(xmlCfg, File: T:/test.html);
   <:>
@@ -34,10 +34,19 @@ sub writeRootClassFromXmlCfg( Obj xmlCfg, String javaDir, String pkgpath, String
   for(subtree:xmlCfg.subtrees) { ##all stored subtree definition
       String sIndent = "  ";
       <+out><&subtree.tag><.+n>                                        
-      call writeDstClass( subclass=subtree, className = subtree.tag);   
+      <:>
+======  /**Subclass defined in XML config-subtree. */      
+======  public static class <&subtree.dstClassName> {
+      <.>
+      call writeClassContent( subclass=subtree, className = subtree.tag);   
+      <:>
+======  } //class <&subtree.dstClassName>
+      <.>
       call writeSubClasses( parent=subtree, indent = 4);   
   }
   call writeSubClasses(parent = xmlCfg.rootNode, indent=2);
+  ##
+  call writeClassContent( subclass=xmlCfg.rootNode, className = javaclass);   
   <:>  
   }   
   <.>
@@ -49,21 +58,67 @@ sub writeRootClassFromXmlCfg( Obj xmlCfg, String javaDir, String pkgpath, String
   
 String spaces = "                                                           ";
 
-sub writeDstClass(Obj subclass, String className){
-  <:>
-==  public static class <&className> {
-  <.>
+sub writeClassContent(Obj subclass, String className){
   for(attrib: subclass.attribs){
     <:>
-====    public String <&attrib.storeInMap>;
+====    /** XML attrib @<&attrib.storeInMap>> */    
+====    public String <&attrib.storeInMap>;  //from attrib storeInMap
     <.>
   }
+  for(subnode: subclass.subnodes) {
+    if(subnode.dstClassName) {
+      if(subnode.elementStorePath.ident >= "set_") {
+        <:>
+========    /** XML tag=<&subnode.tag> */        
+========    <&subnode.dstClassName> <&subnode.dstClassName>;            
+        <.>
+      } elsif(subnode.elementStorePath.ident >= "add_") {
+        <:>
+========    /** XML tag=<&subnode.tag> */        
+========    List<<&subnode.dstClassName>> <&subnode.dstClassName> = new ArrayList<<&subnode.dstClassName>>();            
+        <.>  
+      } else {
+        <:>
+========    //ERROR unexpected: no add, no set: <&subnode.dstClassName>        
+        <.>
+      }  
+    } elsif(subnode.elementStorePath) { ##a subnode without dstClass, should store content immediately:
+      if(subnode.elementStorePath.ident >= "set_") {
+        for(arg: subnode.elementStorePath.argNames) {
+          <:>
+==========    /** XML tag=<&subnode.tag>/@<&arg> */        
+==========    String <&subnode.tag>_<&arg>;            
+          <.>
+        }
+      } elsif(subnode.elementStorePath.ident >= "add_") {
+        String secondArg = "";
+        for(arg: subnode.elementStorePath.argNames) {
+          <:>
+==========    /** XML tag=<&subnode.tag>/@<&arg> */        
+==========    List<String> <&subnode.tag>_<&arg> = new ArrayList<String>();  <&secondArg>            
+          <.>
+          secondArg = "//ERROR only one arg for add possible";
+        }
+      } else {
+        <:>
+========    //ERROR unexpected: no add, no set: <&subnode.dstClassName>        
+        <.>
+      }  
+       
+    } elsif(subnode.contentStorePath) {
+      <:>
+======    /** XML tag=<&subnode.tag>/text() */        
+======    String <&subnode.tag>;            
+      <.>
+    }
+  }##for subnodes
+  ##
   <:>
 ==    /**Constructor with attrib values. */  
 ==    public <&className>(<:for:attrib: subclass.attribs>String <&attrib.storeInMap><:hasNext>, <.hasNext><.for>) {<.>
   for(attrib: subclass.attribs){
     <:>
-====      this.<&attrib.storeInMap> = <&attrib.storeInMap>;<.>
+====      this.<&attrib.storeInMap> = <&attrib.storeInMap>;  //from attrib storeInMap<.>
   }
   <:>
 ==    }
@@ -71,17 +126,49 @@ sub writeDstClass(Obj subclass, String className){
   for(subnode: subclass.subnodes) {
     if(subnode.dstClassName) {
     <:>
-====    public void add_<&subnode.dstClassName>(<: >
+====    /**Invoked from XMLjzReader cfg.xml to create an instance for the content of the &lt;<&subnode.tag> ... &gt;
+====     * The attributes of the XML element are used as String arguments.
+====     */
+====    public <&subnode.dstClassName> <&subnode.elementStorePath.ident> (<: >
          <:for:arg:subnode.elementStorePath.argNames>String <&arg><:hasNext>, <.hasNext><.for>) {
+====      return new <&subnode.dstClassName>(<:for:arg:subnode.elementStorePath.argNames><&arg><:hasNext>, <.hasNext><.for>);
 ====    }
     <.>
+    } elsif(subnode.elementStorePath) {
+      call writeAttrSetRoutine(storePath = subnode.elementStorePath, subtag=subnode.tag);
+    } elsif(subnode.contentStorePath) {
+      call writeAttrSetRoutine(storePath = subnode.contentStorePath, subtag=subnode.tag);
     }
   }##for subnodes
-  <:>
-==  }
-  <.>
 }
     
+
+
+
+sub writeAttrSetRoutine(Obj storePath, String subtag) {
+              <:>
+==============    /**Invoked from XMLjzReader cfg.xml to store the attribute values of the &lt;<&subtag> ... &gt;
+==============     * The attributes of the XML element are used as String arguments.
+==============     */
+==============    public void <&storePath.ident> (<:for:arg:storePath.argNames>String <&arg><:hasNext>, <.hasNext><.for>) { <.>
+  for(arg: storePath.argNames){
+    if(storePath.ident >= "set_"){
+              <:>
+==============      this.<&subtag>_<&arg> = <&arg>;<.>
+    } else {
+              <:>
+==============      this.<&subtag>_<&arg>.add(<&arg>);   //more as one element<.>
+    }     
+  }
+              <:> 
+==============    }
+    <.>
+}
+
+
+
+
+
 
 
 
@@ -90,7 +177,15 @@ sub writeSubClasses(Obj parent, Num indent) {
   for(subclass: parent.subnodes) {
     if(subclass.cfgSubtreeName == null && subclass.dstClassName) {  ##xmlinput:subtree already processed.
       <+out><&subclass.tag><.+n>                                        
-      call writeDstClass(subclass=subclass, className = subclass.dstClassName);      
+      <:>
+======  /**Subclass from an inner node list in defined in <&parent.tag> in the XML config-subtree. */      
+======  public static class <&subclass.dstClassName> {
+      <.>
+      call writeClassContent(subclass=subclass, className = subclass.dstClassName);      
+      <:>
+======  } //subclass <&subclass.dstClassName>
+      <.>
+      
       call writeSubClasses( parent=subclass, indent = indent);   
     }
   }
