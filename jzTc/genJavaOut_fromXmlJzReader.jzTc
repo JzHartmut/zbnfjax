@@ -108,7 +108,7 @@ sub writeClassContent(Obj subclass, String className){
     } elsif(subnode.contentStorePath) {
       <:>
 ======    /** XML tag=<&subnode.tag>/text() */        
-======    String <&subnode.tag>;            
+======    String <&subnode.tag>_text;            
       <.>
     }
   }##for subnodes
@@ -131,7 +131,16 @@ sub writeClassContent(Obj subclass, String className){
 ====     */
 ====    public <&subnode.dstClassName> <&subnode.elementStorePath.ident> (<: >
          <:for:arg:subnode.elementStorePath.argNames>String <&arg><:hasNext>, <.hasNext><.for>) {
-====      return new <&subnode.dstClassName>(<:for:arg:subnode.elementStorePath.argNames><&arg><:hasNext>, <.hasNext><.for>);
+====      <&subnode.dstClassName> obj = new <&subnode.dstClassName>(<:for:arg:subnode.elementStorePath.argNames><&arg><:hasNext>, <.hasNext><.for>);<.>
+    if(subnode.elementStorePath.ident>="set_"){
+      <:>
+======      this.<&subnode.dstClassName> = obj;<.>
+    } else {
+      <:>
+======      this.<&subnode.dstClassName>.add(obj);<.>
+    }
+    <:>  
+====      return obj;
 ====    }
     <.>
     } elsif(subnode.elementStorePath) {
@@ -164,6 +173,10 @@ sub writeAttrSetRoutine(Obj storePath, String subtag) {
 ==============    }
     <.>
 }
+
+
+
+
 
 
 
