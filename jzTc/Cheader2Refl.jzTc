@@ -25,7 +25,12 @@ exit /B
 
 
 ##Class reflStructDefinition = org.vishia.header2Reflection.CheaderParser$StructDefinition;
-            
+
+
+String openBB = "{";   ##openBlockBracket use indirect
+String closeBB = "}";
+
+
 Obj headerTranslator = java new org.vishia.header2Reflection.CheaderParser(console);
 
 
@@ -134,31 +139,33 @@ Map idSimpleTypes = {
 ##Generates the reflection of one type (struct, class).
 ##It is invoked as subtext call.
 ##
-sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fileOffsTypetable) 
+sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsTypetable) 
 { Num nrElements = 0;
   String structBasename = struct.baseName("_s");
   for(entry:struct.entries){if(entry.name) {
     nrElements = nrElements +1;
   } }
-  <:>
-==
-==extern_C const ClassJc reflection_<&structBasename>;  //the just defined reflection_ used in the own fields.<: >
-  <.>
-  for(entry:struct.entries) { if(entry.name && entry.type) { ##Note a type is not present for a #define inside a struct.
-    Obj typeRefl;
-    if(entry.description.reflType) {
-      typeRefl = entry.description.reflType;
-    } elsif(entry.type) {
-      typeRefl = entry.type;
-    }
-    if(not reflSimpleTypes.get(typeRefl.name)) { 
-      String sTypename = typeRefl.baseName("_s", "_t");
-      <:>
-======extern_C const ClassJc reflection_<&sTypename>;  //used for field <&entry.name>
-      <.>      
-    }
-  }}
-  Num hasSuperclass = 0;
+  if(!fileBin) {
+    <:>
+====
+====extern_C const ClassJc reflection_<&structBasename>;  //the just defined reflection_ used in the own fields.<: >
+    <.>
+    for(entry:struct.entries) { if(entry.name && entry.type) { ##Note a type is not present for a #define inside a struct.
+      Obj typeRefl;
+      if(entry.description.reflType) {
+        typeRefl = entry.description.reflType;
+      } elsif(entry.type) {
+        typeRefl = entry.type;
+      }
+      if(not reflSimpleTypes.get(typeRefl.name)) { 
+        String sTypename = typeRefl.baseName("_s", "_t");
+        <:>
+  ======extern_C const ClassJc reflection_<&sTypename>;  //used for field <&entry.name>
+        <.>      
+      }
+  } }}
+  if(!fileBin) {
+    Num hasSuperclass = 0;
     if(struct.superclass) {
       Num accessLevel = 0;
       if(struct.superclass.description) {
@@ -188,7 +195,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fil
 ======    }
 ======};
 ======<.>
-  } 
+  } }
   String sClassNameShow = struct.name();  ##TODO shorten
   if(fileBin) {
     Num posSuperClassAddr;
@@ -199,83 +206,75 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fil
     if(struct.superclass) {
       fileBin.setClassSuperclass(posSuperClassAddr); 
     }
-    if(fileOffsC) {
-      <+fileOffsTypetable><:>
-======, reflectionOffset_<&struct.baseName("_s")>    //access the array<.><.+>
-      <+fileOffsC>
-      <:>
-======int32 const reflectionOffset_<&struct.baseName("_s")>[] =
-======{ <&nrClass>   //index of class in Offset data<: >
-      <.><.+>
-      <+fileOffsH>
-      <:>
-======extern_C ClassJc const reflection_<&struct.baseName("_s")>;      
-======//extern int32 const reflectionOffset_<&struct.baseName("_s")>[];  //for usage as root instance
-======//#define reflection_<&struct.baseName("_s")> reflectionOffset_<&struct.baseName("_s")>[0]
-      <.><.+>
-    }
-  }
+    fileOffsTypetable.add(<:>reflection_<&struct.baseName("_s")><.>); 
+    <:>
+====int32 const reflectionOffset_<&struct.baseName("_s")>[] =
+===={ <&nrClass>   //index of class in Offset data<: >
+    <.>
+  }//fileBin
   String sFieldsInStruct = "null";
   ##if(struct.entries.size() > hasSuperclass) { ##hasSuperclass is 1 if the first entry is the superclass.
   if(struct.attribs.size() > 0) { ##hasSuperclass is 1 if the first entry is the superclass.
     sFieldsInStruct = <:>(FieldJcArray const*)&reflection_Fields_<&struct.name><.>;
     Stringjar wrFields;  ##the container for the generated field data
     Map retEntries;
-    ##
+    ##                                                                                  
     ## generates all fields:
     ##
-    retEntries = call attribs_struct(wr = wrFields, fileBin = fileBin, fileOffsC=fileOffsC, fileOffsH=fileOffsH, struct = struct);
+    retEntries = call attribs_struct(wr = wrFields, fileBin = fileBin, struct = struct);
     ##
-    <:>
-====const struct Reflection_Fields_<&struct.name>_t
-===={ ObjectArrayJc head;
-====  FieldJc data[<&retEntries.nrofEntries>];
-====} reflection_Fields_<&struct.name> =
-===={ INIZ_ObjectArrayJc(reflection_Fields_<&struct.name>, <&retEntries.nrofEntries>, FieldJc, null, INIZ_ID_FieldJc)
-====, {  
-    <&wrFields>
-====} }; 
-====                                                    
-    <.>                                     
-  }
+    if(!fileBin) {
+      <:>
+======const struct Reflection_Fields_<&struct.name>_t
+======{ ObjectArrayJc head;
+======  FieldJc data[<&retEntries.nrofEntries>];
+======} reflection_Fields_<&struct.name> =
+======{ INIZ_ObjectArrayJc(reflection_Fields_<&struct.name>, <&retEntries.nrofEntries>, FieldJc, null, INIZ_ID_FieldJc)
+======, {  
+      <&wrFields>
+======} }; 
+====== 
+      <.>  
+    }
+  }  
   ##The class:
   String classModif;
-  String sizeName;
+  String sizeName;               
   if(struct.implicitName !=null) { sizeName = <:>((<&struct.parent.name>*)0x1000)-><&struct.implicitName><.>; }
   else { sizeName = struct.name; }
-  <:>                                                                   
-==const ClassJc reflection_<&structBasename> =
-=={ INIZ_objReflId_ObjectJc(reflection_<&structBasename>, &reflection_ClassJc, INIZ_ID_ClassJc)
-==, "<&structBasename>"
-==, 0
-==, sizeof(<&sizeName>)
-==, <&sFieldsInStruct>  //attributes and associations
-==, null  //method      
-==, <:if:reflSuperName>(ClassOffset_idxMtblJcARRAY*)&superClasses_<&struct.name><:else>null<.if>  //superclass  
-==, null  //interfaces  ##TODO check first union
-==, <:if:struct.isBasedOnObjectJc>mObjectJc_Modifier_reflectJc<:else>0<.if>   ## if union{ ObjectJc obj, ...} or 1. element ObjectJc
-==, <:if:struct.description.vtbl>&<&struct.description.vtbl>.tbl.head<:else>null<.if>  //virtual table
-==};
-==
-==<.>
+  if(!fileBin) {
+    <:>                                                                   
+====const ClassJc reflection_<&structBasename> =
+===={ INIZ_objReflId_ObjectJc(reflection_<&structBasename>, &reflection_ClassJc, INIZ_ID_ClassJc)
+====, "<&structBasename>"
+====, 0
+====, sizeof(<&sizeName>)
+====, <&sFieldsInStruct>  //attributes and associations
+====, null  //method      
+====, <:if:reflSuperName>(ClassOffset_idxMtblJcARRAY*)&superClasses_<&struct.name><:else>null<.if>  //superclass  
+====, null  //interfaces  ##TODO check first union
+====, <:if:struct.isBasedOnObjectJc>mObjectJc_Modifier_reflectJc<:else>0<.if>   ## if union{ ObjectJc obj, ...} or 1. element ObjectJc
+====, <:if:struct.description.vtbl>&<&struct.description.vtbl>.tbl.head<:else>null<.if>  //virtual table
+====};
+====
+====<.>
+  } 
   if(fileBin) {
     if(struct.isBasedOnObjectJc){ fileBin.setClassBasedOnObjectJc(); }
     fileBin.closeAddClass();
-    if(fileOffsC) {
-      <+fileOffsC>
       <:>
-======};
+======<&closeBB>;
 ======
+======extern_C ClassJc const reflection_<&struct.baseName("_s")>; //forward declaration because extern "C" 
 ======ClassJc const reflection_<&struct.baseName("_s")> = 
 ======{ <&nrClass>   //index of class in Offset data
 ======, &reflectionOffset_<&struct.baseName("_s")>[1]
 ======};
-      <.><.+>
-    }  
+      <.>
   }
 }
 
-
+                                                                          
 
 
 
@@ -286,7 +285,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fil
 ##Subroutine writes the C-code for an entry of a struct.
 ##Regards bitfields
 ##
-sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj struct)
+sub attribs_struct(Obj wr, Obj fileBin, Obj struct)
 { Num return.nrofEntries = 0;
   String offset = "0";    ##initial value, keep it on bitfields
   String sizetype = "0";  ##initial, no element before 1. bitfield
@@ -414,17 +413,18 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj struct
       if(sTypeRefl) { ##else: a #define
         return.nrofEntries = return.nrofEntries +1;
         String nameRefl = java org.vishia.header2Reflection.CheaderParser.prepareReflName(<:><&entry.name><.>);
-        <+wr><:><:indent:2=>
-========    { "<&nameRefl>"
-========    , <&arraysize>                           
-========    , <&sTypeRefl>                                                                                            
-========    , <&modifier> //bitModifiers
-========    , <&offset>
-========    , 0  //offsetToObjectifcBase                                                            
-========    , &reflection_<&structBasename>
-========    }
-========  <:hasNext>, <.hasNext><: >
-        <.><.+>
+        if(!fileBin) {
+          <+wr><:><:indent:2=>
+==========    { "<&nameRefl>"
+==========    , <&arraysize>                           
+==========    , <&sTypeRefl>                                                                                            
+==========    , <&modifier> //bitModifiers
+==========    , <&offset>
+==========    , 0  //offsetToObjectifcBase                                                            
+==========    , &reflection_<&structBasename>
+==========    }
+==========  <:hasNext>, <.hasNext><: >
+          <.><.+>
         }
         if(fileBin) {
           Num idType = idSimpleTypes.get(typename);  ##stores 0 if not found.
@@ -433,19 +433,24 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj struct
           Num typeAddress = -1;
           Num nArraySize = entry.arraysize.value;
           fileBin.addField(nameRefl, idType, typename, mModifier,nArraySize); ##modifier, arraysize); 
-          if(fileOffsC) {
-            <+fileOffsC><:>
-============, ((<&sizetype><<16) | <&offset>) <.><.+>          
-##============//, ((sizeof(<:if:entry.type.pointerDepth() ?gt0 > void* <:else><&typename><.if>)<<16) | <&offset>)<.><+>       
-          }
-        }
-    } } //if for
+          <:>
+==========, ((<&sizetype><<16) | <&offset>)<: >          
+          <.>       
+        }//!fileBin
+      } //sTypeRefl, a field  
+  } } //if for
 }
 
 
 
 
 
+
+
+sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String fileBin = null, String fileOffs, String html = null)
+{
+  call genDstFiles(target = target, html=html, sfileBin = fileBin, sfileOffs = fileOffs, genRoutine="genReflectionHeader", fileExt=".crefl");
+}
 
 
 
@@ -468,69 +473,65 @@ sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String sfileBin, String 
   if(sfileBin) {
     Bool endian = false;  ##Note: depends on the target processor, false for PC platform.
     fileBin = new org.vishia.header2Reflection.BinOutPrep(sfileBin, endian, false, 0);
-  }
-  if(sfileOffs) {
-    Openfile fileOffsC = <:><&sfileOffs>.c<.>;
-    Openfile fileOffsH = <:><&sfileOffs>.h<.>;
-    <+fileOffsH>
-    <:>
-====//This file is generated by zbnfjax/jzTc/Cheader2Refl.jzTc. Do not modify.
-====#ifndef __reflectionOffsetAppl_h__
-====#define __reflectionOffsetAppl_h__
-====#include <applstdef_emC.h>
-====
-    <.><.+>
-    <+fileOffsC>
-    <:>
-====//This file is generated by zbnfjax/jzTc/Cheader2Refl.jztxt.cmd. Do not modify.
-====#include <<&sfileOffs>.h>
-====#include <Inspc/Target2Proxy_Inspc.h>  //declares reflectionOffsetArrays
-====
-    <.><.+>
-    Obj fileOffsTypetable = new java.lang.StringBuilder(1000);
+    Obj fileOffsTypetable = new java.util.LinkedList();
   } else {
-    Obj fileOffsC;  //remain null but define
-    Obj fileOffsH;  //remain null but define
     Obj fileOffsTypetable;
   }
-  for(headerfile:inputsExpanded)
+  for(headerfile: inputsExpanded)
   { <+out><&headerfile.absfile()><.+n>
-    call genDstFile(filepath = headerfile, fileBin = fileBin, fileOffsC=fileOffsC, fileOffsH=fileOffsH, fileOffsTypetable = fileOffsTypetable
+    call genDstFile(filepath = headerfile, fileBin = fileBin, fileOffsTypetable = fileOffsTypetable
       , fileDst = <:><&target.output.absdir()>/<&headerfile.localname()><&fileExt><.>, genRoutine=genRoutine, html = html);
   }
   if(fileBin) {
     fileBin.postProcessBinOut();
     fileBin.close();
-  }
-  if(fileOffsC) {
-    <+fileOffsH>
-    <:>
-====#endif //__<&sfileOffs>_h__
+    Openfile fileOffs = sfileOffs;
+    <+fileOffs><: >
+    <:>/**This file is generated by Cheaer2Refl.jzTc mady by Hartmut Schorrig
+====*/    
+====#include <Inspc/Target2Proxy_Inspc.h>  //declares reflectionOffsetArrays
+====
     <.><.+>
-    <+fileOffsC>
+    for(entry: fileOffsTypetable) {
+      <+fileOffs><: >
+      <:>
+======extern_C struct ClassJc_t const <&entry>;<: >
+      <.><.+>
+    }//for
+    <+fileOffs><: >
     <:>
-====    
-====int32 const* const reflectionOffsetArrays[] =
-===={ null  //index 0 left free
-====<&fileOffsTypetable>
+====
+====/**Array of pointer to all reflection_Type definition.
+==== * The order of the pointer matches to the ClassJc#index
+==== * The target2proxy service accesses the correct ClassJc by given index in communication.
+==== */
+====ClassJc const* const reflectionOffsetArrays[] =
+===={ null  //index 0 left free <: >
+    <.><.+>
+    for(entry: fileOffsTypetable) {
+      <+fileOffs><: >
+      <:>
+======, &<&entry><: >
+      <.><.+>
+    }//for
+    <+fileOffs>
+    <:>
 ====};
     <.><.+>
-    fileOffsC.close();
-    fileOffsH.close();
+    fileOffs.close();
   }
 }
 
 
-sub genReflection(Obj target: org.vishia.cmd.ZmakeTarget, String fileBin = null, String fileOffs =null, String html = null)
-{
-  call genDstFiles(target = target, html=html, sfileBin = fileBin, sfileOffs = fileOffs, genRoutine="genReflectionHeader", fileExt=".crefl");
-}
 
 
-
-
-
-sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fileOffsTypetable, String fileDst, String genRoutine, String html = null)
+##################################################################################################################
+##
+##Generates one file for the given header.
+##args:
+## * genRoutine: It determines which sub routine is used for the file content.
+##
+sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, Obj fileBin, Obj fileOffsTypetable, String fileDst, String genRoutine, String html = null)
 {
   ##java org.vishia.util.DataAccess.debugMethod("setSrc");
   Obj args = java new org.vishia.header2Reflection.CheaderParser$Args();
@@ -552,7 +553,7 @@ sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, Obj fileBin, Obj f
       mkdir <:><&html>/<&headerfile.fileName>'<.>;
       test.dataHtml(headers, File:<:><&html>/<&headerfile.fileName>.html<.>);
     }
-    call &genRoutine(headerfile = headerfile, fileBin = fileBin, fileOffsC=fileOffsC, fileOffsH=fileOffsH, fileOffsTypetable = fileOffsTypetable, fileDst = fileDst);
+    call &genRoutine(headerfile = headerfile, fileBin = fileBin, fileOffsTypetable = fileOffsTypetable, fileDst = fileDst);
   }
 } 
 
@@ -569,7 +570,7 @@ sub genDstFile(Obj filepath :org.vishia.cmd.JZtxtcmdFilepath, Obj fileBin, Obj f
 ##The routine to generate reflection files, one file per header file.
 ##It parses all header files one after another, then generates reflection
 ##
-sub genReflectionHeader(Obj headerfile, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fileOffsTypetable, String fileDst)
+sub genReflectionHeader(Obj headerfile, Obj fileBin, Obj fileOffsTypetable, String fileDst)
 {
   FileSystem.mkDirPath(fileDst);  ##Note: makes only the directory, because fileDst does not end with /
   Openfile outRefl = fileDst;
@@ -577,16 +578,8 @@ sub genReflectionHeader(Obj headerfile, Obj fileBin, Obj fileOffsC, Obj fileOffs
     <:>
 ====//This file is generated by ZBNF/zbnfjax/jzTc/Cheader2Refl.jzTc
 ====#include "<&headerfile.fileName>.h"  ##it comes from args.addSrc(...,input.localname())
-====//#include <emC/Reflection_emC.h>
-====#include <stddef.h>
+====//#include <stddef.h>
     <.><.+>
-  if(fileOffsC) {
-    <+fileOffsC>
-    <:>
-====#include <<&headerfile.fileName>.h>
-====<.><.+>
-  }
-
   for(classC: headerfile.listClassC) {
     for(entry: classC.entries) {
       if(  (entry.whatisit == "structDefinition" || entry.whatisit == "unionDefinition")  
@@ -597,7 +590,7 @@ sub genReflectionHeader(Obj headerfile, Obj fileBin, Obj fileOffsC, Obj fileOffs
         ##
         ##check whether a Bus should be generated.
         ##
-        <+outRefl><:call:genReflStruct:struct=entry, fileOffsC=fileOffsC, fileOffsH=fileOffsH, fileOffsTypetable = fileOffsTypetable, fileBin=fileBin><.+>
+        <+outRefl><:call:genReflStruct:struct=entry, fileOffsTypetable = fileOffsTypetable, fileBin=fileBin><.+>
       }
       if(entry.whatisit == "unionDefinition") {
         <+>  union <.n+>
