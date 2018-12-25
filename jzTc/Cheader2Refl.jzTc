@@ -209,8 +209,9 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fil
       <.><.+>
       <+fileOffsH>
       <:>
-======extern int32 const reflectionOffset_<&struct.baseName("_s")>[];  //for usage as root instance
-======#define reflection_<&struct.baseName("_s")> reflectionOffset_<&struct.baseName("_s")>[0]
+======extern_C ClassJc const reflection_<&struct.baseName("_s")>;      
+======//extern int32 const reflectionOffset_<&struct.baseName("_s")>[];  //for usage as root instance
+======//#define reflection_<&struct.baseName("_s")> reflectionOffset_<&struct.baseName("_s")>[0]
       <.><.+>
     }
   }
@@ -265,6 +266,10 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsC, Obj fileOffsH, Obj fil
       <:>
 ======};
 ======
+======ClassJc const reflection_<&struct.baseName("_s")> = 
+======{ <&nrClass>   //index of class in Offset data
+======, &reflectionOffset_<&struct.baseName("_s")>[1]
+======};
       <.><.+>
     }  
   }
