@@ -267,8 +267,8 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsTypetable)
 ======
 ======extern_C ClassJc const reflection_<&struct.baseName("_s")>; //forward declaration because extern "C" 
 ======ClassJc const reflection_<&struct.baseName("_s")> = 
-======{ <&nrClass>   //index of class in Offset data
-======, &reflectionOffset_<&struct.baseName("_s")>[1]
+======{ <&nrClass>   //index of class in Offset data    //sizeof(reflectionOffset_<&struct.baseName("_s")>)
+======, &reflectionOffset_<&struct.baseName("_s")>[0]
 ======};
       <.>
   }
@@ -472,7 +472,7 @@ sub genDstFiles(Obj target: org.vishia.cmd.ZmakeTarget, String sfileBin, String 
   Obj fileBin;
   if(sfileBin) {
     Bool endian = false;  ##Note: depends on the target processor, false for PC platform.
-    fileBin = new org.vishia.header2Reflection.BinOutPrep(sfileBin, endian, false, 0);
+    fileBin = new org.vishia.header2Reflection.BinOutPrep(sfileBin, <:><&sfileBin>.lst<.>, endian, false, 0);
     Obj fileOffsTypetable = new java.util.LinkedList();
   } else {
     Obj fileOffsTypetable;
