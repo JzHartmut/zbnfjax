@@ -185,7 +185,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsTypetable)
 ======    , { "super"              ##<&struct.superclass.name>"     
 ======      , 0 //arraysize
 ======      , &<&reflSuperName>  //type of super                                                                                         
-======      , kEmbeddedContainer_Modifier_reflectJc //hint: embd helps to show the real type.
+======      , kEmbedded_Modifier_reflectJc //hint: embd helps to show the real type.
 ======        | (<&accessLevel><< kBitAccessLevel_Modifier_FieldJc)  //access level
 ======        | (7<< kBitChangeLevel_Modifier_FieldJc)  //never change
 ======      , 0 //offsetalways 0 (C++?)
@@ -379,8 +379,8 @@ sub attribs_struct(Obj wr, Obj fileBin, Obj struct)
         } ##else: further bitfields: keep offset string 
       } elsif(sTypeRefl) { ##don't set offset = ... for an entry which is not used (espec. #define)
         if((entry.arraysize || not bytesType) && not typeRefl.pointer_) {
-          modifier = <:><&modifier>|kEmbeddedContainer_Modifier_reflectJc<.>;
-          mModifier = mModifier + %org.vishia.byteData.Class_Jc.kEmbeddedContainer_Modifier;
+          modifier = <:><&modifier>|kEmbedded_Modifier_reflectJc<.>;
+          mModifier = mModifier + %org.vishia.byteData.Class_Jc.kEmbedded_Modifier_reflectJc;
         }
         ##
         String sElement;
