@@ -47,8 +47,10 @@ Map reflSimpleTypes = {
   String int32_T =  "REFLECTION_int32";
   String int32_t =  "REFLECTION_int32";
   String int32 =    "REFLECTION_int32";
+  String intptr_t =    "REFLECTION_int32";
   String uint16_t = "REFLECTION_uint16";
   String Uint16 =   "REFLECTION_uint16";
+  String uint16 =   "REFLECTION_uint16";
   String int16_t =  "REFLECTION_int16";
   String int16 =    "REFLECTION_int16";
   String uint8_t =  "REFLECTION_uint8";
@@ -75,6 +77,7 @@ Map bytesSimpleTypes = {
   String int32_T =  "4";
   String int32_t =  "4";
   String int32 =    "4";
+  String intptr_t = "4";
   String uint16_t = "2";
   String Uint16 =   "2";                                        
   String int16_t =  "2";
@@ -106,6 +109,7 @@ Map idSimpleTypes = {
   Num int32_T =  4;
   Num int32_t =  4;
   Num int32 =    4;
+  Num intptr_t = 4;
   Num uint16_t = 7;
   Num Uint16 =   7;                                        
   Num int16_t =  6;
@@ -142,6 +146,7 @@ Map idSimpleTypes = {
 sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsTypetable) 
 { Num nrElements = 0;
   String structBasename = struct.baseName("_s");
+  String structReflname = java org.vishia.header2Reflection.CheaderParser.prepareReflName(structBasename);
   for(entry:struct.entries){if(entry.name) {
     nrElements = nrElements +1;
   } }
@@ -174,6 +179,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsTypetable)
       String reflSuperName = <:>reflection_<&struct.superclass.type.name><.>;
       <:>  
 ======
+======extern_C const ClassJc <&reflSuperName>;  //the super class here used.
 ======const struct SuperClasses_<&struct.name>_ClassOffset_idxMtblJcARRAY_t  //Type for the super class
 ======{ ObjectArrayJc head;
 ======  ClassOffset_idxMtblJc data[1];
@@ -246,7 +252,7 @@ sub genReflStruct(Obj struct, Obj fileBin, Obj fileOffsTypetable)
     <:>                                                                   
 ====const ClassJc reflection_<&structBasename> =
 ===={ INIZ_objReflId_ObjectJc(reflection_<&structBasename>, &reflection_ClassJc, INIZ_ID_ClassJc)
-====, "<&structBasename>"
+====, "<&structReflname>"
 ====, 0
 ====, sizeof(<&sizeName>)
 ====, <&sFieldsInStruct>  //attributes and associations

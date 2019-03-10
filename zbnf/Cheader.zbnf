@@ -409,6 +409,7 @@ test_description::= <*|\e|\@?text>
  | @simulink [> <*\.@\e?!test_simulinkTag> ] [\. <*@\e?>]  ##for Sfunction code generation for simulink
  | @vtbl <$?vtbl> <*@\e?>                   ##name of the const virtual table for reflection generation
  | @noReflection <?noReflection> <*@\e?>    ##do not generate an reflection entry for this element.
+ | @param \.\.\. <attribute?varg> 
  | @param <paramDescription>                ##javadoc like
  | @sizeof = <sizeofDescription>
  | @super <?superClass>
@@ -435,7 +436,9 @@ test_description::= <*|\e|\@?text>
 
   
 test_simulinkTag::= 
-{ [<?simulinkTag> Object-FB | Operation-FB | ctor | dtor | defPortTypes | init | accel-tlc 
+{ [<?simulinkTag> Object-FB | Operation-FB | ctor | dtor | init 
+  | defPortTypes 
+  | accel-tlc 
   | bus | no-bus | no-thizInit | no-thizStep | step-in | step-out | update | step2 | xxxoutput
   | defTlcParam_excl | defTlcParam 
   | try-catch | fnCallTrg
